@@ -1,0 +1,275 @@
+<!-- Hero Section -->
+<section class="hero-section relative min-h-screen flex items-center overflow-hidden bg-[#FAF8F5]">
+
+  <!-- Floating butterflies background -->
+  <div class="absolute inset-0 pointer-events-none overflow-hidden">
+    @for (b of butterflies(); track b.id) {
+      <div
+        class="butterfly-float absolute"
+        [style.left]="b.left"
+        [style.top]="b.top"
+        [style.animation-delay]="b.delay"
+        [style.animation-duration]="b.duration"
+      >
+        <svg [attr.width]="b.size" [attr.height]="b.size" viewBox="0 0 40 30" fill="none">
+          <ellipse cx="10" cy="12" rx="9" ry="6" [attr.fill]="b.color" opacity="0.35" transform="rotate(-20 10 12)"/>
+          <ellipse cx="30" cy="12" rx="9" ry="6" [attr.fill]="b.color" opacity="0.35" transform="rotate(20 30 12)"/>
+          <ellipse cx="8" cy="20" rx="6" ry="4" [attr.fill]="b.color" opacity="0.25" transform="rotate(-30 8 20)"/>
+          <ellipse cx="32" cy="20" rx="6" ry="4" [attr.fill]="b.color" opacity="0.25" transform="rotate(30 32 20)"/>
+          <line x1="20" y1="2" x2="20" y2="28" stroke="#8B7355" stroke-width="0.8" opacity="0.4"/>
+        </svg>
+      </div>
+    }
+  </div>
+
+  <div class="container mx-auto px-6 lg:px-16 grid lg:grid-cols-2 gap-12 items-center relative z-10">
+
+    <!-- Logo / Ilustração -->
+    <div class="flex justify-center lg:justify-start animate-fade-in-left">
+      <div class="relative">
+        <img
+          src="assets/Plano_de_fundo_1.png"
+          alt="Logo Lays Coelho"
+          class="w-full max-w-md lg:max-w-lg drop-shadow-sm"
+        />
+      </div>
+    </div>
+
+    <!-- Texto Hero -->
+    <div class="text-center lg:text-left animate-fade-in-right space-y-6">
+      <div class="inline-block">
+        <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium">Psicologia Sistêmica</span>
+      </div>
+      <h1 class="font-display text-5xl lg:text-7xl text-[#2C2C2C] leading-tight">
+        Lays<br/>
+        <span class="text-[#9DC5C8]">Coelho</span>
+      </h1>
+      <p class="text-[#6B6B6B] text-lg leading-relaxed max-w-md mx-auto lg:mx-0">
+        Um espaço de cuidado, escuta e transformação. A terapia sistêmica olha para você dentro do contexto das suas relações — família, vínculos, histórias.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
+        <a href="#contato" class="btn-primary">
+          Agendar Consulta
+        </a>
+        <a href="#sobre" class="btn-secondary">
+          Saiba Mais
+        </a>
+      </div>
+      <div class="flex items-center gap-3 justify-center lg:justify-start pt-2">
+        <div class="w-8 h-px bg-[#C8A882]"></div>
+        <span class="text-[#9A8570] text-sm">CRP registrado</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce-slow">
+    <div class="w-px h-12 bg-gradient-to-b from-transparent to-[#C8A882] mx-auto"></div>
+    <div class="w-1.5 h-1.5 rounded-full bg-[#C8A882] mx-auto mt-1"></div>
+  </div>
+</section>
+
+<!-- Sobre Section -->
+<section id="sobre" class="py-24 lg:py-32 bg-white">
+  <div class="container mx-auto px-6 lg:px-16">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+
+      <!-- Imagem do consultório -->
+      <div class="relative order-2 lg:order-1">
+        <div class="relative rounded-3xl overflow-hidden shadow-2xl shadow-[#9DC5C8]/20">
+          <img
+            src="assets/Fundo_Meet.png"
+            alt="Consultório Lays Coelho"
+            class="w-full object-cover"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-[#2C2C2C]/10 to-transparent"></div>
+        </div>
+        <!-- Decorative element -->
+        <div class="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-[#F0EBE3] -z-10"></div>
+        <div class="absolute -top-4 -left-4 w-20 h-20 rounded-full bg-[#D4EAE8]/40 -z-10"></div>
+      </div>
+
+      <!-- Texto -->
+      <div class="order-1 lg:order-2 space-y-6">
+        <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium">Sobre mim</span>
+        <h2 class="font-display text-4xl lg:text-5xl text-[#2C2C2C] leading-tight">
+          Cuidar de quem<br/>
+          <em class="text-[#C8A882] not-italic">cuida de você</em>
+        </h2>
+        <p class="text-[#6B6B6B] leading-relaxed">
+          Sou Lays Coelho, psicóloga especializada em Psicologia Sistêmica. Minha abordagem parte do entendimento de que cada pessoa existe dentro de uma rede de relações — e é nessa teia que encontramos tanto as dores quanto os recursos para a transformação.
+        </p>
+        <p class="text-[#6B6B6B] leading-relaxed">
+          Atendo adultos e famílias, tanto presencialmente quanto online, em um espaço de escuta genuína, sem julgamentos.
+        </p>
+        <div class="grid grid-cols-2 gap-4 pt-2">
+          @for (stat of stats(); track stat.label) {
+            <div class="stat-card">
+              <span class="stat-number">{{ stat.value }}</span>
+              <span class="stat-label">{{ stat.label }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Abordagem / Serviços -->
+<section id="servicos" class="py-24 lg:py-32 bg-[#FAF8F5]">
+  <div class="container mx-auto px-6 lg:px-16">
+
+    <div class="text-center mb-16 space-y-3">
+      <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium">Como posso ajudar</span>
+      <h2 class="font-display text-4xl lg:text-5xl text-[#2C2C2C]">Áreas de Atuação</h2>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      @for (service of services(); track service.title) {
+        <div class="service-card group">
+          <div class="service-icon" [style.background]="service.bg">
+            <span class="text-2xl">{{ service.icon }}</span>
+          </div>
+          <h3 class="font-display text-xl text-[#2C2C2C] mt-4 mb-2">{{ service.title }}</h3>
+          <p class="text-[#6B6B6B] text-sm leading-relaxed">{{ service.description }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Como funciona -->
+<section class="py-24 lg:py-32 bg-[#2C2C2C] text-white overflow-hidden relative">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#9DC5C8]/5 -translate-y-1/2 translate-x-1/4"></div>
+    <div class="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-[#C8A882]/5 translate-y-1/2 -translate-x-1/4"></div>
+  </div>
+
+  <div class="container mx-auto px-6 lg:px-16 relative z-10">
+    <div class="text-center mb-16 space-y-3">
+      <span class="text-xs tracking-[0.35em] uppercase text-[#9DC5C8] font-medium">O processo</span>
+      <h2 class="font-display text-4xl lg:text-5xl">Como funciona<br/>a terapia</h2>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      @for (step of steps(); track step.number; let last = $last) {
+        <div class="step-item text-center relative">
+          <div class="step-number">{{ step.number }}</div>
+          <h3 class="font-display text-lg mt-4 mb-2 text-white">{{ step.title }}</h3>
+          <p class="text-white/50 text-sm leading-relaxed">{{ step.description }}</p>
+          @if (!last) {
+            <div class="hidden lg:block absolute top-7 left-[calc(50%+2rem)] w-[calc(100%-4rem)] h-px bg-white/10"></div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Depoimentos -->
+<section class="py-24 lg:py-32 bg-white">
+  <div class="container mx-auto px-6 lg:px-16">
+    <div class="text-center mb-16 space-y-3">
+      <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium">Histórias reais</span>
+      <h2 class="font-display text-4xl lg:text-5xl text-[#2C2C2C]">O que dizem<br/>os pacientes</h2>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      @for (t of testimonials(); track t.author) {
+        <div class="testimonial-card">
+          <div class="flex gap-1 mb-4">
+            @for (star of [1,2,3,4,5]; track star) {
+              <span class="text-[#C8A882] text-sm">★</span>
+            }
+          </div>
+          <p class="text-[#4A4A4A] leading-relaxed mb-4 text-sm">"{{ t.text }}"</p>
+          <div class="flex items-center gap-3 mt-auto">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                 [style.background]="t.color">
+              {{ t.author[0] }}
+            </div>
+            <span class="text-[#9A8570] text-sm font-medium">{{ t.author }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- CTA / Contato -->
+<section id="contato" class="py-24 lg:py-32 bg-[#FAF8F5]">
+  <div class="container mx-auto px-6 lg:px-16">
+    <div class="max-w-3xl mx-auto text-center space-y-8">
+
+      <!-- Logo pequeno -->
+      <div class="flex justify-center">
+        <div class="w-16 h-16 relative">
+          <svg viewBox="0 0 60 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="30" cy="22" rx="22" ry="18" fill="#D4EAE8" opacity="0.6"/>
+            <path d="M30 8 C22 8 16 14 16 22 C16 30 22 36 30 38 C38 36 44 30 44 22 C44 14 38 8 30 8Z" fill="#9DC5C8" opacity="0.5"/>
+            <text x="30" y="32" text-anchor="middle" font-size="22" fill="#C8A882" font-family="serif">ψ</text>
+            <rect x="27" y="38" width="6" height="20" rx="3" fill="#C8A882"/>
+            <rect x="18" y="52" width="24" height="5" rx="2.5" fill="#C8A882" opacity="0.6"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium">Dê o primeiro passo</span>
+        <h2 class="font-display text-4xl lg:text-6xl text-[#2C2C2C] leading-tight">
+          Pronta para<br/>
+          <span class="text-[#9DC5C8]">começar?</span>
+        </h2>
+      </div>
+
+      <p class="text-[#6B6B6B] text-lg leading-relaxed max-w-xl mx-auto">
+        Entre em contato pelo WhatsApp e agende sua primeira sessão. Atendimento presencial e online disponíveis.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a
+          href="https://wa.me/5521999999999"
+          target="_blank"
+          rel="noopener"
+          class="btn-whatsapp"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+          </svg>
+          Falar no WhatsApp
+        </a>
+        <a href="mailto:contato@layscoelho.com.br" class="btn-secondary">
+          Enviar E-mail
+        </a>
+      </div>
+
+      <div class="flex items-center justify-center gap-8 pt-4 text-[#9A8570] text-sm">
+        <span class="flex items-center gap-2">
+          <span class="text-[#9DC5C8]">●</span> Online & Presencial
+        </span>
+        <span class="flex items-center gap-2">
+          <span class="text-[#C8A882]">●</span> Rio de Janeiro
+        </span>
+        <span class="flex items-center gap-2">
+          <span class="text-[#A8C5A0]">●</span> Sigilo garantido
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-[#2C2C2C] py-10">
+  <div class="container mx-auto px-6 lg:px-16 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="font-display text-white text-xl">
+      Lays Coelho <span class="text-[#9DC5C8] text-sm font-sans ml-2">Psicologia Sistêmica</span>
+    </div>
+    <p class="text-white/30 text-sm text-center">
+      © {{ currentYear() }} Lays Coelho · Todos os direitos reservados
+    </p>
+    <div class="flex gap-4">
+      <a href="#" class="text-white/30 hover:text-[#9DC5C8] transition-colors text-sm">Instagram</a>
+      <a href="#" class="text-white/30 hover:text-[#9DC5C8] transition-colors text-sm">LinkedIn</a>
+    </div>
+  </div>
+</footer>
