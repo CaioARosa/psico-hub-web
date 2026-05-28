@@ -48,7 +48,7 @@
         Um espaço de cuidado, escuta e transformação. A terapia sistêmica olha para você dentro do contexto das suas relações — família, vínculos, histórias.
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
-        <a href="#contato" class="btn-primary">
+        <a href="#agenda" class="btn-primary">
           Agendar Consulta
         </a>
         <a href="#sobre" class="btn-secondary">
@@ -192,6 +192,281 @@
           </div>
         </div>
       }
+    </div>
+  </div>
+</section>
+
+<!-- Agenda / Agendamento Online Section -->
+<section id="agenda" class="py-24 lg:py-32 bg-white relative overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-1/4 left-0 w-96 h-96 rounded-full bg-[#D4EAE8]/20 -translate-x-1/2 blur-3xl"></div>
+    <div class="absolute bottom-1/4 right-0 w-96 h-96 rounded-full bg-[#FAE8DC]/20 translate-x-1/2 blur-3xl"></div>
+  </div>
+
+  <div class="container mx-auto px-6 lg:px-16 relative z-10">
+    <div class="text-center mb-16 space-y-3">
+      <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium font-sans">Agendamento Online</span>
+      <h2 class="font-display text-4xl lg:text-5xl text-[#2C2C2C]">Reserve sua Sessão</h2>
+      <p class="text-[#6B6B6B] text-sm max-w-md mx-auto">Selecione o serviço, data e horário ideal para o seu atendimento presencial ou online.</p>
+    </div>
+
+    <!-- Booking Card -->
+    <div class="max-w-4xl mx-auto glass-card rounded-3xl p-8 lg:p-12 shadow-2xl relative">
+      
+      <!-- Progress Bar -->
+      <div class="flex items-center justify-between mb-10 max-w-md mx-auto">
+        <div class="flex flex-col items-center">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
+               [class.bg-[#7BA5A8]]="bookingStep() >= 1" [class.text-white]="bookingStep() >= 1"
+               [class.bg-[#FAF8F5]]="bookingStep() < 1" [class.text-[#A0988E]]="bookingStep() < 1">1</div>
+          <span class="text-[10px] uppercase tracking-wider text-[#9A8570] mt-1 font-sans">Sessão</span>
+        </div>
+        <div class="h-0.5 flex-1 bg-[#F0EBE3] mx-2" [class.bg-[#7BA5A8]]="bookingStep() >= 2"></div>
+        <div class="flex flex-col items-center">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
+               [class.bg-[#7BA5A8]]="bookingStep() >= 2" [class.text-white]="bookingStep() >= 2"
+               [class.bg-[#FAF8F5]]="bookingStep() < 2" [class.text-[#A0988E]]="bookingStep() < 2">2</div>
+          <span class="text-[10px] uppercase tracking-wider text-[#9A8570] mt-1 font-sans">Data & Hora</span>
+        </div>
+        <div class="h-0.5 flex-1 bg-[#F0EBE3] mx-2" [class.bg-[#7BA5A8]]="bookingStep() >= 3"></div>
+        <div class="flex flex-col items-center">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
+               [class.bg-[#7BA5A8]]="bookingStep() >= 3" [class.text-white]="bookingStep() >= 3"
+               [class.bg-[#FAF8F5]]="bookingStep() < 3" [class.text-[#A0988E]]="bookingStep() < 3">3</div>
+          <span class="text-[10px] uppercase tracking-wider text-[#9A8570] mt-1 font-sans">Identificação</span>
+        </div>
+      </div>
+
+      <!-- STEP 1: SELECT SERVICE -->
+      @if (bookingStep() === 1) {
+        <div class="space-y-6 animate-fade-in">
+          <h3 class="font-display text-2xl text-[#2C2C2C] text-center mb-6">Qual tipo de atendimento você procura?</h3>
+          <div class="grid md:grid-cols-3 gap-6">
+            
+            <div class="p-6 rounded-2xl border-2 transition-all cursor-pointer bg-white/80 flex flex-col justify-between hover:border-[#7BA5A8]/50"
+                 [class.border-[#7BA5A8]]="selectedService() === 'Terapia Individual'"
+                 [class.border-[#EBE7E0]]="selectedService() !== 'Terapia Individual'"
+                 (click)="selectedService.set('Terapia Individual')">
+              <div>
+                <span class="text-3xl">🧩</span>
+                <h4 class="font-display text-lg text-[#2C2C2C] mt-3">Individual</h4>
+                <p class="text-xs text-[#6B6B6B] mt-1">Foco no autoconhecimento, ansiedade, estresse e transições de vida.</p>
+              </div>
+              <span class="text-xs font-medium text-[#7BA5A8] mt-4 block">Selecionar →</span>
+            </div>
+
+            <div class="p-6 rounded-2xl border-2 transition-all cursor-pointer bg-white/80 flex flex-col justify-between hover:border-[#7BA5A8]/50"
+                 [class.border-[#7BA5A8]]="selectedService() === 'Terapia de Casal'"
+                 [class.border-[#EBE7E0]]="selectedService() !== 'Terapia de Casal'"
+                 (click)="selectedService.set('Terapia de Casal')">
+              <div>
+                <span class="text-3xl">💑</span>
+                <h4 class="font-display text-lg text-[#2C2C2C] mt-3">De Casal</h4>
+                <p class="text-xs text-[#6B6B6B] mt-1">Fortalecimento da conexão, comunicação e resolução de conflitos conjugais.</p>
+              </div>
+              <span class="text-xs font-medium text-[#7BA5A8] mt-4 block">Selecionar →</span>
+            </div>
+
+            <div class="p-6 rounded-2xl border-2 transition-all cursor-pointer bg-white/80 flex flex-col justify-between hover:border-[#7BA5A8]/50"
+                 [class.border-[#7BA5A8]]="selectedService() === 'Terapia Familiar'"
+                 [class.border-[#EBE7E0]]="selectedService() !== 'Terapia Familiar'"
+                 (click)="selectedService.set('Terapia Familiar')">
+              <div>
+                <span class="text-3xl">👨‍👩‍👧</span>
+                <h4 class="font-display text-lg text-[#2C2C2C] mt-3">Familiar</h4>
+                <p class="text-xs text-[#6B6B6B] mt-1">Dinâmicas e vínculos familiares estruturando relacionamentos saudáveis.</p>
+              </div>
+              <span class="text-xs font-medium text-[#7BA5A8] mt-4 block">Selecionar →</span>
+            </div>
+
+          </div>
+
+          <div class="flex justify-end pt-6">
+            <button class="btn-primary" (click)="setStep(2)">
+              Continuar
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- STEP 2: SELECT DATE & TIME -->
+      @if (bookingStep() === 2) {
+        <div class="animate-fade-in grid lg:grid-cols-12 gap-8">
+          
+          <!-- Calendar Column -->
+          <div class="lg:col-span-7 space-y-4">
+            <div class="flex items-center justify-between px-2">
+              <span class="font-display text-lg text-[#2C2C2C]">{{ monthLabel() }}</span>
+              <div class="flex gap-2">
+                <button (click)="prevMonth()" class="w-8 h-8 rounded-full border border-[#EBE7E0] hover:bg-[#FAF8F5] flex items-center justify-center text-sm">‹</button>
+                <button (click)="nextMonth()" class="w-8 h-8 rounded-full border border-[#EBE7E0] hover:bg-[#FAF8F5] flex items-center justify-center text-sm">›</button>
+              </div>
+            </div>
+
+            <!-- Days Grid -->
+            <div class="grid grid-cols-7 gap-1 text-center text-xs">
+              @for (wd of weekDays; track wd) {
+                <span class="py-2 text-[#9A8570] font-medium font-sans">{{ wd }}</span>
+              }
+              
+              @for (day of calendarDays(); track day ? day.toISOString() : $index) {
+                @if (day === null) {
+                  <span class="aspect-square"></span>
+                } @else {
+                  <button 
+                    (click)="selectDate(day)"
+                    [disabled]="isPastDate(day) || isSunday(day)"
+                    class="aspect-square rounded-full flex flex-col items-center justify-center relative text-sm border border-transparent font-medium"
+                    [class.text-white]="isSelected(day)"
+                    [class.bg-[#7BA5A8]]="isSelected(day)"
+                    [class.text-[#C8A882]]="isToday(day) && !isSelected(day)"
+                    [class.font-bold]="isToday(day)"
+                    [class.text-[#2C2C2C]]="!isPastDate(day) && !isSunday(day) && !isSelected(day)"
+                    [class.text-[#C8C3BC]]="isPastDate(day) || isSunday(day)"
+                    [class.hover:bg-[#D4EAE8]/30]="!isPastDate(day) && !isSunday(day) && !isSelected(day)"
+                    [class.cursor-not-allowed]="isPastDate(day) || isSunday(day)"
+                  >
+                    <span>{{ day.getDate() }}</span>
+                    @if (isToday(day) && !isSelected(day)) {
+                      <span class="absolute bottom-1.5 w-1 h-1 rounded-full bg-[#C8A882]"></span>
+                    }
+                  </button>
+                }
+              }
+            </div>
+            
+            <div class="flex items-center gap-4 text-xs text-[#9A8570] px-2 font-sans">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#7BA5A8]"></span> Selecionado</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border border-dotted border-[#C8A882] bg-white"></span> Hoje</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#C8C3BC]/40"></span> Indisponível</span>
+            </div>
+          </div>
+
+          <!-- Time Slots Column -->
+          <div class="lg:col-span-5 space-y-4">
+            <h4 class="font-display text-lg text-[#2C2C2C]">Horários Disponíveis</h4>
+            @if (selectedDate()) {
+              <div class="grid grid-cols-2 gap-3">
+                @for (slot of availableTimeSlots(); track slot) {
+                  <button 
+                    (click)="selectTimeSlot(slot)"
+                    class="py-3 rounded-xl border text-sm font-medium transition-all"
+                    [class.border-[#7BA5A8]]="selectedTimeSlot() === slot"
+                    [class.bg-[#7BA5A8]]="selectedTimeSlot() === slot"
+                    [class.text-white]="selectedTimeSlot() === slot"
+                    [class.border-[#EBE7E0]]="selectedTimeSlot() !== slot"
+                    [class.bg-white]="selectedTimeSlot() !== slot"
+                    [class.text-[#4A4A4A]]="selectedTimeSlot() !== slot"
+                    [class.hover:border-[#7BA5A8]]="selectedTimeSlot() !== slot"
+                  >
+                    {{ slot }}
+                  </button>
+                }
+              </div>
+              <p class="text-xs text-[#9A8570] font-sans mt-2">Duração da sessão: 50 minutos.</p>
+            } @else {
+              <div class="h-48 border border-dashed border-[#EBE7E0] rounded-2xl flex flex-col items-center justify-center text-center p-4">
+                <span class="text-2xl mb-2">📅</span>
+                <p class="text-xs text-[#A0988E] max-w-[200px]">Por favor, selecione uma data no calendário para ver horários livres.</p>
+              </div>
+            }
+          </div>
+
+          <div class="col-span-12 flex justify-between pt-6 border-t border-[#F0EBE3]">
+            <button class="btn-secondary" (click)="setStep(1)">
+              Voltar
+            </button>
+            <button class="btn-primary" [disabled]="!selectedDate() || !selectedTimeSlot()" (click)="setStep(3)">
+              Continuar
+            </button>
+          </div>
+
+        </div>
+      }
+
+      <!-- STEP 3: PATIENT INFORMATION -->
+      @if (bookingStep() === 3) {
+        <div class="animate-fade-in space-y-6 max-w-xl mx-auto">
+          <div class="text-center space-y-2 mb-4">
+            <h3 class="font-display text-2xl text-[#2C2C2C]">Seus dados de contato</h3>
+            <p class="text-xs text-[#9A8570]">Precisamos dessas informações para confirmar seu horário e enviar os detalhes da sessão.</p>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs uppercase tracking-wider text-[#9A8570] font-medium mb-1.5 font-sans" for="p-name">Nome Completo *</label>
+              <input id="p-name" type="text" class="form-input" placeholder="Ex: Ana Souza" 
+                     (input)="patientName.set($any($event.target).value)" [value]="patientName()" />
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs uppercase tracking-wider text-[#9A8570] font-medium mb-1.5 font-sans" for="p-phone">WhatsApp *</label>
+                <input id="p-phone" type="tel" class="form-input" placeholder="Ex: (21) 99999-9999" 
+                       (input)="patientPhone.set($any($event.target).value)" [value]="patientPhone()" />
+              </div>
+              <div>
+                <label class="block text-xs uppercase tracking-wider text-[#9A8570] font-medium mb-1.5 font-sans" for="p-email">E-mail</label>
+                <input id="p-email" type="email" class="form-input" placeholder="Ex: ana@exemplo.com" 
+                       (input)="patientEmail.set($any($event.target).value)" [value]="patientEmail()" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs uppercase tracking-wider text-[#9A8570] font-medium mb-1.5 font-sans" for="p-msg">Gostaria de enviar alguma mensagem ou observação? (Opcional)</label>
+              <textarea id="p-msg" rows="3" class="form-input py-2.5" placeholder="Ex: Tenho preferência por atendimento online..."
+                        (input)="patientMessage.set($any($event.target).value)" [value]="patientMessage()"></textarea>
+            </div>
+          </div>
+
+          <!-- Summary banner -->
+          <div class="p-4 rounded-xl bg-[#FAF8F5] border border-[#F2ECE4] text-xs text-[#6B6B6B] space-y-1 font-sans">
+            <div><strong>Serviço selecionado:</strong> {{ selectedService() }}</div>
+            <div><strong>Data:</strong> {{ selectedDate()?.toLocaleDateString('pt-BR') }} às {{ selectedTimeSlot() }}</div>
+            <div><strong>Modalidade:</strong> Presencial ou Online (a combinar)</div>
+          </div>
+
+          <div class="flex justify-between pt-6 border-t border-[#F0EBE3]">
+            <button class="btn-secondary" (click)="setStep(2)">
+              Voltar
+            </button>
+            <button class="btn-primary" [disabled]="!patientName() || !patientPhone()" (click)="confirmBooking()">
+              Confirmar & Finalizar
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- STEP 4: BOOKING SUCCESS -->
+      @if (bookingStep() === 4) {
+        <div class="animate-fade-in text-center py-10 space-y-6 max-w-md mx-auto">
+          <div class="w-20 h-20 rounded-full bg-[#D4EAE8] flex items-center justify-center text-4xl mx-auto text-[#7BA5A8] animate-bounce">
+            ✓
+          </div>
+          <div class="space-y-2">
+            <h3 class="font-display text-3xl text-[#2C2C2C]">Quase tudo pronto!</h3>
+            <p class="text-sm text-[#6B6B6B]">Solicitação de agendamento realizada com sucesso.</p>
+          </div>
+          
+          <div class="p-6 rounded-2xl bg-[#FAF8F5] border border-[#F2ECE4] text-left text-xs space-y-2 font-sans text-[#4A4A4A]">
+            <div class="flex justify-between"><span><strong>Paciente:</strong></span> <span>{{ patientName() }}</span></div>
+            <div class="flex justify-between"><span><strong>Serviço:</strong></span> <span>{{ selectedService() }}</span></div>
+            <div class="flex justify-between"><span><strong>Data:</strong></span> <span>{{ selectedDate()?.toLocaleDateString('pt-BR') }}</span></div>
+            <div class="flex justify-between"><span><strong>Horário:</strong></span> <span>{{ selectedTimeSlot() }}</span></div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-[#D4EAE8]/40 border border-[#7BA5A8]/20 text-xs text-[#5B888A] leading-relaxed font-sans">
+            📲 Você está sendo redirecionado para o WhatsApp da <strong>Lays Coelho</strong> em instantes para concluir a confirmação automática do seu horário. Caso não ocorra, clique no botão abaixo.
+          </div>
+
+          <div class="pt-4">
+            <a href="https://wa.me/5521999999999" target="_blank" rel="noopener" class="btn-whatsapp w-full">
+              Enviar WhatsApp Manualmente
+            </a>
+          </div>
+        </div>
+      }
+
     </div>
   </div>
 </section>

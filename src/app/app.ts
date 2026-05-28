@@ -46,6 +46,160 @@ export class AppComponent {
 
   readonly currentYear = computed(() => new Date().getFullYear());
 
+  // Scheduler / Booking Signals
+  readonly bookingStep = signal<number>(1);
+  readonly selectedService = signal<string>('Terapia Individual');
+  readonly selectedDate = signal<Date | null>(null);
+  readonly selectedTimeSlot = signal<string | null>(null);
+  
+  readonly patientName = signal<string>('');
+  readonly patientEmail = signal<string>('');
+  readonly patientPhone = signal<string>('');
+  readonly patientMessage = signal<string>('');
+
+  readonly currentMonth = signal<Date>(new Date());
+  readonly weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  
+  readonly availableTimeSlots = signal<string[]>([
+    '09:00', '10:30', '14:00', '15:30', '17:00'
+  ]);
+
+  // Generate calendar days for the current month
+  readonly calendarDays = computed(() => {
+    const date = this.currentMonth();
+    const year = date.getFullYear();
+    const month = date.getMonth();
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    const days: (Date | null)[] = [];
+
+    // Padding for empty days at the start of month grid
+    for (let i = 0; i < firstDayIndex; i++) {
+      days.push(null);
+    }
+
+    // Days of the month
+    for (let i = 1; i <= totalDays; i++) {
+      days.push(new Date(year, month, i));
+    }
+
+    return days;
+  });
+
+  readonly monthLabel = computed(() => {
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    const date = this.currentMonth();
+    return `${months[date.getMonth()]} de ${date.getFullYear()}`;
+  });
+
+  prevMonth() {
+    const current = this.currentMonth();
+    const prev = new Date(current.getFullYear(), current.getMonth() - 1, 1);
+    this.currentMonth.set(prev);
+  }
+
+  nextMonth() {
+    const current = this.currentMonth();
+    const next = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+    this.currentMonth.set(next);
+  }
+
+  isPastDate(date: Date | null): boolean {
+    if (!date) return true;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
+  }
+
+  isSunday(date: Date | null): boolean {
+    if (!date) return false;
+    return date.getDay() === 0;
+  }
+
+  isToday(date: Date | null): boolean {
+    if (!date) return false;
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  }
+
+  isSelected(date: Date | null): boolean {
+    const selected = this.selectedDate();
+    if (!date || !selected) return false;
+    return date.getDate() === selected.getDate() &&
+           date.getMonth() === selected.getMonth() &&
+           date.getFullYear() === selected.getFullYear();
+  }
+
+  selectDate(date: Date | null) {
+    if (!date || this.isPastDate(date) || this.isSunday(date)) return;
+    this.selectedDate.set(date);
+    this.selectedTimeSlot.set(null); // Reset time when date changes
+  }
+
+  selectTimeSlot(slot: string) {
+    this.selectedTimeSlot.set(slot);
+  }
+
+  setStep(step: number) {
+    this.bookingStep.set(step);
+  }
+
+  confirmBooking() {
+    if (!this.patientName() || !this.patientPhone()) {
+      alert('Por favor, preencha seu nome e telefone.');
+      return;
+    }
+
+    const dateStr = this.selectedDate()?.toLocaleDateString('pt-BR');
+    const timeStr = this.selectedTimeSlot();
+    const serviceStr = this.selectedService();
+    const nameStr = this.patientName();
+    
+    // Save to local storage for patient persistence
+    const booking = {
+      service: serviceStr,
+      date: dateStr,
+      time: timeStr,
+      name: nameStr,
+      email: this.patientEmail(),
+      phone: this.patientPhone(),
+      message: this.patientMessage(),
+      timestamp: new Date().toISOString()
+    };
+    
+    const existing = JSON.parse(localStorage.getItem('lays_bookings') || '[]');
+    existing.push(booking);
+    localStorage.setItem('lays_bookings', JSON.stringify(existing));
+
+    // Redirect step to success (Step 4)
+    this.bookingStep.set(4);
+
+    // Format WhatsApp message
+    const formattedPhone = '5521999999999'; // Lays' consultation WhatsApp phone
+    const textMsg = `Olá Lays! Acabei de solicitar um agendamento pelo seu site:\n\n` +
+                    `*Serviço:* ${serviceStr}\n` +
+                    `*Data:* ${dateStr}\n` +
+                    `*Horário:* ${timeStr}\n` +
+                    `*Nome:* ${nameStr}\n` +
+                    `*WhatsApp:* ${this.patientPhone()}\n` +
+                    `*Mensagem:* ${this.patientMessage() || 'Sem observações'}\n\n` +
+                    `Gostaria de confirmar a disponibilidade da sessão!`;
+                    
+    const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(textMsg)}`;
+    
+    // Smooth delay before redirecting to WhatsApp
+    setTimeout(() => {
+      window.open(url, '_blank');
+    }, 1500);
+  }
+
   readonly butterflies = signal<Butterfly[]>([
     { id: 1,  left: '8%',  top: '15%', size: 24, color: '#9DC5C8', delay: '0s',    duration: '7s'  },
     { id: 2,  left: '15%', top: '70%', size: 18, color: '#F2C9A0', delay: '1.2s',  duration: '9s'  },
