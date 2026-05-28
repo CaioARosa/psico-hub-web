@@ -51,7 +51,7 @@ export class AppComponent {
   readonly selectedService = signal<string>('Terapia Individual');
   readonly selectedDate = signal<Date | null>(null);
   readonly selectedTimeSlot = signal<string | null>(null);
-  
+
   readonly patientName = signal<string>('');
   readonly patientEmail = signal<string>('');
   readonly patientPhone = signal<string>('');
@@ -59,7 +59,7 @@ export class AppComponent {
 
   readonly currentMonth = signal<Date>(new Date());
   readonly weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  
+
   readonly availableTimeSlots = signal<string[]>([
     '09:00', '10:30', '14:00', '15:30', '17:00'
   ]);
@@ -125,16 +125,16 @@ export class AppComponent {
     if (!date) return false;
     const today = new Date();
     return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
   }
 
   isSelected(date: Date | null): boolean {
     const selected = this.selectedDate();
     if (!date || !selected) return false;
     return date.getDate() === selected.getDate() &&
-           date.getMonth() === selected.getMonth() &&
-           date.getFullYear() === selected.getFullYear();
+      date.getMonth() === selected.getMonth() &&
+      date.getFullYear() === selected.getFullYear();
   }
 
   selectDate(date: Date | null) {
@@ -161,7 +161,7 @@ export class AppComponent {
     const timeStr = this.selectedTimeSlot();
     const serviceStr = this.selectedService();
     const nameStr = this.patientName();
-    
+
     // Save to local storage for patient persistence
     const booking = {
       service: serviceStr,
@@ -173,7 +173,7 @@ export class AppComponent {
       message: this.patientMessage(),
       timestamp: new Date().toISOString()
     };
-    
+
     const existing = JSON.parse(localStorage.getItem('lays_bookings') || '[]');
     existing.push(booking);
     localStorage.setItem('lays_bookings', JSON.stringify(existing));
@@ -182,18 +182,18 @@ export class AppComponent {
     this.bookingStep.set(4);
 
     // Format WhatsApp message
-    const formattedPhone = '5521999999999'; // Lays' consultation WhatsApp phone
+    const formattedPhone = '553194720801'; // Lays' consultation WhatsApp phone
     const textMsg = `Olá Lays! Acabei de solicitar um agendamento pelo seu site:\n\n` +
-                    `*Serviço:* ${serviceStr}\n` +
-                    `*Data:* ${dateStr}\n` +
-                    `*Horário:* ${timeStr}\n` +
-                    `*Nome:* ${nameStr}\n` +
-                    `*WhatsApp:* ${this.patientPhone()}\n` +
-                    `*Mensagem:* ${this.patientMessage() || 'Sem observações'}\n\n` +
-                    `Gostaria de confirmar a disponibilidade da sessão!`;
-                    
+      `*Serviço:* ${serviceStr}\n` +
+      `*Data:* ${dateStr}\n` +
+      `*Horário:* ${timeStr}\n` +
+      `*Nome:* ${nameStr}\n` +
+      `*WhatsApp:* ${this.patientPhone()}\n` +
+      `*Mensagem:* ${this.patientMessage() || 'Sem observações'}\n\n` +
+      `Gostaria de confirmar a disponibilidade da sessão!`;
+
     const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(textMsg)}`;
-    
+
     // Smooth delay before redirecting to WhatsApp
     setTimeout(() => {
       window.open(url, '_blank');
@@ -201,23 +201,23 @@ export class AppComponent {
   }
 
   readonly butterflies = signal<Butterfly[]>([
-    { id: 1,  left: '8%',  top: '15%', size: 24, color: '#9DC5C8', delay: '0s',    duration: '7s'  },
-    { id: 2,  left: '15%', top: '70%', size: 18, color: '#F2C9A0', delay: '1.2s',  duration: '9s'  },
-    { id: 3,  left: '72%', top: '10%', size: 20, color: '#F4B8C4', delay: '0.5s',  duration: '8s'  },
-    { id: 4,  left: '85%', top: '55%', size: 16, color: '#9DC5C8', delay: '2s',    duration: '6s'  },
-    { id: 5,  left: '60%', top: '80%', size: 22, color: '#A8C5A0', delay: '0.8s',  duration: '10s' },
-    { id: 6,  left: '45%', top: '5%',  size: 14, color: '#F2C9A0', delay: '1.5s',  duration: '7.5s'},
-    { id: 7,  left: '92%', top: '30%', size: 18, color: '#F4B8C4', delay: '3s',    duration: '8.5s'},
-    { id: 8,  left: '3%',  top: '45%', size: 20, color: '#A8C5A0', delay: '2.5s',  duration: '9.5s'},
-    { id: 9,  left: '52%', top: '60%', size: 12, color: '#9DC5C8', delay: '0.3s',  duration: '6.5s'},
-    { id: 10, left: '30%', top: '88%', size: 16, color: '#F2C9A0', delay: '1.8s',  duration: '8s'  },
+    { id: 1, left: '8%', top: '15%', size: 24, color: '#9DC5C8', delay: '0s', duration: '7s' },
+    { id: 2, left: '15%', top: '70%', size: 18, color: '#F2C9A0', delay: '1.2s', duration: '9s' },
+    { id: 3, left: '72%', top: '10%', size: 20, color: '#F4B8C4', delay: '0.5s', duration: '8s' },
+    { id: 4, left: '85%', top: '55%', size: 16, color: '#9DC5C8', delay: '2s', duration: '6s' },
+    { id: 5, left: '60%', top: '80%', size: 22, color: '#A8C5A0', delay: '0.8s', duration: '10s' },
+    { id: 6, left: '45%', top: '5%', size: 14, color: '#F2C9A0', delay: '1.5s', duration: '7.5s' },
+    { id: 7, left: '92%', top: '30%', size: 18, color: '#F4B8C4', delay: '3s', duration: '8.5s' },
+    { id: 8, left: '3%', top: '45%', size: 20, color: '#A8C5A0', delay: '2.5s', duration: '9.5s' },
+    { id: 9, left: '52%', top: '60%', size: 12, color: '#9DC5C8', delay: '0.3s', duration: '6.5s' },
+    { id: 10, left: '30%', top: '88%', size: 16, color: '#F2C9A0', delay: '1.8s', duration: '8s' },
   ]);
 
   readonly stats = signal<Stat[]>([
-    { value: '5+',   label: 'Anos de experiência' },
+    { value: '5+', label: 'Anos de experiência' },
     { value: '200+', label: 'Pacientes atendidos' },
     { value: '100%', label: 'Sigilo garantido' },
-    { value: '★ 5',  label: 'Avaliação média' },
+    { value: '★ 5', label: 'Avaliação média' },
   ]);
 
   readonly services = signal<Service[]>([
