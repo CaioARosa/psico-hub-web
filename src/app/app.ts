@@ -1,5 +1,6 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BookingService } from './shared/core/services/booking.service';
 
 interface Butterfly {
   id: number;
@@ -44,6 +45,8 @@ interface Testimonial {
 })
 export class AppComponent {
 
+  private bookingService = inject(BookingService);
+
   readonly currentYear = computed(() => new Date().getFullYear());
 
   // Scheduler / Booking Signals
@@ -57,12 +60,14 @@ export class AppComponent {
   readonly patientPhone = signal<string>('');
   readonly patientMessage = signal<string>('');
 
+  readonly slotsLoading = signal<boolean>(false);
+  readonly slotsError = signal<string | null>(null);
+  readonly bookingLoading = signal<boolean>(false);
+
   readonly currentMonth = signal<Date>(new Date());
   readonly weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-  readonly availableTimeSlots = signal<string[]>([
-    '09:00', '10:30', '14:00', '15:30', '17:00'
-  ]);
+  readonly availableTimeSlots = signal<string[]>([]);
 
   // Generate calendar days for the current month
   readonly calendarDays = computed(() => {
@@ -141,6 +146,28 @@ export class AppComponent {
     if (!date || this.isPastDate(date) || this.isSunday(date)) return;
     this.selectedDate.set(date);
     this.selectedTimeSlot.set(null); // Reset time when date changes
+
+    // Format date as YYYY-MM-DD for backend API
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+
+    this.slotsLoading.set(true);
+    this.slotsError.set(null);
+    this.availableTimeSlots.set([]);
+
+    this.bookingService.getAvailability(dateStr).subscribe({
+      next: (res) => {
+        this.availableTimeSlots.set(res.slots);
+        this.slotsLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Error fetching availability:', err);
+        this.slotsError.set('Falha ao conectar com o servidor da agenda.');
+        this.slotsLoading.set(false);
+      }
+    });
   }
 
   selectTimeSlot(slot: string) {
@@ -157,47 +184,80 @@ export class AppComponent {
       return;
     }
 
-    const dateStr = this.selectedDate()?.toLocaleDateString('pt-BR');
+    const date = this.selectedDate();
+    if (!date) return;
+
+    // Format date as YYYY-MM-DD for backend API
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStrForApi = `${year}-${month}-${day}`;
+    
+    const dateStr = date.toLocaleDateString('pt-BR');
     const timeStr = this.selectedTimeSlot();
     const serviceStr = this.selectedService();
     const nameStr = this.patientName();
 
-    // Save to local storage for patient persistence
-    const booking = {
+    this.bookingLoading.set(true);
+
+    const bookingData = {
       service: serviceStr,
-      date: dateStr,
-      time: timeStr,
+      date: dateStrForApi,
+      time: timeStr!,
       name: nameStr,
-      email: this.patientEmail(),
+      email: this.patientEmail() || undefined,
       phone: this.patientPhone(),
-      message: this.patientMessage(),
-      timestamp: new Date().toISOString()
+      message: this.patientMessage() || undefined
     };
 
-    const existing = JSON.parse(localStorage.getItem('lays_bookings') || '[]');
-    existing.push(booking);
-    localStorage.setItem('lays_bookings', JSON.stringify(existing));
+    this.bookingService.bookAppointment(bookingData).subscribe({
+      next: (res) => {
+        // Save to local storage for patient persistence
+        const booking = {
+          service: serviceStr,
+          date: dateStr,
+          time: timeStr,
+          name: nameStr,
+          email: this.patientEmail(),
+          phone: this.patientPhone(),
+          message: this.patientMessage(),
+          timestamp: new Date().toISOString(),
+          mode: res.mode,
+          eventId: res.eventId
+        };
 
-    // Redirect step to success (Step 4)
-    this.bookingStep.set(4);
+        const existing = JSON.parse(localStorage.getItem('lays_bookings') || '[]');
+        existing.push(booking);
+        localStorage.setItem('lays_bookings', JSON.stringify(existing));
 
-    // Format WhatsApp message
-    const formattedPhone = '553194720801'; // Lays' consultation WhatsApp phone
-    const textMsg = `Olá Lays! Acabei de solicitar um agendamento pelo seu site:\n\n` +
-      `*Serviço:* ${serviceStr}\n` +
-      `*Data:* ${dateStr}\n` +
-      `*Horário:* ${timeStr}\n` +
-      `*Nome:* ${nameStr}\n` +
-      `*WhatsApp:* ${this.patientPhone()}\n` +
-      `*Mensagem:* ${this.patientMessage() || 'Sem observações'}\n\n` +
-      `Gostaria de confirmar a disponibilidade da sessão!`;
+        // Redirect step to success (Step 4)
+        this.bookingLoading.set(false);
+        this.bookingStep.set(4);
 
-    const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(textMsg)}`;
+        // Format WhatsApp message
+        const formattedPhone = '553194720801'; // Lays' consultation WhatsApp phone
+        const textMsg = `Olá Lays! Acabei de solicitar um agendamento pelo seu site:\n\n` +
+          `*Serviço:* ${serviceStr}\n` +
+          `*Data:* ${dateStr}\n` +
+          `*Horário:* ${timeStr}\n` +
+          `*Nome:* ${nameStr}\n` +
+          `*WhatsApp:* ${this.patientPhone()}\n` +
+          `*Mensagem:* ${this.patientMessage() || 'Sem observações'}\n\n` +
+          `Gostaria de confirmar a disponibilidade da sessão!`;
 
-    // Smooth delay before redirecting to WhatsApp
-    setTimeout(() => {
-      window.open(url, '_blank');
-    }, 1500);
+        const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(textMsg)}`;
+
+        // Smooth delay before redirecting to WhatsApp
+        setTimeout(() => {
+          window.open(url, '_blank');
+        }, 1500);
+      },
+      error: (err) => {
+        console.error('Error creating booking event:', err);
+        alert('Erro ao agendar consulta no Google Agenda. Por favor, tente novamente.');
+        this.bookingLoading.set(false);
+      }
+    });
   }
 
   readonly butterflies = signal<Butterfly[]>([

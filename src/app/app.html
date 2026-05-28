@@ -347,26 +347,50 @@
         <!-- Time Slots Column -->
         <div class="lg:col-span-5 space-y-4">
           <h4 class="font-display text-lg text-[#2C2C2C]">Horários Disponíveis</h4>
-          @if (selectedDate()) {
-          <div class="grid grid-cols-2 gap-3">
-            @for (slot of availableTimeSlots(); track slot) {
-            <button (click)="selectTimeSlot(slot)" class="py-3 rounded-xl border text-sm font-medium transition-all"
-              [class.border-[#7BA5A8]]="selectedTimeSlot() === slot" [class.bg-[#7BA5A8]]="selectedTimeSlot() === slot"
-              [class.text-white]="selectedTimeSlot() === slot" [class.border-[#EBE7E0]]="selectedTimeSlot() !== slot"
-              [class.bg-white]="selectedTimeSlot() !== slot" [class.text-[#4A4A4A]]="selectedTimeSlot() !== slot"
-              [class.hover:border-[#7BA5A8]]="selectedTimeSlot() !== slot">
-              {{ slot }}
-            </button>
+          @if (slotsLoading()) {
+            <!-- Skeletons for Loading State -->
+            <div class="grid grid-cols-2 gap-3 animate-pulse">
+              <div class="h-11 rounded-xl bg-gray-200/60"></div>
+              <div class="h-11 rounded-xl bg-gray-200/60"></div>
+              <div class="h-11 rounded-xl bg-gray-200/60"></div>
+              <div class="h-11 rounded-xl bg-gray-200/60"></div>
+            </div>
+            <p class="text-xs text-[#9A8570] font-sans mt-2 animate-pulse">Consultando disponibilidade no Google Agenda...</p>
+          } @else if (slotsError()) {
+            <!-- Error State -->
+            <div class="p-4 rounded-2xl bg-red-55/60 border border-red-100 text-center space-y-2">
+              <span class="text-xl">⚠️</span>
+              <p class="text-xs text-red-600 font-medium">{{ slotsError() }}</p>
+              <button (click)="selectDate(selectedDate())" class="text-xs text-[#7BA5A8] underline font-sans font-medium">Tentar Novamente</button>
+            </div>
+          } @else if (selectedDate()) {
+            @if (availableTimeSlots().length > 0) {
+              <div class="grid grid-cols-2 gap-3">
+                @for (slot of availableTimeSlots(); track slot) {
+                <button (click)="selectTimeSlot(slot)" class="py-3 rounded-xl border text-sm font-medium transition-all"
+                  [class.border-[#7BA5A8]]="selectedTimeSlot() === slot" [class.bg-[#7BA5A8]]="selectedTimeSlot() === slot"
+                  [class.text-white]="selectedTimeSlot() === slot" [class.border-[#EBE7E0]]="selectedTimeSlot() !== slot"
+                  [class.bg-white]="selectedTimeSlot() !== slot" [class.text-[#4A4A4A]]="selectedTimeSlot() !== slot"
+                  [class.hover:border-[#7BA5A8]]="selectedTimeSlot() !== slot">
+                  {{ slot }}
+                </button>
+                }
+              </div>
+              <p class="text-xs text-[#9A8570] font-sans mt-2">Duração da sessão: 50 minutos.</p>
+            } @else {
+              <!-- No Slots Available -->
+              <div class="h-48 border border-dashed border-[#EBE7E0] rounded-2xl flex flex-col items-center justify-center text-center p-4">
+                <span class="text-2xl mb-2">🌸</span>
+                <p class="text-xs text-[#A0988E] max-w-[200px]">Sem horários disponíveis para o dia selecionado. Por favor, escolha outra data.</p>
+              </div>
             }
-          </div>
-          <p class="text-xs text-[#9A8570] font-sans mt-2">Duração da sessão: 50 minutos.</p>
           } @else {
-          <div
-            class="h-48 border border-dashed border-[#EBE7E0] rounded-2xl flex flex-col items-center justify-center text-center p-4">
-            <span class="text-2xl mb-2">📅</span>
-            <p class="text-xs text-[#A0988E] max-w-[200px]">Por favor, selecione uma data no calendário para ver
-              horários livres.</p>
-          </div>
+            <div
+              class="h-48 border border-dashed border-[#EBE7E0] rounded-2xl flex flex-col items-center justify-center text-center p-4">
+              <span class="text-2xl mb-2">📅</span>
+              <p class="text-xs text-[#A0988E] max-w-[200px]">Por favor, selecione uma data no calendário para ver
+                horários livres.</p>
+            </div>
           }
         </div>
 
@@ -432,11 +456,15 @@
         </div>
 
         <div class="flex justify-between pt-6 border-t border-[#F0EBE3]">
-          <button class="btn-secondary" (click)="setStep(2)">
+          <button class="btn-secondary" [disabled]="bookingLoading()" (click)="setStep(2)">
             Voltar
           </button>
-          <button class="btn-primary" [disabled]="!patientName() || !patientPhone()" (click)="confirmBooking()">
-            Confirmar & Finalizar
+          <button class="btn-primary" [disabled]="!patientName() || !patientPhone() || bookingLoading()" (click)="confirmBooking()">
+            @if (bookingLoading()) {
+              <span class="inline-block animate-spin mr-2">⏳</span> Agendando...
+            } @else {
+              Confirmar & Finalizar
+            }
           </button>
         </div>
       </div>
