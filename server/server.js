@@ -69,6 +69,21 @@ app.get('/api/availability', async (req, res) => {
     const dayStart = new Date(`${date}T00:00:00`);
     const dayEnd = new Date(`${date}T23:59:59`);
     
+    // Determine shedule availability slots based on the day of the week
+    const dayOfWeek = dayStart.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    let activeSlots = [];
+
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      // Weekdays (Monday - Friday): 19:00 - 21:00 (Sessional starts at 19:00 and 20:00)
+      activeSlots = ['19:00', '20:00'];
+    } else if (dayOfWeek === 6) {
+      // Saturdays: 08:00 - 12:00 (Sessional starts at 08:00, 09:00, 10:00, 11:00)
+      activeSlots = ['08:00', '09:00', '10:00', '11:00'];
+    } else {
+      // Sundays: Closed
+      activeSlots = [];
+    }
+    
     if (!isGCalConfigured || !calendar) {
       // --- SIMULATION MODE ---
       // Filter out simulated bookings that are already booked for this date
@@ -76,7 +91,7 @@ app.get('/api/availability', async (req, res) => {
         .filter(b => b.date === date)
         .map(b => b.time);
       
-      const freeSlots = DEFAULT_SLOTS.filter(slot => !bookedHours.includes(slot));
+      const freeSlots = activeSlots.filter(slot => !bookedHours.includes(slot));
       return res.json({ slots: freeSlots, mode: 'simulation' });
     }
 
@@ -93,7 +108,7 @@ app.get('/api/availability', async (req, res) => {
     const busyTimes = freeBusyResponse.data.calendars[calendarId].busy || [];
     
     // Calculate available slots
-    const availableSlots = DEFAULT_SLOTS.filter(slot => {
+    const availableSlots = activeSlots.filter(slot => {
       // Convert slot string to full Date objects for comparison
       const slotStart = new Date(`${date}T${slot}:00`);
       const slotEnd = new Date(slotStart.getTime() + 50 * 60 * 1000); // 50 min session
