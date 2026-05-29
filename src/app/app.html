@@ -366,13 +366,25 @@
           } @else if (selectedDate()) {
             @if (availableTimeSlots().length > 0) {
               <div class="grid grid-cols-2 gap-3">
-                @for (slot of availableTimeSlots(); track slot) {
-                <button (click)="selectTimeSlot(slot)" class="py-3 rounded-xl border text-sm font-medium transition-all"
-                  [class.border-[#7BA5A8]]="selectedTimeSlot() === slot" [class.bg-[#7BA5A8]]="selectedTimeSlot() === slot"
-                  [class.text-white]="selectedTimeSlot() === slot" [class.border-[#EBE7E0]]="selectedTimeSlot() !== slot"
-                  [class.bg-white]="selectedTimeSlot() !== slot" [class.text-[#4A4A4A]]="selectedTimeSlot() !== slot"
-                  [class.hover:border-[#7BA5A8]]="selectedTimeSlot() !== slot">
-                  {{ slot }}
+                @for (slot of availableTimeSlots(); track slot.time) {
+                <button 
+                  [disabled]="!slot.available"
+                  (click)="selectTimeSlot(slot.time)" 
+                  class="py-3 rounded-xl border text-sm font-medium transition-all"
+                  [class.border-[#7BA5A8]]="slot.available && selectedTimeSlot() === slot.time" 
+                  [class.bg-[#7BA5A8]]="slot.available && selectedTimeSlot() === slot.time"
+                  [class.text-white]="slot.available && selectedTimeSlot() === slot.time" 
+                  
+                  [class.border-[#EBE7E0]]="slot.available && selectedTimeSlot() !== slot.time"
+                  [class.bg-white]="slot.available && selectedTimeSlot() !== slot.time" 
+                  [class.text-[#4A4A4A]]="slot.available && selectedTimeSlot() !== slot.time"
+                  [class.hover:border-[#7BA5A8]]="slot.available && selectedTimeSlot() !== slot.time"
+                  
+                  [class.bg-gray-100]="!slot.available"
+                  [class.text-gray-400]="!slot.available"
+                  [class.border-gray-200]="!slot.available"
+                  [class.cursor-not-allowed]="!slot.available">
+                  {{ slot.time }} @if (!slot.available) { (ocupada!) }
                 </button>
                 }
               </div>

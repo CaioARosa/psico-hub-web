@@ -9,8 +9,13 @@ export interface BookingResponse {
   mode: string;
 }
 
+export interface TimeSlot {
+  time: string;
+  available: boolean;
+}
+
 export interface AvailabilityResponse {
-  slots: string[];
+  slots: TimeSlot[];
   mode: string;
 }
 

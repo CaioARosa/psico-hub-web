@@ -1,6 +1,6 @@
 import { Component, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BookingService } from './shared/core/services/booking.service';
+import { BookingService, TimeSlot } from './shared/core/services/booking.service';
 
 interface Butterfly {
   id: number;
@@ -67,7 +67,7 @@ export class AppComponent {
   readonly currentMonth = signal<Date>(new Date());
   readonly weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-  readonly availableTimeSlots = signal<string[]>([]);
+  readonly availableTimeSlots = signal<TimeSlot[]>([]);
 
   // Generate calendar days for the current month
   readonly calendarDays = computed(() => {
