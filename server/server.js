@@ -74,8 +74,8 @@ app.get('/api/availability', async (req, res) => {
     let activeSlots = [];
 
     if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-      // Weekdays (Monday - Friday): 19:00 - 21:00 (Sessional starts at 19:00 and 20:00)
-      activeSlots = ['19:00', '20:00'];
+      // Weekdays (Monday - Friday): 19:00 - 21:50 (Session starts at 19:00, 20:00, and 21:00)
+      activeSlots = ['19:00', '20:00', '21:00'];
     } else if (dayOfWeek === 6) {
       // Saturdays: 08:00 - 12:00 (Sessional starts at 08:00, 09:00, 10:00, 11:00)
       activeSlots = ['08:00', '09:00', '10:00', '11:00'];
