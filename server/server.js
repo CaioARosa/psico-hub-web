@@ -65,9 +65,9 @@ app.get('/api/availability', async (req, res) => {
   }
 
   try {
-    // Parse target date boundaries (start of day to end of day)
-    const dayStart = new Date(`${date}T00:00:00`);
-    const dayEnd = new Date(`${date}T23:59:59`);
+    // Parse target date boundaries (start of day to end of day in America/Sao_Paulo timezone)
+    const dayStart = new Date(`${date}T00:00:00-03:00`);
+    const dayEnd = new Date(`${date}T23:59:59-03:00`);
     
     // Determine shedule availability slots based on the day of the week
     const dayOfWeek = dayStart.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
@@ -91,8 +91,11 @@ app.get('/api/availability', async (req, res) => {
         .filter(b => b.date === date)
         .map(b => b.time);
       
-      const freeSlots = activeSlots.filter(slot => !bookedHours.includes(slot));
-      return res.json({ slots: freeSlots, mode: 'simulation' });
+      const slotsWithStatus = activeSlots.map(slot => ({
+        time: slot,
+        available: !bookedHours.includes(slot)
+      }));
+      return res.json({ slots: slotsWithStatus, mode: 'simulation' });
     }
 
     // --- REAL GOOGLE CALENDAR MODE ---
@@ -107,10 +110,10 @@ app.get('/api/availability', async (req, res) => {
 
     const busyTimes = freeBusyResponse.data.calendars[calendarId].busy || [];
     
-    // Calculate available slots
-    const availableSlots = activeSlots.filter(slot => {
-      // Convert slot string to full Date objects for comparison
-      const slotStart = new Date(`${date}T${slot}:00`);
+    // Calculate slots status
+    const slotsWithStatus = activeSlots.map(slot => {
+      // Convert slot string to full Date objects specifying the Brazil timezone offset (-03:00)
+      const slotStart = new Date(`${date}T${slot}:00-03:00`);
       const slotEnd = new Date(slotStart.getTime() + 50 * 60 * 1000); // 50 min session
 
       // Check if slot overlaps with any busy times
@@ -122,10 +125,13 @@ app.get('/api/availability', async (req, res) => {
         return slotStart < busyEnd && slotEnd > busyStart;
       });
 
-      return !isBusy;
+      return {
+        time: slot,
+        available: !isBusy
+      };
     });
 
-    return res.json({ slots: availableSlots, mode: 'production' });
+    return res.json({ slots: slotsWithStatus, mode: 'production' });
 
   } catch (error) {
     console.error('Error fetching availability:', error);
@@ -145,7 +151,7 @@ app.post('/api/book', async (req, res) => {
   }
 
   try {
-    const slotStart = new Date(`${date}T${time}:00`);
+    const slotStart = new Date(`${date}T${time}:00-03:00`);
     const slotEnd = new Date(slotStart.getTime() + 50 * 60 * 1000); // 50 min session
 
     if (!isGCalConfigured || !calendar) {
@@ -180,7 +186,6 @@ app.post('/api/book', async (req, res) => {
         dateTime: slotEnd.toISOString(),
         timeZone: 'America/Sao_Paulo'
       },
-      attendees: email ? [{ email }] : [],
       reminders: {
         useDefault: false,
         overrides: [
