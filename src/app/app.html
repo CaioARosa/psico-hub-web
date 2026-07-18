@@ -1,101 +1,133 @@
-<!-- Hero Section -->
-<section class="hero-section relative min-h-screen flex items-center overflow-hidden bg-[#FAF8F5]">
-
-  <!-- Floating butterflies background -->
-  <div class="absolute inset-0 pointer-events-none overflow-hidden">
-    @for (b of butterflies(); track b.id) {
-    <div class="butterfly-float absolute" [style.left]="b.left" [style.top]="b.top" [style.animation-delay]="b.delay"
-      [style.animation-duration]="b.duration">
-      <svg [attr.width]="b.size" [attr.height]="b.size" viewBox="0 0 40 30" fill="none">
-        <ellipse cx="10" cy="12" rx="9" ry="6" [attr.fill]="b.color" opacity="0.35" transform="rotate(-20 10 12)" />
-        <ellipse cx="30" cy="12" rx="9" ry="6" [attr.fill]="b.color" opacity="0.35" transform="rotate(20 30 12)" />
-        <ellipse cx="8" cy="20" rx="6" ry="4" [attr.fill]="b.color" opacity="0.25" transform="rotate(-30 8 20)" />
-        <ellipse cx="32" cy="20" rx="6" ry="4" [attr.fill]="b.color" opacity="0.25" transform="rotate(30 32 20)" />
-        <line x1="20" y1="2" x2="20" y2="28" stroke="#8B7355" stroke-width="0.8" opacity="0.4" />
-      </svg>
+<!-- =========================================================
+     NAVEGAÇÃO
+     ========================================================= -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-[#FDFBF7]/90 backdrop-blur-md border-b border-[rgba(76,100,91,0.08)]">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12 flex items-center justify-between h-16">
+    <!-- Identidade -->
+    <div>
+      <span class="font-display text-lg text-[#1C221F] leading-none">Lays Coelho</span>
+      <span class="block text-[0.6rem] tracking-[0.14em] uppercase text-[#8F9C99] font-medium"
+            style="font-family: 'Plus Jakarta Sans', sans-serif;">Psicologia Sistêmica</span>
     </div>
-    }
+
+    <!-- Links de navegação -->
+    <div class="hidden md:flex items-center gap-8">
+      <a href="#sobre" class="nav-link">Sobre</a>
+      <a href="#servicos" class="nav-link">Serviços</a>
+      <a href="#contato" class="nav-link">Contato</a>
+    </div>
+
+    <!-- CTA da nav -->
+    <a href="#agenda" class="btn-primary text-sm py-2.5 px-5">
+      Agendar Sessão
+    </a>
+  </div>
+</nav>
+
+<!-- =========================================================
+     HERO
+     ========================================================= -->
+<section class="min-h-[100dvh] flex items-center pt-16 overflow-hidden"
+         style="background-color: #FDFBF7;">
+
+  <!-- Ambient blur de fundo — sutil, não decorativo demais -->
+  <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+    <div class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full"
+         style="background: radial-gradient(circle, rgba(212,230,225,0.35) 0%, transparent 70%);"></div>
+    <div class="absolute bottom-[-5%] left-[-8%] w-[400px] h-[400px] rounded-full"
+         style="background: radial-gradient(circle, rgba(77,109,102,0.06) 0%, transparent 70%);"></div>
   </div>
 
-  <div class="container mx-auto px-6 lg:px-16 grid lg:grid-cols-2 gap-12 items-center relative z-10">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12 w-full">
+    <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
-    <!-- Logo / Ilustração -->
-    <div class="flex justify-center lg:justify-start animate-fade-in-left">
-      <div class="relative">
-        <img src="assets/lays_coelho_profile.png" alt="Lays Coelho"
-          class="w-full max-w-sm lg:max-w-md rounded-3xl shadow-2xl shadow-[#9DC5C8]/20 object-cover border-4 border-white" />
-        <div class="absolute -bottom-4 -right-4 w-24 h-24 rounded-full bg-[#FAE8DC]/40 -z-10"></div>
+      <!-- Texto Hero -->
+      <div class="animate-fade-in-up" style="order: 1;">
+        <span class="section-label mb-5 block">Psicoterapia Sistêmica</span>
+
+        <h1 class="font-display text-5xl lg:text-6xl xl:text-7xl text-[#1C221F] leading-[1.05] mb-6">
+          Às vezes, algo<br />
+          parece <span class="font-display-italic">diferente</span><br />
+          — e tudo bem.
+        </h1>
+
+        <p class="text-[#556661] text-lg leading-relaxed max-w-md mb-8"
+           style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 300;">
+          Não é necessário ter uma crise para buscar apoio. Se você sente que
+          algo não está no lugar certo, esse espaço existe para isso.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-3 mb-10">
+          <a href="#agenda" class="btn-primary">Quero agendar uma sessão</a>
+          <a href="#sobre" class="btn-secondary">Conhecer a abordagem</a>
+        </div>
+
+        <!-- Credencial discreta -->
+        <div class="flex items-center gap-3">
+          <div class="divider"></div>
+          <span class="text-[#8F9C99] text-xs tracking-wide"
+                style="font-family: 'Plus Jakarta Sans', sans-serif;">
+            CRP ativo · Rio de Janeiro · Presencial e Online
+          </span>
+        </div>
       </div>
+
+      <!-- Foto de Lays -->
+      <div class="animate-fade-in-right relative" style="order: 2;">
+        <div class="relative max-w-sm mx-auto lg:max-w-none">
+          <!-- Moldura sutil atrás da foto -->
+          <div class="absolute -inset-3 rounded-[2rem]"
+               style="background: linear-gradient(135deg, rgba(212,230,225,0.4) 0%, rgba(77,109,102,0.08) 100%);"></div>
+          <img src="assets/lays_coelho_profile.png"
+               alt="Lays Coelho, psicóloga especializada em Psicoterapia Sistêmica"
+               class="relative w-full rounded-[1.75rem] object-cover"
+               style="box-shadow: 0 24px 64px rgba(28,34,31,0.10); aspect-ratio: 3/4; max-height: 520px;" />
+        </div>
+      </div>
+
     </div>
-
-    <!-- Texto Hero -->
-    <div class="text-center lg:text-left animate-fade-in-right space-y-6">
-      <div class="inline-block">
-        <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium">Psicologia Sistêmica</span>
-      </div>
-      <h1 class="font-display text-5xl lg:text-7xl text-[#2C2C2C] leading-tight">
-        Lays<br />
-        <span class="text-[#9DC5C8]">Coelho</span>
-      </h1>
-      <p class="text-[#6B6B6B] text-lg leading-relaxed max-w-md mx-auto lg:mx-0">
-        Um espaço de cuidado, escuta e transformação. A terapia sistêmica olha para você dentro do contexto das suas
-        relações — família, vínculos, histórias.
-      </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
-        <a href="#agenda" class="btn-primary">
-          Agendar Consulta
-        </a>
-        <a href="#sobre" class="btn-secondary">
-          Saiba Mais
-        </a>
-      </div>
-      <div class="flex items-center gap-3 justify-center lg:justify-start pt-2">
-        <div class="w-8 h-px bg-[#C8A882]"></div>
-        <span class="text-[#9A8570] text-sm">CRP registrado</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Scroll indicator -->
-  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce-slow">
-    <div class="w-px h-12 bg-gradient-to-b from-transparent to-[#C8A882] mx-auto"></div>
-    <div class="w-1.5 h-1.5 rounded-full bg-[#C8A882] mx-auto mt-1"></div>
   </div>
 </section>
 
-<!-- Sobre Section -->
-<section id="sobre" class="py-24 lg:py-32 bg-white">
-  <div class="container mx-auto px-6 lg:px-16">
+<!-- =========================================================
+     SOBRE
+     ========================================================= -->
+<section id="sobre" class="py-24 lg:py-32" style="background-color: #F5F2ED;">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
     <div class="grid lg:grid-cols-2 gap-16 items-center">
 
-      <!-- Imagem do consultório -->
-      <div class="relative order-2 lg:order-1">
-        <div class="relative rounded-3xl overflow-hidden shadow-2xl shadow-[#9DC5C8]/20">
-          <img src="assets/clinic_consultation_room.png" alt="Consultório Lays Coelho" class="w-full object-cover" />
-          <div class="absolute inset-0 bg-gradient-to-t from-[#2C2C2C]/10 to-transparent"></div>
-        </div>
-        <!-- Decorative element -->
-        <div class="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-[#F0EBE3] -z-10"></div>
-        <div class="absolute -top-4 -left-4 w-20 h-20 rounded-full bg-[#D4EAE8]/40 -z-10"></div>
+      <!-- Foto do consultório -->
+      <div class="relative">
+        <img src="assets/clinic_consultation_room.png"
+             alt="Consultório de Lays Coelho"
+             class="w-full rounded-[1.5rem] object-cover"
+             style="box-shadow: 0 8px 40px rgba(28,34,31,0.08); aspect-ratio: 4/3;" />
       </div>
 
       <!-- Texto -->
-      <div class="order-1 lg:order-2 space-y-6">
-        <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium">Sobre mim</span>
-        <h2 class="font-display text-4xl lg:text-5xl text-[#2C2C2C] leading-tight">
-          Cuidar de quem<br />
-          <em class="text-[#C8A882] not-italic">cuida de você</em>
+      <div class="space-y-6">
+        <span class="section-label">Sobre Lays</span>
+
+        <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-tight">
+          Uma escuta que não<br />
+          <span class="font-display-italic">julga o que você sente</span>
         </h2>
-        <p class="text-[#6B6B6B] leading-relaxed">
-          Sou Lays Coelho, psicóloga especializada em Psicologia Sistêmica. Minha abordagem parte do entendimento de que
-          cada pessoa existe dentro de uma rede de relações — e é nessa teia que encontramos tanto as dores quanto os
-          recursos para a transformação.
+
+        <p class="text-[#556661] leading-relaxed" style="font-weight: 300;">
+          Sou Lays Coelho, psicóloga com formação em Psicologia Sistêmica.
+          Trabalho com a compreensão de que cada pessoa carrega uma história
+          que vai além dela própria — família, vínculos, contextos que moldam
+          o que sentimos e como nos relacionamos.
         </p>
-        <p class="text-[#6B6B6B] leading-relaxed">
-          Atendo adultos e famílias, tanto presencialmente quanto online, em um espaço de escuta genuína, sem
-          julgamentos.
+
+        <p class="text-[#556661] leading-relaxed" style="font-weight: 300;">
+          O processo terapêutico que proponho não é sobre consertar nada.
+          É sobre criar um espaço seguro onde você possa se entender melhor
+          e construir, no seu tempo, um caminho que faça sentido para você.
         </p>
-        <div class="grid grid-cols-2 gap-4 pt-2">
+
+        <!-- Stats redesenhados -->
+        <div class="grid grid-cols-2 gap-0 pt-4">
           @for (stat of stats(); track stat.label) {
           <div class="stat-card">
             <span class="stat-number">{{ stat.value }}</span>
@@ -104,314 +136,358 @@
           }
         </div>
       </div>
+
     </div>
   </div>
 </section>
 
-<!-- Abordagem / Serviços -->
-<section id="servicos" class="py-24 lg:py-32 bg-[#FAF8F5]">
-  <div class="container mx-auto px-6 lg:px-16">
+<!-- =========================================================
+     SERVIÇOS — Zig-zag assimétrico, sem grid de 3 iguais
+     ========================================================= -->
+<section id="servicos" class="py-24 lg:py-32" style="background-color: #FDFBF7;">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
 
-    <div class="text-center mb-16 space-y-3">
-      <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium">Como posso ajudar</span>
-      <h2 class="font-display text-4xl lg:text-5xl text-[#2C2C2C]">Áreas de Atuação</h2>
+    <div class="max-w-2xl mb-16">
+      <span class="section-label mb-4 block">Para quem é</span>
+      <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-tight">
+        Não é preciso estar<br />
+        <span class="font-display-italic">em crise para começar</span>
+      </h2>
+      <p class="text-[#556661] mt-4 leading-relaxed max-w-lg" style="font-weight: 300;">
+        A terapia é para quem sente que algo poderia ser diferente —
+        seja nas relações, nos pensamentos ou na forma como enfrenta o dia a dia.
+      </p>
     </div>
 
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Grid de serviços com borda-top como divisor — sem cards iguais -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-[rgba(76,100,91,0.12)]">
       @for (service of services(); track service.title) {
-      <div class="service-card group">
-        <div class="service-icon" [style.background]="service.bg">
-          <span class="text-2xl">{{ service.icon }}</span>
-        </div>
-        <h3 class="font-display text-xl text-[#2C2C2C] mt-4 mb-2">{{ service.title }}</h3>
-        <p class="text-[#6B6B6B] text-sm leading-relaxed">{{ service.description }}</p>
+      <div class="service-card">
+        <!-- Ícone SVG em vez de emoji -->
+        <div class="w-8 h-8 mb-5"
+             [style.color]="'var(--accent)'"
+             [innerHTML]="service.svgIcon"></div>
+        <h3 class="font-display text-xl text-[#1C221F] mb-2">{{ service.title }}</h3>
+        <p class="text-[#8F9C99] text-sm leading-relaxed" style="font-weight: 300;">{{ service.description }}</p>
       </div>
       }
     </div>
+
   </div>
 </section>
 
-<!-- Como funciona -->
-<section class="py-24 lg:py-32 bg-[#2C2C2C] text-white overflow-hidden relative">
-  <div class="absolute inset-0 pointer-events-none">
-    <div class="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#9DC5C8]/5 -translate-y-1/2 translate-x-1/4"></div>
-    <div class="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-[#C8A882]/5 translate-y-1/2 -translate-x-1/4"></div>
+<!-- =========================================================
+     COMO FUNCIONA
+     ========================================================= -->
+<section class="py-24 lg:py-32 relative overflow-hidden"
+         style="background-color: #1C221F;">
+
+  <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+    <div class="absolute top-0 right-0 w-80 h-80 rounded-full"
+         style="background: radial-gradient(circle, rgba(77,109,102,0.15) 0%, transparent 70%); transform: translate(30%, -30%);"></div>
   </div>
 
-  <div class="container mx-auto px-6 lg:px-16 relative z-10">
-    <div class="text-center mb-16 space-y-3">
-      <span class="text-xs tracking-[0.35em] uppercase text-[#9DC5C8] font-medium">O processo</span>
-      <h2 class="font-display text-4xl lg:text-5xl">Como funciona<br />a terapia</h2>
+  <div class="max-w-6xl mx-auto px-6 lg:px-12 relative z-10">
+    <div class="max-w-xl mb-16">
+      <span class="section-label mb-4 block" style="color: rgba(212,230,225,0.6);">O caminho</span>
+      <h2 class="font-display text-4xl lg:text-5xl text-white leading-tight">
+        Como acontece<br />
+        <span class="font-display-italic" style="color: rgba(212,230,225,0.7);">a terapia</span>
+      </h2>
     </div>
 
     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
       @for (step of steps(); track step.number; let last = $last) {
-      <div class="step-item text-center relative">
-        <div class="step-number">{{ step.number }}</div>
-        <h3 class="font-display text-lg mt-4 mb-2 text-white">{{ step.title }}</h3>
-        <p class="text-white/50 text-sm leading-relaxed">{{ step.description }}</p>
+      <div class="step-item relative">
+        <div class="step-number mb-5">{{ step.number }}</div>
+        <h3 class="font-display text-lg text-white mb-2">{{ step.title }}</h3>
+        <p class="text-sm leading-relaxed" style="color: rgba(255,255,255,0.45); font-weight: 300;">{{ step.description }}</p>
         @if (!last) {
-        <div class="hidden lg:block absolute top-7 left-[calc(50%+2rem)] w-[calc(100%-4rem)] h-px bg-white/10"></div>
+        <div class="hidden lg:block absolute top-6 left-[calc(50%+2rem)] w-[calc(100%-4rem)] h-px"
+             style="background-color: rgba(255,255,255,0.08);"></div>
         }
       </div>
       }
     </div>
+
   </div>
 </section>
 
-<!-- Depoimentos -->
-<section class="py-24 lg:py-32 bg-white">
-  <div class="container mx-auto px-6 lg:px-16">
-    <div class="text-center mb-16 space-y-3">
-      <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium">Histórias reais</span>
-      <h2 class="font-display text-4xl lg:text-5xl text-[#2C2C2C]">O que dizem<br />os pacientes</h2>
+<!-- =========================================================
+     DEPOIMENTOS — Assimétrico, 1 largo + 2 empilhados
+     ========================================================= -->
+<section class="py-24 lg:py-32" style="background-color: #F5F2ED;">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+
+    <div class="max-w-xl mb-16">
+      <span class="section-label mb-4 block">O que relatam</span>
+      <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-tight">
+        Experiências de<br />
+        <span class="font-display-italic">quem passou por aqui</span>
+      </h2>
     </div>
 
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      @for (t of testimonials(); track t.author) {
-      <div class="testimonial-card">
-        <div class="flex gap-1 mb-4">
-          @for (star of [1,2,3,4,5]; track star) {
-          <span class="text-[#C8A882] text-sm">★</span>
-          }
-        </div>
-        <p class="text-[#4A4A4A] leading-relaxed mb-4 text-sm">"{{ t.text }}"</p>
+    <!-- Grid assimétrico: 1 destaque largo + 2 menores -->
+    <div class="grid lg:grid-cols-5 gap-5">
+
+      <!-- Destaque: primeiro depoimento ocupa 3 colunas -->
+      @if (testimonials().length > 0) {
+      <div class="testimonial-card lg:col-span-3">
+        <p class="font-display text-xl text-[#1C221F] leading-relaxed mb-6">
+          "{{ testimonials()[0].text }}"
+        </p>
         <div class="flex items-center gap-3 mt-auto">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-            [style.background]="t.color">
-            {{ t.author[0] }}
+          <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold"
+               [style.background-color]="'var(--accent)'">
+            {{ testimonials()[0].author[0] }}
           </div>
-          <span class="text-[#9A8570] text-sm font-medium">{{ t.author }}</span>
+          <span class="text-[#8F9C99] text-sm" style="font-weight: 500;">{{ testimonials()[0].author }}</span>
         </div>
       </div>
       }
+
+      <!-- Demais: 2 colunas -->
+      <div class="lg:col-span-2 flex flex-col gap-5">
+        @for (t of testimonials().slice(1); track t.author) {
+        <div class="testimonial-card flex-1">
+          <p class="text-[#556661] text-sm leading-relaxed mb-5" style="font-weight: 300;">
+            "{{ t.text }}"
+          </p>
+          <div class="flex items-center gap-3 mt-auto">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold"
+                 [style.background-color]="t.color">
+              {{ t.author[0] }}
+            </div>
+            <span class="text-[#8F9C99] text-xs" style="font-weight: 500;">{{ t.author }}</span>
+          </div>
+        </div>
+        }
+      </div>
+
     </div>
+
   </div>
 </section>
 
-<!-- Agenda / Agendamento Online Section -->
-<section id="agenda" class="py-24 lg:py-32 bg-white relative overflow-hidden">
-  <div class="absolute inset-0 pointer-events-none">
-    <div class="absolute top-1/4 left-0 w-96 h-96 rounded-full bg-[#D4EAE8]/20 -translate-x-1/2 blur-3xl"></div>
-    <div class="absolute bottom-1/4 right-0 w-96 h-96 rounded-full bg-[#FAE8DC]/20 translate-x-1/2 blur-3xl"></div>
+<!-- =========================================================
+     AGENDA — Booking Multi-Step
+     ========================================================= -->
+<section id="agenda" class="py-24 lg:py-32 relative overflow-hidden"
+         style="background-color: #FDFBF7;">
+
+  <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+    <div class="absolute top-1/3 left-0 w-96 h-96 rounded-full"
+         style="background: radial-gradient(circle, rgba(212,230,225,0.2) 0%, transparent 70%); transform: translateX(-50%);"></div>
   </div>
 
-  <div class="container mx-auto px-6 lg:px-16 relative z-10">
-    <div class="text-center mb-16 space-y-3">
-      <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium font-sans">Agendamento Online</span>
-      <h2 class="font-display text-4xl lg:text-5xl text-[#2C2C2C]">Reserve sua Sessão</h2>
-      <p class="text-[#6B6B6B] text-sm max-w-md mx-auto">Selecione o serviço, data e horário ideal para o seu
-        atendimento presencial ou online.</p>
+  <div class="max-w-5xl mx-auto px-6 lg:px-12 relative z-10">
+
+    <!-- Header da seção -->
+    <div class="max-w-xl mb-12">
+      <span class="section-label mb-4 block">Agendamento Online</span>
+      <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-tight">
+        Reserve sua sessão
+      </h2>
+      <p class="text-[#8F9C99] text-sm mt-3 leading-relaxed" style="font-weight: 300;">
+        Veja os horários disponíveis e escolha o que funciona melhor para você.
+        Atendimento presencial e online.
+      </p>
     </div>
 
     <!-- Booking Card -->
-    <div class="max-w-4xl mx-auto glass-card rounded-3xl p-8 lg:p-12 shadow-2xl relative">
+    <div class="booking-card p-6 lg:p-10">
 
-      <!-- Progress Bar -->
-      <div class="flex items-center justify-between mb-10 max-w-md mx-auto">
-        <div class="flex flex-col items-center">
-          <div
-            class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
-            [class.bg-[#7BA5A8]]="bookingStep() >= 1" [class.text-white]="bookingStep() >= 1"
-            [class.bg-[#FAF8F5]]="bookingStep() < 1" [class.text-[#A0988E]]="bookingStep() < 1">1</div>
-          <span class="text-[10px] uppercase tracking-wider text-[#9A8570] mt-1 font-sans">Sessão</span>
+      <!-- Indicador de progresso -->
+      <div class="flex items-center max-w-xs mb-10 gap-0">
+        @for (s of [1,2,3]; track s; let last = $last) {
+        <div class="flex items-center gap-0">
+          <div class="flex flex-col items-center">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300"
+                 [style.background-color]="bookingStep() >= s ? 'var(--accent)' : 'var(--bg-muted)'"
+                 [style.color]="bookingStep() >= s ? '#fff' : 'var(--text-muted)'">
+              {{ s }}
+            </div>
+            <span class="text-[0.625rem] uppercase tracking-widest mt-1"
+                  style="font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-muted);">
+              {{ s === 1 ? 'Tipo' : s === 2 ? 'Data' : 'Dados' }}
+            </span>
+          </div>
+          @if (!last) {
+          <div class="h-px w-8 mx-1 mb-4 transition-all duration-300"
+               [style.background-color]="bookingStep() > s ? 'var(--accent)' : 'var(--border-whisper)'"></div>
+          }
         </div>
-        <div class="h-0.5 flex-1 bg-[#F0EBE3] mx-2" [class.bg-[#7BA5A8]]="bookingStep() >= 2"></div>
-        <div class="flex flex-col items-center">
-          <div
-            class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
-            [class.bg-[#7BA5A8]]="bookingStep() >= 2" [class.text-white]="bookingStep() >= 2"
-            [class.bg-[#FAF8F5]]="bookingStep() < 2" [class.text-[#A0988E]]="bookingStep() < 2">2</div>
-          <span class="text-[10px] uppercase tracking-wider text-[#9A8570] mt-1 font-sans">Data & Hora</span>
-        </div>
-        <div class="h-0.5 flex-1 bg-[#F0EBE3] mx-2" [class.bg-[#7BA5A8]]="bookingStep() >= 3"></div>
-        <div class="flex flex-col items-center">
-          <div
-            class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
-            [class.bg-[#7BA5A8]]="bookingStep() >= 3" [class.text-white]="bookingStep() >= 3"
-            [class.bg-[#FAF8F5]]="bookingStep() < 3" [class.text-[#A0988E]]="bookingStep() < 3">3</div>
-          <span class="text-[10px] uppercase tracking-wider text-[#9A8570] mt-1 font-sans">Identificação</span>
-        </div>
+        }
       </div>
 
-      <!-- STEP 1: SELECT SERVICE -->
+      <!-- ---- PASSO 1: Tipo de Sessão ---- -->
       @if (bookingStep() === 1) {
-      <div class="space-y-6 animate-fade-in">
-        <h3 class="font-display text-2xl text-[#2C2C2C] text-center mb-6">Qual tipo de atendimento você procura?</h3>
-        <div class="grid md:grid-cols-3 gap-6">
+      <div class="animate-fade-in space-y-6">
+        <h3 class="font-display text-2xl text-[#1C221F]">O que você busca?</h3>
+        <p class="text-[#8F9C99] text-sm" style="font-weight: 300;">
+          Pode ser uma dúvida ou uma certeza — os dois são válidos para começar.
+        </p>
 
-          <div
-            class="p-6 rounded-2xl border-2 transition-all cursor-pointer bg-white/80 flex flex-col justify-between hover:border-[#7BA5A8]/50"
-            [class.border-[#7BA5A8]]="selectedService() === 'Terapia Individual'"
-            [class.border-[#EBE7E0]]="selectedService() !== 'Terapia Individual'"
-            (click)="selectedService.set('Terapia Individual')">
-            <div>
-              <span class="text-3xl">🧩</span>
-              <h4 class="font-display text-lg text-[#2C2C2C] mt-3">Individual</h4>
-              <p class="text-xs text-[#6B6B6B] mt-1">Foco no autoconhecimento, ansiedade, estresse e transições de vida.
-              </p>
-            </div>
-            <span class="text-xs font-medium text-[#7BA5A8] mt-4 block">Selecionar →</span>
-          </div>
-
-          <div
-            class="p-6 rounded-2xl border-2 transition-all cursor-pointer bg-white/80 flex flex-col justify-between hover:border-[#7BA5A8]/50"
-            [class.border-[#7BA5A8]]="selectedService() === 'Terapia de Casal'"
-            [class.border-[#EBE7E0]]="selectedService() !== 'Terapia de Casal'"
-            (click)="selectedService.set('Terapia de Casal')">
-            <div>
-              <span class="text-3xl">💑</span>
-              <h4 class="font-display text-lg text-[#2C2C2C] mt-3">De Casal</h4>
-              <p class="text-xs text-[#6B6B6B] mt-1">Fortalecimento da conexão, comunicação e resolução de conflitos
-                conjugais.</p>
-            </div>
-            <span class="text-xs font-medium text-[#7BA5A8] mt-4 block">Selecionar →</span>
-          </div>
-
-          <div
-            class="p-6 rounded-2xl border-2 transition-all cursor-pointer bg-white/80 flex flex-col justify-between hover:border-[#7BA5A8]/50"
-            [class.border-[#7BA5A8]]="selectedService() === 'Terapia Familiar'"
-            [class.border-[#EBE7E0]]="selectedService() !== 'Terapia Familiar'"
-            (click)="selectedService.set('Terapia Familiar')">
-            <div>
-              <span class="text-3xl">👨‍👩‍👧</span>
-              <h4 class="font-display text-lg text-[#2C2C2C] mt-3">Familiar</h4>
-              <p class="text-xs text-[#6B6B6B] mt-1">Dinâmicas e vínculos familiares estruturando relacionamentos
-                saudáveis.</p>
-            </div>
-            <span class="text-xs font-medium text-[#7BA5A8] mt-4 block">Selecionar →</span>
-          </div>
-
+        <div class="grid md:grid-cols-3 gap-4">
+          @for (opt of serviceOptions(); track opt.value) {
+          <button
+            class="p-5 rounded-xl border text-left transition-all duration-200 cursor-pointer"
+            [style.border-color]="selectedService() === opt.value ? 'var(--accent)' : 'var(--border-whisper)'"
+            [style.background-color]="selectedService() === opt.value ? 'var(--accent-light)' : 'var(--bg-canvas)'"
+            (click)="selectedService.set(opt.value)">
+            <!-- Ícone SVG inline -->
+            <div class="w-5 h-5 mb-3"
+                 [style.color]="selectedService() === opt.value ? 'var(--accent)' : 'var(--text-muted)'"
+                 [innerHTML]="opt.svgIcon"></div>
+            <h4 class="font-display text-base text-[#1C221F] mb-1">{{ opt.label }}</h4>
+            <p class="text-[#8F9C99] text-xs leading-relaxed" style="font-weight: 300;">{{ opt.desc }}</p>
+          </button>
+          }
         </div>
 
-        <div class="flex justify-end pt-6">
-          <button class="btn-primary" (click)="setStep(2)">
-            Continuar
-          </button>
+        <div class="flex justify-end pt-4">
+          <button class="btn-primary" (click)="setStep(2)">Escolher data e horário</button>
         </div>
       </div>
       }
 
-      <!-- STEP 2: SELECT DATE & TIME -->
+      <!-- ---- PASSO 2: Data e Horário ---- -->
       @if (bookingStep() === 2) {
       <div class="animate-fade-in grid lg:grid-cols-12 gap-8">
 
-        <!-- Calendar Column -->
+        <!-- Calendário -->
         <div class="lg:col-span-7 space-y-4">
-          <div class="flex items-center justify-between px-2">
-            <span class="font-display text-lg text-[#2C2C2C]">{{ monthLabel() }}</span>
-            <div class="flex gap-2">
+          <div class="flex items-center justify-between">
+            <span class="font-display text-lg text-[#1C221F]">{{ monthLabel() }}</span>
+            <div class="flex gap-1">
               <button (click)="prevMonth()"
-                class="w-8 h-8 rounded-full border border-[#EBE7E0] hover:bg-[#FAF8F5] flex items-center justify-center text-sm">‹</button>
+                      class="w-8 h-8 rounded-full border flex items-center justify-center text-sm transition-colors"
+                      style="border-color: var(--border-whisper); color: var(--text-secondary);"
+                      aria-label="Mês anterior">‹</button>
               <button (click)="nextMonth()"
-                class="w-8 h-8 rounded-full border border-[#EBE7E0] hover:bg-[#FAF8F5] flex items-center justify-center text-sm">›</button>
+                      class="w-8 h-8 rounded-full border flex items-center justify-center text-sm transition-colors"
+                      style="border-color: var(--border-whisper); color: var(--text-secondary);"
+                      aria-label="Próximo mês">›</button>
             </div>
           </div>
 
-          <!-- Days Grid -->
+          <!-- Grade de dias -->
           <div class="grid grid-cols-7 gap-1 text-center text-xs">
             @for (wd of weekDays; track wd) {
-            <span class="py-2 text-[#9A8570] font-medium font-sans">{{ wd }}</span>
+            <span class="py-2 font-semibold" style="color: var(--text-muted); letter-spacing: 0.04em; font-size: 0.625rem; text-transform: uppercase;">{{ wd }}</span>
             }
 
             @for (day of calendarDays(); track day ? day.toISOString() : $index) {
-            @if (day === null) {
-            <span class="aspect-square"></span>
-            } @else {
-            <button (click)="selectDate(day)" [disabled]="isPastDate(day) || isSunday(day)"
-              class="aspect-square rounded-full flex flex-col items-center justify-center relative text-sm border border-transparent font-medium"
-              [class.text-white]="isSelected(day)" [class.bg-[#7BA5A8]]="isSelected(day)"
-              [class.text-[#C8A882]]="isToday(day) && !isSelected(day)" [class.font-bold]="isToday(day)"
-              [class.text-[#2C2C2C]]="!isPastDate(day) && !isSunday(day) && !isSelected(day)"
-              [class.text-[#C8C3BC]]="isPastDate(day) || isSunday(day)"
-              [class.hover:bg-[#D4EAE8]/30]="!isPastDate(day) && !isSunday(day) && !isSelected(day)"
-              [class.cursor-not-allowed]="isPastDate(day) || isSunday(day)">
-              <span>{{ day.getDate() }}</span>
-              @if (isToday(day) && !isSelected(day)) {
-              <span class="absolute bottom-1.5 w-1 h-1 rounded-full bg-[#C8A882]"></span>
+              @if (day === null) {
+              <span class="aspect-square"></span>
+              } @else {
+              <button (click)="selectDate(day)"
+                      [disabled]="isPastDate(day) || isSunday(day)"
+                      class="aspect-square rounded-full flex items-center justify-center text-sm font-medium transition-all duration-150"
+                      [style.background-color]="isSelected(day) ? 'var(--accent)' : 'transparent'"
+                      [style.color]="isSelected(day) ? '#fff' : isPastDate(day) || isSunday(day) ? 'rgba(28,34,31,0.2)' : isToday(day) ? 'var(--accent)' : 'var(--text-primary)'"
+                      [style.cursor]="isPastDate(day) || isSunday(day) ? 'not-allowed' : 'pointer'"
+                      [attr.aria-label]="'Dia ' + day.getDate()">
+                <span>{{ day.getDate() }}</span>
+              </button>
               }
-            </button>
-            }
             }
           </div>
 
-          <div class="flex items-center gap-4 text-xs text-[#9A8570] px-2 font-sans">
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#7BA5A8]"></span>
-              Selecionado</span>
-            <span class="flex items-center gap-1.5"><span
-                class="w-2.5 h-2.5 rounded-full border border-dotted border-[#C8A882] bg-white"></span> Hoje</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#C8C3BC]/40"></span>
-              Indisponível</span>
+          <!-- Legenda -->
+          <div class="flex items-center gap-5 text-xs pt-2" style="color: var(--text-muted);">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: var(--accent);"></span>
+              Selecionado
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full inline-block" style="border: 1px solid var(--accent);"></span>
+              Hoje
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: rgba(28,34,31,0.1);"></span>
+              Indisponível
+            </span>
           </div>
         </div>
 
-        <!-- Time Slots Column -->
+        <!-- Horários -->
         <div class="lg:col-span-5 space-y-4">
-          <h4 class="font-display text-lg text-[#2C2C2C]">Horários Disponíveis</h4>
+          <h4 class="font-display text-lg text-[#1C221F]">Horários disponíveis</h4>
+
           @if (slotsLoading()) {
-            <!-- Skeletons for Loading State -->
-            <div class="grid grid-cols-2 gap-3 animate-pulse">
-              <div class="h-11 rounded-xl bg-gray-200/60"></div>
-              <div class="h-11 rounded-xl bg-gray-200/60"></div>
-              <div class="h-11 rounded-xl bg-gray-200/60"></div>
-              <div class="h-11 rounded-xl bg-gray-200/60"></div>
+            <div class="space-y-2.5">
+              <div class="skeleton h-11 w-full"></div>
+              <div class="skeleton h-11 w-full"></div>
+              <div class="skeleton h-11 w-4/5"></div>
             </div>
-            <p class="text-xs text-[#9A8570] font-sans mt-2 animate-pulse">Consultando disponibilidade no Google Agenda...</p>
+            <p class="text-xs mt-2" style="color: var(--text-muted); font-weight: 300;">
+              Verificando disponibilidade na agenda...
+            </p>
           } @else if (slotsError()) {
-            <!-- Error State -->
-            <div class="p-4 rounded-2xl bg-red-55/60 border border-red-100 text-center space-y-2">
-              <span class="text-xl">⚠️</span>
-              <p class="text-xs text-red-600 font-medium">{{ slotsError() }}</p>
-              <button (click)="selectDate(selectedDate())" class="text-xs text-[#7BA5A8] underline font-sans font-medium">Tentar Novamente</button>
+            <div class="p-4 rounded-xl border text-center space-y-2"
+                 style="border-color: rgba(200,60,60,0.15); background-color: rgba(200,60,60,0.04);">
+              <p class="text-xs text-red-600" style="font-weight: 500;">{{ slotsError() }}</p>
+              <button (click)="selectDate(selectedDate())"
+                      class="text-xs underline" style="color: var(--accent);">
+                Tentar novamente
+              </button>
             </div>
           } @else if (selectedDate()) {
             @if (availableTimeSlots().length > 0) {
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-2 gap-2">
                 @for (slot of availableTimeSlots(); track slot.time) {
-                <button 
+                <button
                   [disabled]="!slot.available"
-                  (click)="selectTimeSlot(slot.time)" 
-                  class="py-3 rounded-xl border text-sm font-medium transition-all"
-                  [class.border-[#7BA5A8]]="slot.available && selectedTimeSlot() === slot.time" 
-                  [class.bg-[#7BA5A8]]="slot.available && selectedTimeSlot() === slot.time"
-                  [class.text-white]="slot.available && selectedTimeSlot() === slot.time" 
-                  
-                  [class.border-[#EBE7E0]]="slot.available && selectedTimeSlot() !== slot.time"
-                  [class.bg-white]="slot.available && selectedTimeSlot() !== slot.time" 
-                  [class.text-[#4A4A4A]]="slot.available && selectedTimeSlot() !== slot.time"
-                  [class.hover:border-[#7BA5A8]]="slot.available && selectedTimeSlot() !== slot.time"
-                  
-                  [class.bg-gray-100]="!slot.available"
-                  [class.text-gray-400]="!slot.available"
-                  [class.border-gray-200]="!slot.available"
-                  [class.cursor-not-allowed]="!slot.available">
-                  {{ slot.time }} @if (!slot.available) { (ocupada!) }
+                  (click)="selectTimeSlot(slot.time)"
+                  class="py-3 rounded-lg border text-sm font-medium transition-all duration-150"
+                  [style.border-color]="slot.available && selectedTimeSlot() === slot.time ? 'var(--accent)' : slot.available ? 'var(--border-whisper)' : 'transparent'"
+                  [style.background-color]="slot.available && selectedTimeSlot() === slot.time ? 'var(--accent)' : slot.available ? 'var(--bg-canvas)' : 'var(--bg-muted)'"
+                  [style.color]="slot.available && selectedTimeSlot() === slot.time ? '#fff' : slot.available ? 'var(--text-primary)' : 'var(--text-muted)'"
+                  [style.cursor]="!slot.available ? 'not-allowed' : 'pointer'">
+                  {{ slot.time }}
+                  @if (!slot.available) { <span class="text-xs opacity-60 ml-1">ocupado</span> }
                 </button>
                 }
               </div>
-              <p class="text-xs text-[#9A8570] font-sans mt-2">Duração da sessão: 50 minutos.</p>
+              <p class="text-xs mt-1" style="color: var(--text-muted); font-weight: 300;">
+                Sessão de 50 minutos.
+              </p>
             } @else {
-              <!-- No Slots Available -->
-              <div class="h-48 border border-dashed border-[#EBE7E0] rounded-2xl flex flex-col items-center justify-center text-center p-4">
-                <span class="text-2xl mb-2">🌸</span>
-                <p class="text-xs text-[#A0988E] max-w-[200px]">Sem horários disponíveis para o dia selecionado. Por favor, escolha outra data.</p>
+              <div class="h-44 rounded-xl border-dashed border flex flex-col items-center justify-center text-center p-4"
+                   style="border-color: var(--border-whisper);">
+                <div class="w-8 h-8 mb-3 opacity-30">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <p class="text-xs" style="color: var(--text-muted); font-weight: 300;">
+                  Sem horários neste dia.<br />Escolha outra data.
+                </p>
               </div>
             }
           } @else {
-            <div
-              class="h-48 border border-dashed border-[#EBE7E0] rounded-2xl flex flex-col items-center justify-center text-center p-4">
-              <span class="text-2xl mb-2">📅</span>
-              <p class="text-xs text-[#A0988E] max-w-[200px]">Por favor, selecione uma data no calendário para ver
-                horários livres.</p>
+            <div class="h-44 rounded-xl border-dashed border flex flex-col items-center justify-center text-center p-4"
+                 style="border-color: var(--border-whisper);">
+              <div class="w-8 h-8 mb-3 opacity-25">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <p class="text-xs" style="color: var(--text-muted); font-weight: 300;">
+                Selecione uma data ao lado<br />para ver os horários livres.
+              </p>
             </div>
           }
         </div>
 
-        <div class="col-span-12 flex justify-between pt-6 border-t border-[#F0EBE3]">
-          <button class="btn-secondary" (click)="setStep(1)">
-            Voltar
-          </button>
-          <button class="btn-primary" [disabled]="!selectedDate() || !selectedTimeSlot()" (click)="setStep(3)">
+        <!-- Navegação entre passos -->
+        <div class="col-span-12 flex justify-between pt-6"
+             style="border-top: 1px solid var(--border-whisper);">
+          <button class="btn-secondary py-2.5 px-5 text-sm" (click)="setStep(1)">Voltar</button>
+          <button class="btn-primary"
+                  [disabled]="!selectedDate() || !selectedTimeSlot()"
+                  (click)="setStep(3)">
             Continuar
           </button>
         </div>
@@ -419,105 +495,111 @@
       </div>
       }
 
-      <!-- STEP 3: PATIENT INFORMATION -->
+      <!-- ---- PASSO 3: Dados do Paciente ---- -->
       @if (bookingStep() === 3) {
-      <div class="animate-fade-in space-y-6 max-w-xl mx-auto">
-        <div class="text-center space-y-2 mb-4">
-          <h3 class="font-display text-2xl text-[#2C2C2C]">Seus dados de contato</h3>
-          <p class="text-xs text-[#9A8570]">Precisamos dessas informações para confirmar seu horário e enviar os
-            detalhes da sessão.</p>
+      <div class="animate-fade-in space-y-6 max-w-lg mx-auto">
+
+        <div>
+          <h3 class="font-display text-2xl text-[#1C221F] mb-1">Seus dados de contato</h3>
+          <p class="text-xs" style="color: var(--text-muted); font-weight: 300;">
+            Usamos apenas para confirmar seu horário e enviar os detalhes da sessão.
+          </p>
         </div>
 
         <div class="space-y-4">
           <div>
-            <label class="block text-xs uppercase tracking-wider text-[#9A8570] font-medium mb-1.5 font-sans"
-              for="p-name">Nome Completo *</label>
-            <input id="p-name" type="text" class="form-input" placeholder="Ex: Ana Souza"
-              (input)="patientName.set($any($event.target).value)" [value]="patientName()" />
+            <label class="form-label" for="p-name">Nome completo *</label>
+            <input id="p-name" type="text" class="form-input"
+                   placeholder="Seu nome"
+                   (input)="patientName.set($any($event.target).value)"
+                   [value]="patientName()" />
           </div>
 
           <div class="grid sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs uppercase tracking-wider text-[#9A8570] font-medium mb-1.5 font-sans"
-                for="p-phone">WhatsApp *</label>
-              <input id="p-phone" type="tel" class="form-input" placeholder="Ex: (21) 99999-9999"
-                (input)="patientPhone.set($any($event.target).value)" [value]="patientPhone()" />
+              <label class="form-label" for="p-phone">WhatsApp *</label>
+              <input id="p-phone" type="tel" class="form-input"
+                     placeholder="(21) 99999-9999"
+                     (input)="patientPhone.set($any($event.target).value)"
+                     [value]="patientPhone()" />
             </div>
             <div>
-              <label class="block text-xs uppercase tracking-wider text-[#9A8570] font-medium mb-1.5 font-sans"
-                for="p-email">E-mail</label>
-              <input id="p-email" type="email" class="form-input" placeholder="Ex: ana@exemplo.com"
-                (input)="patientEmail.set($any($event.target).value)" [value]="patientEmail()" />
+              <label class="form-label" for="p-email">E-mail</label>
+              <input id="p-email" type="email" class="form-input"
+                     placeholder="Opcional"
+                     (input)="patientEmail.set($any($event.target).value)"
+                     [value]="patientEmail()" />
             </div>
           </div>
 
           <div>
-            <label class="block text-xs uppercase tracking-wider text-[#9A8570] font-medium mb-1.5 font-sans"
-              for="p-msg">Gostaria de enviar alguma mensagem ou observação? (Opcional)</label>
-            <textarea id="p-msg" rows="3" class="form-input py-2.5"
-              placeholder="Ex: Tenho preferência por atendimento online..."
-              (input)="patientMessage.set($any($event.target).value)" [value]="patientMessage()"></textarea>
+            <label class="form-label" for="p-msg">Algo que gostaria de compartilhar antes?</label>
+            <textarea id="p-msg" rows="3" class="form-input py-3"
+                      placeholder="Completamente opcional — só se sentir vontade."
+                      (input)="patientMessage.set($any($event.target).value)"
+                      [value]="patientMessage()"></textarea>
           </div>
         </div>
 
-        <!-- Summary banner -->
-        <div class="p-4 rounded-xl bg-[#FAF8F5] border border-[#F2ECE4] text-xs text-[#6B6B6B] space-y-1 font-sans">
-          <div><strong>Serviço selecionado:</strong> {{ selectedService() }}</div>
-          <div><strong>Data:</strong> {{ selectedDate()?.toLocaleDateString('pt-BR') }} às {{ selectedTimeSlot() }}
-          </div>
-          <div><strong>Modalidade:</strong> Presencial ou Online (a combinar)</div>
+        <!-- Resumo do agendamento -->
+        <div class="p-4 rounded-xl text-xs space-y-1"
+             style="background-color: var(--bg-muted); border: 1px solid var(--border-whisper); color: var(--text-secondary);">
+          <div><strong>Tipo:</strong> {{ selectedService() }}</div>
+          <div><strong>Data:</strong> {{ selectedDate()?.toLocaleDateString('pt-BR') }}, {{ selectedTimeSlot() }}</div>
+          <div><strong>Modalidade:</strong> A combinar (presencial ou online)</div>
         </div>
 
-        <div class="flex justify-between pt-6 border-t border-[#F0EBE3]">
-          <button class="btn-secondary" [disabled]="bookingLoading()" (click)="setStep(2)">
-            Voltar
-          </button>
-          <button class="btn-primary" [disabled]="!patientName() || !patientPhone() || bookingLoading()" (click)="confirmBooking()">
+        <div class="flex justify-between pt-4"
+             style="border-top: 1px solid var(--border-whisper);">
+          <button class="btn-secondary py-2.5 px-5 text-sm"
+                  [disabled]="bookingLoading()"
+                  (click)="setStep(2)">Voltar</button>
+          <button class="btn-primary"
+                  [disabled]="!patientName() || !patientPhone() || bookingLoading()"
+                  (click)="confirmBooking()">
             @if (bookingLoading()) {
-              <span class="inline-block animate-spin mr-2">⏳</span> Agendando...
+              Confirmando...
             } @else {
-              Confirmar & Finalizar
+              Confirmar sessão
             }
           </button>
         </div>
+
       </div>
       }
 
-      <!-- STEP 4: BOOKING SUCCESS -->
+      <!-- ---- PASSO 4: Sucesso ---- -->
       @if (bookingStep() === 4) {
       <div class="animate-fade-in text-center py-10 space-y-6 max-w-md mx-auto">
-        <div
-          class="w-20 h-20 rounded-full bg-[#D4EAE8] flex items-center justify-center text-4xl mx-auto text-[#7BA5A8] animate-bounce">
-          ✓
+        <!-- Ícone de confirmação SVG -->
+        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+             style="background-color: var(--accent-light);">
+          <svg class="w-7 h-7" style="color: var(--accent);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
         </div>
+
         <div class="space-y-2">
-          <h3 class="font-display text-3xl text-[#2C2C2C]">Quase tudo pronto!</h3>
-          <p class="text-sm text-[#6B6B6B]">Solicitação de agendamento realizada com sucesso.</p>
+          <h3 class="font-display text-3xl text-[#1C221F]">Solicitação enviada</h3>
+          <p class="text-sm" style="color: var(--text-secondary); font-weight: 300;">
+            Em instantes você será redirecionado ao WhatsApp da Lays para concluir a confirmação.
+          </p>
         </div>
 
-        <div
-          class="p-6 rounded-2xl bg-[#FAF8F5] border border-[#F2ECE4] text-left text-xs space-y-2 font-sans text-[#4A4A4A]">
-          <div class="flex justify-between"><span><strong>Paciente:</strong></span> <span>{{ patientName() }}</span>
-          </div>
-          <div class="flex justify-between"><span><strong>Serviço:</strong></span> <span>{{ selectedService() }}</span>
-          </div>
-          <div class="flex justify-between"><span><strong>Data:</strong></span> <span>{{
-              selectedDate()?.toLocaleDateString('pt-BR') }}</span></div>
-          <div class="flex justify-between"><span><strong>Horário:</strong></span> <span>{{ selectedTimeSlot() }}</span>
-          </div>
+        <div class="p-5 rounded-xl text-left text-xs space-y-2"
+             style="background-color: var(--bg-muted); border: 1px solid var(--border-whisper); color: var(--text-secondary);">
+          <div class="flex justify-between"><span>Paciente</span><span>{{ patientName() }}</span></div>
+          <div class="flex justify-between"><span>Tipo de sessão</span><span>{{ selectedService() }}</span></div>
+          <div class="flex justify-between"><span>Data</span><span>{{ selectedDate()?.toLocaleDateString('pt-BR') }}</span></div>
+          <div class="flex justify-between"><span>Horário</span><span>{{ selectedTimeSlot() }}</span></div>
         </div>
 
-        <div
-          class="p-4 rounded-xl bg-[#D4EAE8]/40 border border-[#7BA5A8]/20 text-xs text-[#5B888A] leading-relaxed font-sans">
-          📲 Você está sendo redirecionado para o WhatsApp da <strong>Lays Coelho</strong> em instantes para concluir a
-          confirmação automática do seu horário. Caso não ocorra, clique no botão abaixo.
-        </div>
-
-        <div class="pt-4">
-          <a href="https://wa.me/553194720801" target="_blank" rel="noopener" class="btn-whatsapp w-full">
-            Enviar WhatsApp Manualmente
-          </a>
-        </div>
+        <a href="https://wa.me/553194720801" target="_blank" rel="noopener" class="btn-whatsapp w-full">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+          </svg>
+          Continuar no WhatsApp
+        </a>
       </div>
       }
 
@@ -525,77 +607,64 @@
   </div>
 </section>
 
-<!-- CTA / Contato -->
-<section id="contato" class="py-24 lg:py-32 bg-[#FAF8F5]">
-  <div class="container mx-auto px-6 lg:px-16">
-    <div class="max-w-3xl mx-auto text-center space-y-8">
+<!-- =========================================================
+     CTA FINAL — Contato
+     ========================================================= -->
+<section id="contato" class="py-24 lg:py-32" style="background-color: #1C221F;">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <div class="max-w-3xl">
 
-      <!-- Logo pequeno -->
-      <div class="flex justify-center">
-        <div class="w-16 h-16 relative">
-          <svg viewBox="0 0 60 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="30" cy="22" rx="22" ry="18" fill="#D4EAE8" opacity="0.6" />
-            <path d="M30 8 C22 8 16 14 16 22 C16 30 22 36 30 38 C38 36 44 30 44 22 C44 14 38 8 30 8Z" fill="#9DC5C8"
-              opacity="0.5" />
-            <text x="30" y="32" text-anchor="middle" font-size="22" fill="#C8A882" font-family="serif">ψ</text>
-            <rect x="27" y="38" width="6" height="20" rx="3" fill="#C8A882" />
-            <rect x="18" y="52" width="24" height="5" rx="2.5" fill="#C8A882" opacity="0.6" />
-          </svg>
-        </div>
-      </div>
+      <span class="section-label mb-5 block" style="color: rgba(212,230,225,0.55);">O primeiro passo</span>
+      <h2 class="font-display text-5xl lg:text-6xl text-white leading-[1.05] mb-6">
+        A dúvida já é<br />
+        <span class="font-display-italic" style="color: rgba(212,230,225,0.7);">um começo</span>
+      </h2>
 
-      <div class="space-y-3">
-        <span class="text-xs tracking-[0.35em] uppercase text-[#7BA5A8] font-medium">Dê o primeiro passo</span>
-        <h2 class="font-display text-4xl lg:text-6xl text-[#2C2C2C] leading-tight">
-          Pronta para<br />
-          <span class="text-[#9DC5C8]">começar?</span>
-        </h2>
-      </div>
-
-      <p class="text-[#6B6B6B] text-lg leading-relaxed max-w-xl mx-auto">
-        Entre em contato pelo WhatsApp e agende sua primeira sessão. Atendimento presencial e online disponíveis.
+      <p class="text-lg leading-relaxed mb-10 max-w-xl"
+         style="color: rgba(255,255,255,0.5); font-weight: 300;">
+        Se você chegou até aqui, algo te trouxe. Não é preciso saber exatamente o que está sentindo para entrar em contato — isso é justamente para o que a terapia serve.
       </p>
 
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="https://wa.me/5521999999999" target="_blank" rel="noopener" class="btn-whatsapp">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path
-              d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+      <div class="flex flex-col sm:flex-row gap-4 mb-12">
+        <a href="https://wa.me/553194720801" target="_blank" rel="noopener" class="btn-whatsapp">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
           </svg>
-          Falar no WhatsApp
+          Conversar no WhatsApp
         </a>
-        <a href="mailto:contato@layscoelho.com.br" class="btn-secondary">
-          Enviar E-mail
+        <a href="mailto:contato@layscoelho.com.br"
+           class="btn-secondary"
+           style="color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.1);">
+          Enviar um e-mail
         </a>
       </div>
 
-      <div class="flex items-center justify-center gap-8 pt-4 text-[#9A8570] text-sm">
-        <span class="flex items-center gap-2">
-          <span class="text-[#9DC5C8]">●</span> Online & Presencial
-        </span>
-        <span class="flex items-center gap-2">
-          <span class="text-[#C8A882]">●</span> Rio de Janeiro
-        </span>
-        <span class="flex items-center gap-2">
-          <span class="text-[#A8C5A0]">●</span> Sigilo garantido
-        </span>
+      <!-- Info discreta -->
+      <div class="flex flex-wrap gap-6 text-xs" style="color: rgba(255,255,255,0.3);">
+        <span>Presencial · Rio de Janeiro</span>
+        <span>Atendimento online disponível</span>
+        <span>Sigilo ético e profissional</span>
       </div>
+
     </div>
   </div>
 </section>
 
-<!-- Footer -->
-<footer class="bg-[#2C2C2C] py-10">
-  <div class="container mx-auto px-6 lg:px-16 flex flex-col md:flex-row items-center justify-between gap-4">
-    <div class="font-display text-white text-xl">
-      Lays Coelho <span class="text-[#9DC5C8] text-sm font-sans ml-2">Psicologia Sistêmica</span>
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+<footer style="background-color: #141817; border-top: 1px solid rgba(255,255,255,0.05);">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div>
+      <span class="font-display text-white text-base">Lays Coelho</span>
+      <span class="text-xs ml-2" style="color: rgba(255,255,255,0.25);">Psicologia Sistêmica · CRP</span>
     </div>
-    <p class="text-white/30 text-sm text-center">
+    <p class="text-xs text-center" style="color: rgba(255,255,255,0.2);">
       © {{ currentYear() }} Lays Coelho · Todos os direitos reservados
     </p>
-    <div class="flex gap-4">
-      <a href="#" class="text-white/30 hover:text-[#9DC5C8] transition-colors text-sm">Instagram</a>
-      <a href="#" class="text-white/30 hover:text-[#9DC5C8] transition-colors text-sm">LinkedIn</a>
+    <div class="flex gap-5">
+      <a href="#" class="text-xs transition-colors" style="color: rgba(255,255,255,0.25);">Instagram</a>
+      <a href="#" class="text-xs transition-colors" style="color: rgba(255,255,255,0.25);">LinkedIn</a>
     </div>
   </div>
 </footer>

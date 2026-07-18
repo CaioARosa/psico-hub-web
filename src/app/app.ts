@@ -2,26 +2,22 @@ import { Component, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BookingService, TimeSlot } from './shared/core/services/booking.service';
 
-interface Butterfly {
-  id: number;
-  left: string;
-  top: string;
-  size: number;
-  color: string;
-  delay: string;
-  duration: string;
-}
-
 interface Stat {
   value: string;
   label: string;
 }
 
-interface Service {
-  icon: string;
+interface ServiceItem {
+  svgIcon: string;
   title: string;
   description: string;
-  bg: string;
+}
+
+interface ServiceOption {
+  value: string;
+  label: string;
+  desc: string;
+  svgIcon: string;
 }
 
 interface Step {
@@ -35,6 +31,14 @@ interface Testimonial {
   author: string;
   color: string;
 }
+
+// SVG icons inline (vetoriais, sem emojis)
+const ICON_PERSON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+const ICON_FAMILY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+const ICON_HEART = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+const ICON_MONITOR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
+const ICON_LEAF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
+const ICON_COMPASS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`;
 
 @Component({
   selector: 'app-root',
@@ -80,12 +84,10 @@ export class AppComponent {
 
     const days: (Date | null)[] = [];
 
-    // Padding for empty days at the start of month grid
     for (let i = 0; i < firstDayIndex; i++) {
       days.push(null);
     }
 
-    // Days of the month
     for (let i = 1; i <= totalDays; i++) {
       days.push(new Date(year, month, i));
     }
@@ -104,14 +106,12 @@ export class AppComponent {
 
   prevMonth() {
     const current = this.currentMonth();
-    const prev = new Date(current.getFullYear(), current.getMonth() - 1, 1);
-    this.currentMonth.set(prev);
+    this.currentMonth.set(new Date(current.getFullYear(), current.getMonth() - 1, 1));
   }
 
   nextMonth() {
     const current = this.currentMonth();
-    const next = new Date(current.getFullYear(), current.getMonth() + 1, 1);
-    this.currentMonth.set(next);
+    this.currentMonth.set(new Date(current.getFullYear(), current.getMonth() + 1, 1));
   }
 
   isPastDate(date: Date | null): boolean {
@@ -145,9 +145,8 @@ export class AppComponent {
   selectDate(date: Date | null) {
     if (!date || this.isPastDate(date) || this.isSunday(date)) return;
     this.selectedDate.set(date);
-    this.selectedTimeSlot.set(null); // Reset time when date changes
+    this.selectedTimeSlot.set(null);
 
-    // Format date as YYYY-MM-DD for backend API
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -164,7 +163,7 @@ export class AppComponent {
       },
       error: (err) => {
         console.error('Error fetching availability:', err);
-        this.slotsError.set('Falha ao conectar com o servidor da agenda.');
+        this.slotsError.set('Não conseguimos conectar com o servidor de agenda. Verifique sua conexão e tente novamente.');
         this.slotsLoading.set(false);
       }
     });
@@ -180,19 +179,17 @@ export class AppComponent {
 
   confirmBooking() {
     if (!this.patientName() || !this.patientPhone()) {
-      alert('Por favor, preencha seu nome e telefone.');
       return;
     }
 
     const date = this.selectedDate();
     if (!date) return;
 
-    // Format date as YYYY-MM-DD for backend API
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const dateStrForApi = `${year}-${month}-${day}`;
-    
+
     const dateStr = date.toLocaleDateString('pt-BR');
     const timeStr = this.selectedTimeSlot();
     const serviceStr = this.selectedService();
@@ -212,7 +209,6 @@ export class AppComponent {
 
     this.bookingService.bookAppointment(bookingData).subscribe({
       next: (res) => {
-        // Save to local storage for patient persistence
         const booking = {
           service: serviceStr,
           date: dateStr,
@@ -230,133 +226,140 @@ export class AppComponent {
         existing.push(booking);
         localStorage.setItem('lays_bookings', JSON.stringify(existing));
 
-        // Redirect step to success (Step 4)
         this.bookingLoading.set(false);
         this.bookingStep.set(4);
 
-        // Format WhatsApp message
-        const formattedPhone = '553194720801'; // Lays' consultation WhatsApp phone
-        const textMsg = `Olá Lays! Acabei de solicitar um agendamento pelo seu site:\n\n` +
-          `*Serviço:* ${serviceStr}\n` +
+        // WhatsApp redirect com mensagem pré-formatada
+        const formattedPhone = '553194720801';
+        const textMsg =
+          `Olá, Lays! Acabei de solicitar um agendamento pelo site:\n\n` +
+          `*Tipo de sessão:* ${serviceStr}\n` +
           `*Data:* ${dateStr}\n` +
           `*Horário:* ${timeStr}\n` +
           `*Nome:* ${nameStr}\n` +
           `*WhatsApp:* ${this.patientPhone()}\n` +
-          `*Mensagem:* ${this.patientMessage() || 'Sem observações'}\n\n` +
-          `Gostaria de confirmar a disponibilidade da sessão!`;
+          (this.patientMessage() ? `*Observação:* ${this.patientMessage()}\n` : '') +
+          `\nGostaria de confirmar a disponibilidade do horário.`;
 
         const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(textMsg)}`;
 
-        // Smooth delay before redirecting to WhatsApp
         setTimeout(() => {
           window.open(url, '_blank');
         }, 1500);
       },
       error: (err) => {
-        console.error('Error creating booking event:', err);
-        alert('Erro ao agendar consulta no Google Agenda. Por favor, tente novamente.');
+        console.error('Error creating booking:', err);
+        this.slotsError.set('Falha ao registrar o agendamento. Por favor, tente novamente ou entre em contato pelo WhatsApp.');
         this.bookingLoading.set(false);
       }
     });
   }
 
-  readonly butterflies = signal<Butterfly[]>([
-    { id: 1, left: '8%', top: '15%', size: 24, color: '#9DC5C8', delay: '0s', duration: '7s' },
-    { id: 2, left: '15%', top: '70%', size: 18, color: '#F2C9A0', delay: '1.2s', duration: '9s' },
-    { id: 3, left: '72%', top: '10%', size: 20, color: '#F4B8C4', delay: '0.5s', duration: '8s' },
-    { id: 4, left: '85%', top: '55%', size: 16, color: '#9DC5C8', delay: '2s', duration: '6s' },
-    { id: 5, left: '60%', top: '80%', size: 22, color: '#A8C5A0', delay: '0.8s', duration: '10s' },
-    { id: 6, left: '45%', top: '5%', size: 14, color: '#F2C9A0', delay: '1.5s', duration: '7.5s' },
-    { id: 7, left: '92%', top: '30%', size: 18, color: '#F4B8C4', delay: '3s', duration: '8.5s' },
-    { id: 8, left: '3%', top: '45%', size: 20, color: '#A8C5A0', delay: '2.5s', duration: '9.5s' },
-    { id: 9, left: '52%', top: '60%', size: 12, color: '#9DC5C8', delay: '0.3s', duration: '6.5s' },
-    { id: 10, left: '30%', top: '88%', size: 16, color: '#F2C9A0', delay: '1.8s', duration: '8s' },
-  ]);
+  // --------------------------------------------------------
+  // Dados da página — atualizados com novos textos
+  // --------------------------------------------------------
 
   readonly stats = signal<Stat[]>([
-    { value: '5+', label: 'Anos de experiência' },
-    { value: '200+', label: 'Pacientes atendidos' },
-    { value: '100%', label: 'Sigilo garantido' },
-    { value: '★ 5', label: 'Avaliação média' },
+    { value: '5+', label: 'Anos de experiência clínica' },
+    { value: '200+', label: 'Pacientes acompanhados' },
+    { value: 'CRP', label: 'Registro ativo e verificado' },
+    { value: '100%', label: 'Sigilo profissional' },
   ]);
 
-  readonly services = signal<Service[]>([
+  // Opções do step 1 do booking (com ícones SVG)
+  readonly serviceOptions = signal<ServiceOption[]>([
     {
-      icon: '🧩',
+      value: 'Terapia Individual',
+      label: 'Individual',
+      desc: 'Para se entender melhor e lidar com o que pesa.',
+      svgIcon: ICON_PERSON,
+    },
+    {
+      value: 'Terapia de Casal',
+      label: 'De Casal',
+      desc: 'Para dois que querem se encontrar de novo.',
+      svgIcon: ICON_HEART,
+    },
+    {
+      value: 'Terapia Familiar',
+      label: 'Familiar',
+      desc: 'Para trabalhar os vínculos que moldam a todos.',
+      svgIcon: ICON_FAMILY,
+    },
+  ]);
+
+  // Cards de serviços na seção "Para quem é"
+  readonly services = signal<ServiceItem[]>([
+    {
+      svgIcon: ICON_PERSON,
       title: 'Terapia Individual',
-      description: 'Um espaço seguro para explorar suas emoções, padrões e recursos internos, com foco no seu bem-estar integral.',
-      bg: '#D4EAE8',
+      description: 'Um espaço para explorar suas emoções, padrões e recursos internos — sem julgamentos, no seu ritmo.',
     },
     {
-      icon: '👨‍👩‍👧',
+      svgIcon: ICON_FAMILY,
       title: 'Terapia Familiar',
-      description: 'Trabalhamos os vínculos e dinâmicas familiares para fortalecer a comunicação e a saúde emocional do sistema.',
-      bg: '#FAE8DC',
+      description: 'Trabalhar os vínculos e dinâmicas que perpassam gerações, para que as relações se tornem mais saudáveis.',
     },
     {
-      icon: '💑',
+      svgIcon: ICON_HEART,
       title: 'Terapia de Casal',
-      description: 'Apoio para casais que desejam aprofundar a conexão, resolver conflitos e construir uma parceria mais saudável.',
-      bg: '#F9E0E5',
+      description: 'Para casais que querem aprofundar a conexão, melhorar a comunicação ou atravessar momentos difíceis juntos.',
     },
     {
-      icon: '💻',
+      svgIcon: ICON_MONITOR,
       title: 'Atendimento Online',
-      description: 'Sessões por videochamada com a mesma qualidade e presença do atendimento presencial, de onde você estiver.',
-      bg: '#E8EDD4',
+      description: 'A mesma qualidade de presença e escuta do atendimento presencial, de onde você estiver.',
     },
     {
-      icon: '🌱',
-      title: 'Ansiedade & Estresse',
-      description: 'Técnicas e escuta especializada para lidar com ansiedade, esgotamento e os desafios do dia a dia moderno.',
-      bg: '#D4EAE8',
+      svgIcon: ICON_LEAF,
+      title: 'Ansiedade e Esgotamento',
+      description: 'Escuta especializada para quem sente que o dia a dia pesou demais, sem conseguir nomear exatamente por quê.',
     },
     {
-      icon: '🔄',
+      svgIcon: ICON_COMPASS,
       title: 'Transições de Vida',
-      description: 'Suporte em momentos de mudança — luto, separação, novos começos — com cuidado e perspectiva sistêmica.',
-      bg: '#FAE8DC',
+      description: 'Suporte em momentos de mudança — separações, lutos, novos começos — com cuidado e perspectiva sistêmica.',
     },
   ]);
 
   readonly steps = signal<Step[]>([
     {
       number: '01',
-      title: 'Primeiro Contato',
-      description: 'Entre em contato pelo WhatsApp ou e-mail. Responderei em até 24h.',
+      title: 'Primeiro contato',
+      description: 'Entre em contato pelo WhatsApp ou agende pelo site. Não precisa saber o que dizer — pode começar com o que está sentindo.',
     },
     {
       number: '02',
-      title: 'Sessão Inicial',
-      description: 'Conversamos sobre suas necessidades e definimos juntas o melhor caminho.',
+      title: 'Sessão inicial',
+      description: 'Conversamos sobre o que te trouxe e entendemos juntos o que faz sentido explorar.',
     },
     {
       number: '03',
-      title: 'Processo Terapêutico',
-      description: 'Sessões semanais ou quinzenais, presenciais ou online, no seu ritmo.',
+      title: 'Processo terapêutico',
+      description: 'Sessões regulares, presenciais ou online, no ritmo que funciona para você.',
     },
     {
       number: '04',
       title: 'Transformação',
-      description: 'Com o tempo, recursos internos emergem e mudanças reais acontecem.',
+      description: 'Com o tempo, recursos internos emergem e mudanças reais, concretas, acontecem.',
     },
   ]);
 
   readonly testimonials = signal<Testimonial[]>([
     {
-      text: 'A Lays tem uma escuta incrível. Me sinto completamente acolhida em cada sessão. Nunca imaginei que a terapia pudesse ser tão transformadora.',
+      text: 'Cheguei sem saber bem o que estava sentindo. A Lays me ajudou a nomear e entender coisas que eu carregava há anos. Não imaginava que a terapia pudesse ser assim.',
       author: 'Ana P.',
-      color: '#9DC5C8',
+      color: '#4D6D66',
     },
     {
-      text: 'A abordagem sistêmica mudou minha forma de ver minha família e a mim mesmo. É uma terapia que vai além do óbvio.',
+      text: 'A abordagem sistêmica muda o olhar. Comecei a ver minha história de um jeito diferente — e isso fez toda a diferença.',
       author: 'Carlos M.',
-      color: '#C8A882',
+      color: '#4D6D66',
     },
     {
-      text: 'Comecei o atendimento online sem muita expectativa, mas fui surpreendida. A Lays cria um espaço seguro mesmo à distância.',
+      text: 'Fui com receio de sessões online, mas a Lays cria um ambiente de escuta genuína mesmo à distância.',
       author: 'Fernanda L.',
-      color: '#A8C5A0',
+      color: '#4D6D66',
     },
   ]);
 }
