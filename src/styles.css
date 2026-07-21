@@ -418,3 +418,471 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================
+   SISTEMA DE ANIMAÇÕES PROFISSIONAIS
+   Spring physics: stiffness 100 / damping 20
+   GPU-only: transform + opacity (nunca top/left/width/height)
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. BORBOLETAS — Float orgânico com trajetória sinusoidal
+   ---------------------------------------------------------- */
+@keyframes butterflyFloat {
+  0%   { transform: translate(0, 0)     rotate(0deg)   scaleX(1); }
+  15%  { transform: translate(6px, -12px) rotate(3deg)  scaleX(0.95); }
+  30%  { transform: translate(14px, -6px) rotate(-2deg) scaleX(1.02); }
+  45%  { transform: translate(8px, -18px) rotate(5deg)  scaleX(0.97); }
+  60%  { transform: translate(-4px,-10px) rotate(-3deg) scaleX(1); }
+  75%  { transform: translate(-10px,-20px)rotate(4deg)  scaleX(0.96); }
+  90%  { transform: translate(-6px, -8px) rotate(-1deg) scaleX(1.01); }
+  100% { transform: translate(0, 0)     rotate(0deg)   scaleX(1); }
+}
+
+/* Bater de asas — flap suave */
+@keyframes wingFlap {
+  0%, 100% { transform: scaleY(1)   rotate(0deg); }
+  25%       { transform: scaleY(0.6) rotate(8deg); }
+  50%       { transform: scaleY(1)   rotate(0deg); }
+  75%       { transform: scaleY(0.7) rotate(-6deg); }
+}
+
+.butterfly-container {
+  position: absolute;
+  pointer-events: none;
+  will-change: transform;
+  animation: butterflyFloat var(--duration, 8s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.butterfly-wings {
+  display: block;
+  animation: wingFlap var(--flap-speed, 1.2s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  transform-origin: center;
+}
+
+/* ----------------------------------------------------------
+   2. SCROLL-REVEAL — Intersection Observer classes
+   Aplica-se via JS: .reveal → .reveal-visible
+   ---------------------------------------------------------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Variantes de direção */
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition:
+    opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-left.reveal-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(32px);
+  transition:
+    opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-right.reveal-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Stagger — delay em cascata via CSS custom property */
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-stagger.reveal-visible > *:nth-child(1)  { opacity: 1; transform: translateY(0); transition-delay: 0ms; }
+.reveal-stagger.reveal-visible > *:nth-child(2)  { opacity: 1; transform: translateY(0); transition-delay: 80ms; }
+.reveal-stagger.reveal-visible > *:nth-child(3)  { opacity: 1; transform: translateY(0); transition-delay: 160ms; }
+.reveal-stagger.reveal-visible > *:nth-child(4)  { opacity: 1; transform: translateY(0); transition-delay: 240ms; }
+.reveal-stagger.reveal-visible > *:nth-child(5)  { opacity: 1; transform: translateY(0); transition-delay: 320ms; }
+.reveal-stagger.reveal-visible > *:nth-child(6)  { opacity: 1; transform: translateY(0); transition-delay: 400ms; }
+
+/* ----------------------------------------------------------
+   3. HERO — Parallax layer via CSS custom property + JS scroll
+   ---------------------------------------------------------- */
+.parallax-slow {
+  will-change: transform;
+  /* JS define --scroll-y; cada layer multiplica por fator diferente */
+  transform: translateY(calc(var(--scroll-y, 0px) * -0.08));
+}
+
+.parallax-medium {
+  will-change: transform;
+  transform: translateY(calc(var(--scroll-y, 0px) * -0.15));
+}
+
+/* ----------------------------------------------------------
+   4. CARDS — Hover lift + brilho deslizante (shine)
+   ---------------------------------------------------------- */
+.card-hover {
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.35s ease;
+  will-change: transform;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-hover::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  transition: left 0.5s ease;
+  pointer-events: none;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(28, 34, 31, 0.10);
+}
+
+.card-hover:hover::after {
+  left: 140%;
+}
+
+/* Service card com shine */
+.service-card {
+  padding: 2rem;
+  border-top: 1.5px solid var(--border-whisper);
+  transition: border-color 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(77,109,102,0.03) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.service-card:hover {
+  border-top-color: var(--accent);
+  transform: translateY(-3px);
+}
+
+.service-card:hover::after {
+  opacity: 1;
+}
+
+/* ----------------------------------------------------------
+   5. NÚMEROS (STATS) — Contador animado via JS
+      Classe auxiliar para a animação de contagem
+   ---------------------------------------------------------- */
+.stat-number {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 2rem;
+  color: var(--accent);
+  line-height: 1;
+  display: block;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.stat-card:hover .stat-number {
+  transform: scale(1.06);
+}
+
+/* ----------------------------------------------------------
+   6. NAV — Indicator bar slide animado
+   ---------------------------------------------------------- */
+.nav-link {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 0.25rem 0;
+  position: relative;
+  transition: color 0.25s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background-color: var(--accent);
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* ----------------------------------------------------------
+   7. BOTÕES — Spring physics + feedback tátil
+   ---------------------------------------------------------- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  border-radius: 9999px;
+  background-color: var(--accent);
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px rgba(77, 109, 102, 0.2);
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.btn-primary:hover {
+  background-color: #3d5852;
+  box-shadow: 0 6px 20px rgba(77, 109, 102, 0.28);
+  transform: translateY(-2px) scale(1.01);
+}
+
+.btn-primary:active {
+  transform: translateY(0px) scale(0.97);
+  box-shadow: 0 1px 3px rgba(77, 109, 102, 0.15);
+  transition-duration: 0.1s;
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  border-radius: 9999px;
+  background-color: transparent;
+  color: var(--text-secondary);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  border: 1px solid var(--border-whisper);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+}
+
+.btn-secondary:hover {
+  color: var(--text-primary);
+  border-color: rgba(77, 109, 102, 0.3);
+  background-color: var(--bg-muted);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+  transition-duration: 0.1s;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.875rem 2rem;
+  border-radius: 9999px;
+  background-color: #128C7E;
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-whatsapp:hover {
+  background-color: #0e7266;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(18, 140, 126, 0.3);
+}
+
+.btn-whatsapp:active {
+  transform: scale(0.97);
+  transition-duration: 0.1s;
+}
+
+/* ----------------------------------------------------------
+   8. HERO TEXT — Gradiente animado no título
+   ---------------------------------------------------------- */
+@keyframes gradientShift {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+.hero-title-accent {
+  background: linear-gradient(135deg, var(--accent) 0%, #7AADA5 50%, #4D6D66 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 4s ease infinite;
+}
+
+/* ----------------------------------------------------------
+   9. PING — Indicador ao vivo (agenda)
+   ---------------------------------------------------------- */
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.ping-dot {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+}
+
+.ping-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-color: var(--accent);
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.ping-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-color: var(--accent);
+}
+
+/* ----------------------------------------------------------
+   10. TESTEMUNHOS — quote mark decorativo animado
+   ---------------------------------------------------------- */
+.testimonial-card {
+  padding: 2rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-whisper);
+  border-radius: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-card);
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.35s ease,
+    border-color 0.25s ease;
+  will-change: transform;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 50px rgba(28, 34, 31, 0.09);
+  border-color: rgba(77, 109, 102, 0.2);
+}
+
+/* ----------------------------------------------------------
+   11. PARALLAX BACKGROUND — Blobs suaves animados
+   ---------------------------------------------------------- */
+@keyframes blobPulse {
+  0%, 100% { transform: translate(0, 0)    scale(1); }
+  33%       { transform: translate(20px, -15px) scale(1.05); }
+  66%       { transform: translate(-10px, 10px) scale(0.97); }
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+  animation: blobPulse var(--blob-duration, 12s) ease-in-out infinite;
+  animation-delay: var(--blob-delay, 0s);
+  filter: blur(60px);
+}
+
+/* ----------------------------------------------------------
+   12. SEÇÃO "COMO FUNCIONA" — linha conectora animada
+   ---------------------------------------------------------- */
+@keyframes lineGrow {
+  from { transform: scaleX(0); transform-origin: left; }
+  to   { transform: scaleX(1); transform-origin: left; }
+}
+
+.step-connector {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.15), rgba(255,255,255,0.03));
+  transform-origin: left;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scaleX(0);
+}
+
+.step-connector.reveal-visible {
+  transform: scaleX(1);
+}
