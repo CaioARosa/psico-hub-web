@@ -3,86 +3,128 @@
      ========================================================= -->
 <nav class="fixed top-0 left-0 right-0 z-50 bg-[#FDFBF7]/90 backdrop-blur-md border-b border-[rgba(76,100,91,0.08)]">
   <div class="max-w-6xl mx-auto px-6 lg:px-12 flex items-center justify-between h-16">
-    <!-- Identidade -->
     <div>
       <span class="font-display text-lg text-[#1C221F] leading-none">Lays Coelho</span>
       <span class="block text-[0.6rem] tracking-[0.14em] uppercase text-[#8F9C99] font-medium"
-            style="font-family: 'Plus Jakarta Sans', sans-serif;">Psicologia Sistêmica</span>
+            style="font-family:'Plus Jakarta Sans',sans-serif;">Psicologia Sistêmica</span>
     </div>
-
-    <!-- Links de navegação -->
     <div class="hidden md:flex items-center gap-8">
-      <a href="#sobre" class="nav-link">Sobre</a>
+      <a href="#sobre"    class="nav-link">Sobre</a>
       <a href="#servicos" class="nav-link">Serviços</a>
-      <a href="#contato" class="nav-link">Contato</a>
+      <a href="#contato"  class="nav-link">Contato</a>
     </div>
-
-    <!-- CTA da nav -->
-    <a href="#agenda" class="btn-primary text-sm py-2.5 px-5">
-      Agendar Sessão
-    </a>
+    <a href="#agenda" class="btn-primary text-sm py-2.5 px-5">Agendar Sessão</a>
   </div>
 </nav>
 
 <!-- =========================================================
      HERO
      ========================================================= -->
-<section class="min-h-[100dvh] flex items-center pt-16 overflow-hidden"
-         style="background-color: #FDFBF7;">
+<section class="relative min-h-[100dvh] flex items-center pt-16 overflow-hidden"
+         style="background-color:#FDFBF7;">
 
-  <!-- Ambient blur de fundo — sutil, não decorativo demais -->
+  <!-- Blobs de fundo — parallax suave -->
   <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-    <div class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full"
-         style="background: radial-gradient(circle, rgba(212,230,225,0.35) 0%, transparent 70%);"></div>
-    <div class="absolute bottom-[-5%] left-[-8%] w-[400px] h-[400px] rounded-full"
-         style="background: radial-gradient(circle, rgba(77,109,102,0.06) 0%, transparent 70%);"></div>
+    <div class="blob" style="
+      width:500px; height:500px;
+      top:-8%; right:-6%;
+      background:radial-gradient(circle,rgba(212,230,225,0.45) 0%,transparent 70%);
+      --blob-duration:14s; --blob-delay:0s;">
+    </div>
+    <div class="blob" style="
+      width:380px; height:380px;
+      bottom:-4%; left:-8%;
+      background:radial-gradient(circle,rgba(77,109,102,0.07) 0%,transparent 70%);
+      --blob-duration:11s; --blob-delay:3s;">
+    </div>
   </div>
 
-  <div class="max-w-6xl mx-auto px-6 lg:px-12 w-full">
+  <!-- ✦ BORBOLETAS ✦ -->
+  <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+
+    @for (b of butterflies(); track b.id) {
+    <div class="butterfly-container"
+         [style.left]="b.left"
+         [style.top]="b.top"
+         [style.--duration]="b.duration"
+         [style.--delay]="b.delay"
+         [style.--flap-speed]="b.flapSpeed">
+      <svg [attr.width]="b.size" [attr.height]="b.size * 0.75"
+           viewBox="0 0 48 36" fill="none"
+           class="butterfly-wings">
+        <!-- Asa superior esquerda -->
+        <ellipse cx="12" cy="14" rx="11" ry="7"
+                 [attr.fill]="b.color" opacity="0.38"
+                 transform="rotate(-22 12 14)"/>
+        <!-- Asa superior direita -->
+        <ellipse cx="36" cy="14" rx="11" ry="7"
+                 [attr.fill]="b.color" opacity="0.38"
+                 transform="rotate(22 36 14)"/>
+        <!-- Asa inferior esquerda -->
+        <ellipse cx="11" cy="23" rx="7" ry="5"
+                 [attr.fill]="b.color" opacity="0.22"
+                 transform="rotate(-35 11 23)"/>
+        <!-- Asa inferior direita -->
+        <ellipse cx="37" cy="23" rx="7" ry="5"
+                 [attr.fill]="b.color" opacity="0.22"
+                 transform="rotate(35 37 23)"/>
+        <!-- Corpo -->
+        <line x1="24" y1="3" x2="24" y2="33"
+              stroke="#8B7355" stroke-width="0.9" opacity="0.35"
+              stroke-linecap="round"/>
+        <!-- Antenas -->
+        <path d="M24 3 Q19 0 16 2" stroke="#8B7355" stroke-width="0.7"
+              opacity="0.3" fill="none" stroke-linecap="round"/>
+        <path d="M24 3 Q29 0 32 2" stroke="#8B7355" stroke-width="0.7"
+              opacity="0.3" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    }
+
+  </div>
+
+  <!-- Conteúdo Hero -->
+  <div class="max-w-6xl mx-auto px-6 lg:px-12 w-full relative z-10">
     <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
-      <!-- Texto Hero -->
-      <div class="animate-fade-in-up" style="order: 1;">
+      <!-- Texto -->
+      <div class="animate-fade-in-up">
         <span class="section-label mb-5 block">Psicoterapia Sistêmica</span>
 
         <h1 class="font-display text-5xl lg:text-6xl xl:text-7xl text-[#1C221F] leading-[1.05] mb-6">
           Às vezes, algo<br />
-          parece <span class="font-display-italic">diferente</span><br />
+          parece <em class="hero-title-accent not-italic">diferente</em><br />
           — e tudo bem.
         </h1>
 
         <p class="text-[#556661] text-lg leading-relaxed max-w-md mb-8"
-           style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 300;">
+           style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:300;">
           Não é necessário ter uma crise para buscar apoio. Se você sente que
           algo não está no lugar certo, esse espaço existe para isso.
         </p>
 
         <div class="flex flex-col sm:flex-row gap-3 mb-10">
           <a href="#agenda" class="btn-primary">Quero agendar uma sessão</a>
-          <a href="#sobre" class="btn-secondary">Conhecer a abordagem</a>
+          <a href="#sobre"  class="btn-secondary">Conhecer a abordagem</a>
         </div>
 
-        <!-- Credencial discreta -->
         <div class="flex items-center gap-3">
           <div class="divider"></div>
           <span class="text-[#8F9C99] text-xs tracking-wide"
-                style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                style="font-family:'Plus Jakarta Sans',sans-serif;">
             CRP ativo · Rio de Janeiro · Presencial e Online
           </span>
         </div>
       </div>
 
-      <!-- Foto de Lays -->
-      <div class="animate-fade-in-right relative" style="order: 2;">
-        <div class="relative max-w-sm mx-auto lg:max-w-none">
-          <!-- Moldura sutil atrás da foto -->
-          <div class="absolute -inset-3 rounded-[2rem]"
-               style="background: linear-gradient(135deg, rgba(212,230,225,0.4) 0%, rgba(77,109,102,0.08) 100%);"></div>
-          <img src="assets/lays_coelho_profile.png"
-               alt="Lays Coelho, psicóloga especializada em Psicoterapia Sistêmica"
-               class="relative w-full rounded-[1.75rem] object-cover"
-               style="box-shadow: 0 24px 64px rgba(28,34,31,0.10); aspect-ratio: 3/4; max-height: 520px;" />
-        </div>
+      <!-- Foto -->
+      <div class="animate-fade-in-right relative parallax-slow">
+        <div class="absolute -inset-3 rounded-[2rem]"
+             style="background:linear-gradient(135deg,rgba(212,230,225,0.4) 0%,rgba(77,109,102,0.08) 100%);"></div>
+        <img src="assets/lays_coelho_profile.png"
+             alt="Lays Coelho, psicóloga especializada em Psicoterapia Sistêmica"
+             class="relative w-full rounded-[1.75rem] object-cover"
+             style="box-shadow:0 24px 64px rgba(28,34,31,0.10);aspect-ratio:3/4;max-height:520px;" />
       </div>
 
     </div>
@@ -92,42 +134,36 @@
 <!-- =========================================================
      SOBRE
      ========================================================= -->
-<section id="sobre" class="py-24 lg:py-32" style="background-color: #F5F2ED;">
+<section id="sobre" class="py-24 lg:py-32" style="background-color:#F5F2ED;">
   <div class="max-w-6xl mx-auto px-6 lg:px-12">
     <div class="grid lg:grid-cols-2 gap-16 items-center">
 
-      <!-- Foto do consultório -->
-      <div class="relative">
+      <div class="reveal-left">
         <img src="assets/clinic_consultation_room.png"
              alt="Consultório de Lays Coelho"
-             class="w-full rounded-[1.5rem] object-cover"
-             style="box-shadow: 0 8px 40px rgba(28,34,31,0.08); aspect-ratio: 4/3;" />
+             class="w-full rounded-[1.5rem] object-cover card-hover"
+             style="box-shadow:0 8px 40px rgba(28,34,31,0.08);aspect-ratio:4/3;" />
       </div>
 
-      <!-- Texto -->
-      <div class="space-y-6">
+      <div class="reveal space-y-6">
         <span class="section-label">Sobre Lays</span>
-
         <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-tight">
           Uma escuta que não<br />
-          <span class="font-display-italic">julga o que você sente</span>
+          <em class="font-display-italic not-italic text-[#4D6D66]">julga o que você sente</em>
         </h2>
-
-        <p class="text-[#556661] leading-relaxed" style="font-weight: 300;">
+        <p class="text-[#556661] leading-relaxed" style="font-weight:300;">
           Sou Lays Coelho, psicóloga com formação em Psicologia Sistêmica.
           Trabalho com a compreensão de que cada pessoa carrega uma história
           que vai além dela própria — família, vínculos, contextos que moldam
           o que sentimos e como nos relacionamos.
         </p>
-
-        <p class="text-[#556661] leading-relaxed" style="font-weight: 300;">
+        <p class="text-[#556661] leading-relaxed" style="font-weight:300;">
           O processo terapêutico que proponho não é sobre consertar nada.
           É sobre criar um espaço seguro onde você possa se entender melhor
           e construir, no seu tempo, um caminho que faça sentido para você.
         </p>
 
-        <!-- Stats redesenhados -->
-        <div class="grid grid-cols-2 gap-0 pt-4">
+        <div class="grid grid-cols-2 gap-0 pt-4 reveal-stagger">
           @for (stat of stats(); track stat.label) {
           <div class="stat-card">
             <span class="stat-number">{{ stat.value }}</span>
@@ -142,33 +178,31 @@
 </section>
 
 <!-- =========================================================
-     SERVIÇOS — Zig-zag assimétrico, sem grid de 3 iguais
+     SERVIÇOS
      ========================================================= -->
-<section id="servicos" class="py-24 lg:py-32" style="background-color: #FDFBF7;">
+<section id="servicos" class="py-24 lg:py-32" style="background-color:#FDFBF7;">
   <div class="max-w-6xl mx-auto px-6 lg:px-12">
 
-    <div class="max-w-2xl mb-16">
+    <div class="max-w-2xl mb-16 reveal">
       <span class="section-label mb-4 block">Para quem é</span>
       <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-tight">
         Não é preciso estar<br />
-        <span class="font-display-italic">em crise para começar</span>
+        <em class="font-display-italic not-italic text-[#4D6D66]">em crise para começar</em>
       </h2>
-      <p class="text-[#556661] mt-4 leading-relaxed max-w-lg" style="font-weight: 300;">
+      <p class="text-[#556661] mt-4 leading-relaxed max-w-lg" style="font-weight:300;">
         A terapia é para quem sente que algo poderia ser diferente —
         seja nas relações, nos pensamentos ou na forma como enfrenta o dia a dia.
       </p>
     </div>
 
-    <!-- Grid de serviços com borda-top como divisor — sem cards iguais -->
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-[rgba(76,100,91,0.12)]">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-[rgba(76,100,91,0.12)] reveal-stagger">
       @for (service of services(); track service.title) {
       <div class="service-card">
-        <!-- Ícone SVG em vez de emoji -->
         <div class="w-8 h-8 mb-5"
-             [style.color]="'var(--accent)'"
+             style="color:var(--accent)"
              [innerHTML]="service.svgIcon"></div>
         <h3 class="font-display text-xl text-[#1C221F] mb-2">{{ service.title }}</h3>
-        <p class="text-[#8F9C99] text-sm leading-relaxed" style="font-weight: 300;">{{ service.description }}</p>
+        <p class="text-[#8F9C99] text-sm leading-relaxed" style="font-weight:300;">{{ service.description }}</p>
       </div>
       }
     </div>
@@ -179,78 +213,76 @@
 <!-- =========================================================
      COMO FUNCIONA
      ========================================================= -->
-<section class="py-24 lg:py-32 relative overflow-hidden"
-         style="background-color: #1C221F;">
+<section class="py-24 lg:py-32 relative overflow-hidden" style="background-color:#1C221F;">
 
   <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-    <div class="absolute top-0 right-0 w-80 h-80 rounded-full"
-         style="background: radial-gradient(circle, rgba(77,109,102,0.15) 0%, transparent 70%); transform: translate(30%, -30%);"></div>
+    <div class="blob" style="
+      width:400px;height:400px;
+      top:0;right:0;
+      background:radial-gradient(circle,rgba(77,109,102,0.18) 0%,transparent 70%);
+      --blob-duration:16s;
+      transform:translate(30%,-30%);">
+    </div>
   </div>
 
   <div class="max-w-6xl mx-auto px-6 lg:px-12 relative z-10">
-    <div class="max-w-xl mb-16">
-      <span class="section-label mb-4 block" style="color: rgba(212,230,225,0.6);">O caminho</span>
+    <div class="max-w-xl mb-16 reveal">
+      <span class="section-label mb-4 block" style="color:rgba(212,230,225,0.55);">O caminho</span>
       <h2 class="font-display text-4xl lg:text-5xl text-white leading-tight">
         Como acontece<br />
-        <span class="font-display-italic" style="color: rgba(212,230,225,0.7);">a terapia</span>
+        <em class="font-display-italic not-italic" style="color:rgba(212,230,225,0.65);">a terapia</em>
       </h2>
     </div>
 
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 reveal-stagger">
       @for (step of steps(); track step.number; let last = $last) {
       <div class="step-item relative">
         <div class="step-number mb-5">{{ step.number }}</div>
         <h3 class="font-display text-lg text-white mb-2">{{ step.title }}</h3>
-        <p class="text-sm leading-relaxed" style="color: rgba(255,255,255,0.45); font-weight: 300;">{{ step.description }}</p>
+        <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.42);font-weight:300;">{{ step.description }}</p>
         @if (!last) {
-        <div class="hidden lg:block absolute top-6 left-[calc(50%+2rem)] w-[calc(100%-4rem)] h-px"
-             style="background-color: rgba(255,255,255,0.08);"></div>
+        <div class="step-connector hidden lg:block absolute top-6 left-[calc(50%+2rem)] w-[calc(100%-4rem)]"></div>
         }
       </div>
       }
     </div>
-
   </div>
 </section>
 
 <!-- =========================================================
-     DEPOIMENTOS — Assimétrico, 1 largo + 2 empilhados
+     DEPOIMENTOS
      ========================================================= -->
-<section class="py-24 lg:py-32" style="background-color: #F5F2ED;">
+<section class="py-24 lg:py-32" style="background-color:#F5F2ED;">
   <div class="max-w-6xl mx-auto px-6 lg:px-12">
 
-    <div class="max-w-xl mb-16">
+    <div class="max-w-xl mb-16 reveal">
       <span class="section-label mb-4 block">O que relatam</span>
       <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-tight">
         Experiências de<br />
-        <span class="font-display-italic">quem passou por aqui</span>
+        <em class="font-display-italic not-italic text-[#4D6D66]">quem passou por aqui</em>
       </h2>
     </div>
 
-    <!-- Grid assimétrico: 1 destaque largo + 2 menores -->
+    <!-- Layout assimétrico: 1 destaque (3 colunas) + 2 empilhados (2 colunas) -->
     <div class="grid lg:grid-cols-5 gap-5">
-
-      <!-- Destaque: primeiro depoimento ocupa 3 colunas -->
       @if (testimonials().length > 0) {
-      <div class="testimonial-card lg:col-span-3">
+      <div class="testimonial-card lg:col-span-3 reveal-left">
         <p class="font-display text-xl text-[#1C221F] leading-relaxed mb-6">
           "{{ testimonials()[0].text }}"
         </p>
         <div class="flex items-center gap-3 mt-auto">
           <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold"
-               [style.background-color]="'var(--accent)'">
+               style="background-color:var(--accent);">
             {{ testimonials()[0].author[0] }}
           </div>
-          <span class="text-[#8F9C99] text-sm" style="font-weight: 500;">{{ testimonials()[0].author }}</span>
+          <span class="text-[#8F9C99] text-sm" style="font-weight:500;">{{ testimonials()[0].author }}</span>
         </div>
       </div>
       }
-
-      <!-- Demais: 2 colunas -->
-      <div class="lg:col-span-2 flex flex-col gap-5">
+      <div class="lg:col-span-2 flex flex-col gap-5 reveal-right">
         @for (t of testimonials().slice(1); track t.author) {
         <div class="testimonial-card flex-1">
-          <p class="text-[#556661] text-sm leading-relaxed mb-5" style="font-weight: 300;">
+          <p class="text-[#556661] text-sm leading-relaxed mb-5" style="font-weight:300;">
             "{{ t.text }}"
           </p>
           <div class="flex items-center gap-3 mt-auto">
@@ -258,44 +290,48 @@
                  [style.background-color]="t.color">
               {{ t.author[0] }}
             </div>
-            <span class="text-[#8F9C99] text-xs" style="font-weight: 500;">{{ t.author }}</span>
+            <span class="text-[#8F9C99] text-xs" style="font-weight:500;">{{ t.author }}</span>
           </div>
         </div>
         }
       </div>
-
     </div>
 
   </div>
 </section>
 
 <!-- =========================================================
-     AGENDA — Booking Multi-Step
+     AGENDA
      ========================================================= -->
 <section id="agenda" class="py-24 lg:py-32 relative overflow-hidden"
-         style="background-color: #FDFBF7;">
+         style="background-color:#FDFBF7;">
 
   <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-    <div class="absolute top-1/3 left-0 w-96 h-96 rounded-full"
-         style="background: radial-gradient(circle, rgba(212,230,225,0.2) 0%, transparent 70%); transform: translateX(-50%);"></div>
+    <div class="blob" style="
+      width:420px;height:420px;
+      top:30%;left:0;
+      background:radial-gradient(circle,rgba(212,230,225,0.22) 0%,transparent 70%);
+      --blob-duration:13s;
+      transform:translateX(-50%);">
+    </div>
   </div>
 
   <div class="max-w-5xl mx-auto px-6 lg:px-12 relative z-10">
 
-    <!-- Header da seção -->
-    <div class="max-w-xl mb-12">
+    <div class="max-w-xl mb-12 reveal">
       <span class="section-label mb-4 block">Agendamento Online</span>
       <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-tight">
         Reserve sua sessão
       </h2>
-      <p class="text-[#8F9C99] text-sm mt-3 leading-relaxed" style="font-weight: 300;">
+      <p class="text-[#8F9C99] text-sm mt-3 leading-relaxed" style="font-weight:300;">
         Veja os horários disponíveis e escolha o que funciona melhor para você.
         Atendimento presencial e online.
       </p>
     </div>
 
     <!-- Booking Card -->
-    <div class="booking-card p-6 lg:p-10">
+    <div class="booking-card p-6 lg:p-10 reveal"
+         style="background-color:var(--bg-surface);border:1px solid var(--border-whisper);border-radius:1.5rem;box-shadow:var(--shadow-float);">
 
       <!-- Indicador de progresso -->
       <div class="flex items-center max-w-xs mb-10 gap-0">
@@ -304,43 +340,39 @@
           <div class="flex flex-col items-center">
             <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300"
                  [style.background-color]="bookingStep() >= s ? 'var(--accent)' : 'var(--bg-muted)'"
-                 [style.color]="bookingStep() >= s ? '#fff' : 'var(--text-muted)'">
-              {{ s }}
-            </div>
+                 [style.color]="bookingStep() >= s ? '#fff' : 'var(--text-muted)'">{{ s }}</div>
             <span class="text-[0.625rem] uppercase tracking-widest mt-1"
-                  style="font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-muted);">
+                  style="font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-muted);">
               {{ s === 1 ? 'Tipo' : s === 2 ? 'Data' : 'Dados' }}
             </span>
           </div>
           @if (!last) {
-          <div class="h-px w-8 mx-1 mb-4 transition-all duration-300"
+          <div class="h-px w-8 mx-1 mb-4 transition-all duration-500"
                [style.background-color]="bookingStep() > s ? 'var(--accent)' : 'var(--border-whisper)'"></div>
           }
         </div>
         }
       </div>
 
-      <!-- ---- PASSO 1: Tipo de Sessão ---- -->
+      <!-- PASSO 1 -->
       @if (bookingStep() === 1) {
       <div class="animate-fade-in space-y-6">
         <h3 class="font-display text-2xl text-[#1C221F]">O que você busca?</h3>
-        <p class="text-[#8F9C99] text-sm" style="font-weight: 300;">
+        <p class="text-[#8F9C99] text-sm" style="font-weight:300;">
           Pode ser uma dúvida ou uma certeza — os dois são válidos para começar.
         </p>
 
         <div class="grid md:grid-cols-3 gap-4">
           @for (opt of serviceOptions(); track opt.value) {
-          <button
-            class="p-5 rounded-xl border text-left transition-all duration-200 cursor-pointer"
-            [style.border-color]="selectedService() === opt.value ? 'var(--accent)' : 'var(--border-whisper)'"
-            [style.background-color]="selectedService() === opt.value ? 'var(--accent-light)' : 'var(--bg-canvas)'"
-            (click)="selectedService.set(opt.value)">
-            <!-- Ícone SVG inline -->
+          <button class="p-5 rounded-xl border text-left transition-all duration-200 cursor-pointer card-hover"
+                  [style.border-color]="selectedService() === opt.value ? 'var(--accent)' : 'var(--border-whisper)'"
+                  [style.background-color]="selectedService() === opt.value ? 'var(--accent-light)' : 'var(--bg-canvas)'"
+                  (click)="selectedService.set(opt.value)">
             <div class="w-5 h-5 mb-3"
                  [style.color]="selectedService() === opt.value ? 'var(--accent)' : 'var(--text-muted)'"
                  [innerHTML]="opt.svgIcon"></div>
             <h4 class="font-display text-base text-[#1C221F] mb-1">{{ opt.label }}</h4>
-            <p class="text-[#8F9C99] text-xs leading-relaxed" style="font-weight: 300;">{{ opt.desc }}</p>
+            <p class="text-[#8F9C99] text-xs leading-relaxed" style="font-weight:300;">{{ opt.desc }}</p>
           </button>
           }
         </div>
@@ -351,32 +383,30 @@
       </div>
       }
 
-      <!-- ---- PASSO 2: Data e Horário ---- -->
+      <!-- PASSO 2 -->
       @if (bookingStep() === 2) {
       <div class="animate-fade-in grid lg:grid-cols-12 gap-8">
 
-        <!-- Calendário -->
         <div class="lg:col-span-7 space-y-4">
           <div class="flex items-center justify-between">
             <span class="font-display text-lg text-[#1C221F]">{{ monthLabel() }}</span>
             <div class="flex gap-1">
               <button (click)="prevMonth()"
-                      class="w-8 h-8 rounded-full border flex items-center justify-center text-sm transition-colors"
-                      style="border-color: var(--border-whisper); color: var(--text-secondary);"
+                      class="w-8 h-8 rounded-full border flex items-center justify-center text-sm transition-all"
+                      style="border-color:var(--border-whisper);color:var(--text-secondary);"
                       aria-label="Mês anterior">‹</button>
               <button (click)="nextMonth()"
-                      class="w-8 h-8 rounded-full border flex items-center justify-center text-sm transition-colors"
-                      style="border-color: var(--border-whisper); color: var(--text-secondary);"
+                      class="w-8 h-8 rounded-full border flex items-center justify-center text-sm transition-all"
+                      style="border-color:var(--border-whisper);color:var(--text-secondary);"
                       aria-label="Próximo mês">›</button>
             </div>
           </div>
 
-          <!-- Grade de dias -->
           <div class="grid grid-cols-7 gap-1 text-center text-xs">
             @for (wd of weekDays; track wd) {
-            <span class="py-2 font-semibold" style="color: var(--text-muted); letter-spacing: 0.04em; font-size: 0.625rem; text-transform: uppercase;">{{ wd }}</span>
+            <span class="py-2 font-semibold"
+                  style="color:var(--text-muted);letter-spacing:0.04em;font-size:0.625rem;text-transform:uppercase;">{{ wd }}</span>
             }
-
             @for (day of calendarDays(); track day ? day.toISOString() : $index) {
               @if (day === null) {
               <span class="aspect-square"></span>
@@ -385,8 +415,8 @@
                       [disabled]="isPastDate(day) || isSunday(day)"
                       class="aspect-square rounded-full flex items-center justify-center text-sm font-medium transition-all duration-150"
                       [style.background-color]="isSelected(day) ? 'var(--accent)' : 'transparent'"
-                      [style.color]="isSelected(day) ? '#fff' : isPastDate(day) || isSunday(day) ? 'rgba(28,34,31,0.2)' : isToday(day) ? 'var(--accent)' : 'var(--text-primary)'"
-                      [style.cursor]="isPastDate(day) || isSunday(day) ? 'not-allowed' : 'pointer'"
+                      [style.color]="isSelected(day) ? '#fff' : isPastDate(day)||isSunday(day) ? 'rgba(28,34,31,0.2)' : isToday(day) ? 'var(--accent)' : 'var(--text-primary)'"
+                      [style.cursor]="isPastDate(day)||isSunday(day) ? 'not-allowed' : 'pointer'"
                       [attr.aria-label]="'Dia ' + day.getDate()">
                 <span>{{ day.getDate() }}</span>
               </button>
@@ -394,24 +424,22 @@
             }
           </div>
 
-          <!-- Legenda -->
-          <div class="flex items-center gap-5 text-xs pt-2" style="color: var(--text-muted);">
+          <div class="flex items-center gap-5 text-xs pt-2" style="color:var(--text-muted);">
             <span class="flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: var(--accent);"></span>
+              <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color:var(--accent);"></span>
               Selecionado
             </span>
             <span class="flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full inline-block" style="border: 1px solid var(--accent);"></span>
+              <span class="w-2.5 h-2.5 rounded-full inline-block" style="border:1px solid var(--accent);"></span>
               Hoje
             </span>
             <span class="flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: rgba(28,34,31,0.1);"></span>
+              <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color:rgba(28,34,31,0.1);"></span>
               Indisponível
             </span>
           </div>
         </div>
 
-        <!-- Horários -->
         <div class="lg:col-span-5 space-y-4">
           <h4 class="font-display text-lg text-[#1C221F]">Horários disponíveis</h4>
 
@@ -421,87 +449,70 @@
               <div class="skeleton h-11 w-full"></div>
               <div class="skeleton h-11 w-4/5"></div>
             </div>
-            <p class="text-xs mt-2" style="color: var(--text-muted); font-weight: 300;">
+            <p class="text-xs mt-2" style="color:var(--text-muted);font-weight:300;">
               Verificando disponibilidade na agenda...
             </p>
           } @else if (slotsError()) {
             <div class="p-4 rounded-xl border text-center space-y-2"
-                 style="border-color: rgba(200,60,60,0.15); background-color: rgba(200,60,60,0.04);">
-              <p class="text-xs text-red-600" style="font-weight: 500;">{{ slotsError() }}</p>
+                 style="border-color:rgba(200,60,60,0.15);background-color:rgba(200,60,60,0.04);">
+              <p class="text-xs text-red-600" style="font-weight:500;">{{ slotsError() }}</p>
               <button (click)="selectDate(selectedDate())"
-                      class="text-xs underline" style="color: var(--accent);">
-                Tentar novamente
-              </button>
+                      class="text-xs underline" style="color:var(--accent);">Tentar novamente</button>
             </div>
           } @else if (selectedDate()) {
             @if (availableTimeSlots().length > 0) {
               <div class="grid grid-cols-2 gap-2">
                 @for (slot of availableTimeSlots(); track slot.time) {
-                <button
-                  [disabled]="!slot.available"
-                  (click)="selectTimeSlot(slot.time)"
-                  class="py-3 rounded-lg border text-sm font-medium transition-all duration-150"
-                  [style.border-color]="slot.available && selectedTimeSlot() === slot.time ? 'var(--accent)' : slot.available ? 'var(--border-whisper)' : 'transparent'"
-                  [style.background-color]="slot.available && selectedTimeSlot() === slot.time ? 'var(--accent)' : slot.available ? 'var(--bg-canvas)' : 'var(--bg-muted)'"
-                  [style.color]="slot.available && selectedTimeSlot() === slot.time ? '#fff' : slot.available ? 'var(--text-primary)' : 'var(--text-muted)'"
-                  [style.cursor]="!slot.available ? 'not-allowed' : 'pointer'">
+                <button [disabled]="!slot.available"
+                        (click)="selectTimeSlot(slot.time)"
+                        class="py-3 rounded-lg border text-sm font-medium transition-all duration-150"
+                        [style.border-color]="slot.available && selectedTimeSlot()===slot.time ? 'var(--accent)' : slot.available ? 'var(--border-whisper)' : 'transparent'"
+                        [style.background-color]="slot.available && selectedTimeSlot()===slot.time ? 'var(--accent)' : slot.available ? 'var(--bg-canvas)' : 'var(--bg-muted)'"
+                        [style.color]="slot.available && selectedTimeSlot()===slot.time ? '#fff' : slot.available ? 'var(--text-primary)' : 'var(--text-muted)'"
+                        [style.cursor]="!slot.available ? 'not-allowed' : 'pointer'">
                   {{ slot.time }}
                   @if (!slot.available) { <span class="text-xs opacity-60 ml-1">ocupado</span> }
                 </button>
                 }
               </div>
-              <p class="text-xs mt-1" style="color: var(--text-muted); font-weight: 300;">
-                Sessão de 50 minutos.
-              </p>
+              <p class="text-xs mt-1" style="color:var(--text-muted);font-weight:300;">Sessão de 50 minutos.</p>
             } @else {
               <div class="h-44 rounded-xl border-dashed border flex flex-col items-center justify-center text-center p-4"
-                   style="border-color: var(--border-whisper);">
+                   style="border-color:var(--border-whisper);">
                 <div class="w-8 h-8 mb-3 opacity-30">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                   </svg>
                 </div>
-                <p class="text-xs" style="color: var(--text-muted); font-weight: 300;">
-                  Sem horários neste dia.<br />Escolha outra data.
-                </p>
+                <p class="text-xs" style="color:var(--text-muted);font-weight:300;">Sem horários neste dia.<br />Escolha outra data.</p>
               </div>
             }
           } @else {
             <div class="h-44 rounded-xl border-dashed border flex flex-col items-center justify-center text-center p-4"
-                 style="border-color: var(--border-whisper);">
+                 style="border-color:var(--border-whisper);">
               <div class="w-8 h-8 mb-3 opacity-25">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
               </div>
-              <p class="text-xs" style="color: var(--text-muted); font-weight: 300;">
-                Selecione uma data ao lado<br />para ver os horários livres.
-              </p>
+              <p class="text-xs" style="color:var(--text-muted);font-weight:300;">Selecione uma data ao lado<br />para ver os horários livres.</p>
             </div>
           }
         </div>
 
-        <!-- Navegação entre passos -->
-        <div class="col-span-12 flex justify-between pt-6"
-             style="border-top: 1px solid var(--border-whisper);">
+        <div class="col-span-12 flex justify-between pt-6" style="border-top:1px solid var(--border-whisper);">
           <button class="btn-secondary py-2.5 px-5 text-sm" (click)="setStep(1)">Voltar</button>
-          <button class="btn-primary"
-                  [disabled]="!selectedDate() || !selectedTimeSlot()"
-                  (click)="setStep(3)">
-            Continuar
-          </button>
+          <button class="btn-primary" [disabled]="!selectedDate()||!selectedTimeSlot()" (click)="setStep(3)">Continuar</button>
         </div>
-
       </div>
       }
 
-      <!-- ---- PASSO 3: Dados do Paciente ---- -->
+      <!-- PASSO 3 -->
       @if (bookingStep() === 3) {
       <div class="animate-fade-in space-y-6 max-w-lg mx-auto">
-
         <div>
           <h3 class="font-display text-2xl text-[#1C221F] mb-1">Seus dados de contato</h3>
-          <p class="text-xs" style="color: var(--text-muted); font-weight: 300;">
+          <p class="text-xs" style="color:var(--text-muted);font-weight:300;">
             Usamos apenas para confirmar seu horário e enviar os detalhes da sessão.
           </p>
         </div>
@@ -509,29 +520,24 @@
         <div class="space-y-4">
           <div>
             <label class="form-label" for="p-name">Nome completo *</label>
-            <input id="p-name" type="text" class="form-input"
-                   placeholder="Seu nome"
+            <input id="p-name" type="text" class="form-input" placeholder="Seu nome"
                    (input)="patientName.set($any($event.target).value)"
                    [value]="patientName()" />
           </div>
-
           <div class="grid sm:grid-cols-2 gap-4">
             <div>
               <label class="form-label" for="p-phone">WhatsApp *</label>
-              <input id="p-phone" type="tel" class="form-input"
-                     placeholder="(21) 99999-9999"
+              <input id="p-phone" type="tel" class="form-input" placeholder="(21) 99999-9999"
                      (input)="patientPhone.set($any($event.target).value)"
                      [value]="patientPhone()" />
             </div>
             <div>
               <label class="form-label" for="p-email">E-mail</label>
-              <input id="p-email" type="email" class="form-input"
-                     placeholder="Opcional"
+              <input id="p-email" type="email" class="form-input" placeholder="Opcional"
                      (input)="patientEmail.set($any($event.target).value)"
                      [value]="patientEmail()" />
             </div>
           </div>
-
           <div>
             <label class="form-label" for="p-msg">Algo que gostaria de compartilhar antes?</label>
             <textarea id="p-msg" rows="3" class="form-input py-3"
@@ -541,59 +547,45 @@
           </div>
         </div>
 
-        <!-- Resumo do agendamento -->
         <div class="p-4 rounded-xl text-xs space-y-1"
-             style="background-color: var(--bg-muted); border: 1px solid var(--border-whisper); color: var(--text-secondary);">
+             style="background-color:var(--bg-muted);border:1px solid var(--border-whisper);color:var(--text-secondary);">
           <div><strong>Tipo:</strong> {{ selectedService() }}</div>
           <div><strong>Data:</strong> {{ selectedDate()?.toLocaleDateString('pt-BR') }}, {{ selectedTimeSlot() }}</div>
           <div><strong>Modalidade:</strong> A combinar (presencial ou online)</div>
         </div>
 
-        <div class="flex justify-between pt-4"
-             style="border-top: 1px solid var(--border-whisper);">
-          <button class="btn-secondary py-2.5 px-5 text-sm"
-                  [disabled]="bookingLoading()"
-                  (click)="setStep(2)">Voltar</button>
-          <button class="btn-primary"
-                  [disabled]="!patientName() || !patientPhone() || bookingLoading()"
-                  (click)="confirmBooking()">
-            @if (bookingLoading()) {
-              Confirmando...
-            } @else {
-              Confirmar sessão
-            }
+        <div class="flex justify-between pt-4" style="border-top:1px solid var(--border-whisper);">
+          <button class="btn-secondary py-2.5 px-5 text-sm" [disabled]="bookingLoading()" (click)="setStep(2)">Voltar</button>
+          <button class="btn-primary" [disabled]="!patientName()||!patientPhone()||bookingLoading()" (click)="confirmBooking()">
+            @if (bookingLoading()) { Confirmando... } @else { Confirmar sessão }
           </button>
         </div>
-
       </div>
       }
 
-      <!-- ---- PASSO 4: Sucesso ---- -->
+      <!-- PASSO 4: Sucesso -->
       @if (bookingStep() === 4) {
       <div class="animate-fade-in text-center py-10 space-y-6 max-w-md mx-auto">
-        <!-- Ícone de confirmação SVG -->
         <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
-             style="background-color: var(--accent-light);">
-          <svg class="w-7 h-7" style="color: var(--accent);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+             style="background-color:var(--accent-light);">
+          <svg class="w-7 h-7" style="color:var(--accent);" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 6L9 17l-5-5"/>
           </svg>
         </div>
-
         <div class="space-y-2">
           <h3 class="font-display text-3xl text-[#1C221F]">Solicitação enviada</h3>
-          <p class="text-sm" style="color: var(--text-secondary); font-weight: 300;">
+          <p class="text-sm" style="color:var(--text-secondary);font-weight:300;">
             Em instantes você será redirecionado ao WhatsApp da Lays para concluir a confirmação.
           </p>
         </div>
-
         <div class="p-5 rounded-xl text-left text-xs space-y-2"
-             style="background-color: var(--bg-muted); border: 1px solid var(--border-whisper); color: var(--text-secondary);">
+             style="background-color:var(--bg-muted);border:1px solid var(--border-whisper);color:var(--text-secondary);">
           <div class="flex justify-between"><span>Paciente</span><span>{{ patientName() }}</span></div>
           <div class="flex justify-between"><span>Tipo de sessão</span><span>{{ selectedService() }}</span></div>
           <div class="flex justify-between"><span>Data</span><span>{{ selectedDate()?.toLocaleDateString('pt-BR') }}</span></div>
           <div class="flex justify-between"><span>Horário</span><span>{{ selectedTimeSlot() }}</span></div>
         </div>
-
         <a href="https://wa.me/553194720801" target="_blank" rel="noopener" class="btn-whatsapp w-full">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
@@ -608,20 +600,32 @@
 </section>
 
 <!-- =========================================================
-     CTA FINAL — Contato
+     CTA FINAL
      ========================================================= -->
-<section id="contato" class="py-24 lg:py-32" style="background-color: #1C221F;">
-  <div class="max-w-6xl mx-auto px-6 lg:px-12">
-    <div class="max-w-3xl">
+<section id="contato" class="py-24 lg:py-32 relative overflow-hidden" style="background-color:#1C221F;">
 
-      <span class="section-label mb-5 block" style="color: rgba(212,230,225,0.55);">O primeiro passo</span>
+  <!-- Borboletas decorativas no fundo escuro — semi-invisíveis -->
+  <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+    <div class="butterfly-container" style="right:8%;bottom:20%;--duration:11s;--delay:0.5s;--flap-speed:1.4s;opacity:0.12;">
+      <svg width="60" height="45" viewBox="0 0 48 36" fill="none">
+        <ellipse cx="12" cy="14" rx="11" ry="7" fill="#D4E6E1" opacity="0.6" transform="rotate(-22 12 14)"/>
+        <ellipse cx="36" cy="14" rx="11" ry="7" fill="#D4E6E1" opacity="0.6" transform="rotate(22 36 14)"/>
+        <ellipse cx="11" cy="23" rx="7"  ry="5" fill="#D4E6E1" opacity="0.3" transform="rotate(-35 11 23)"/>
+        <ellipse cx="37" cy="23" rx="7"  ry="5" fill="#D4E6E1" opacity="0.3" transform="rotate(35 37 23)"/>
+        <line x1="24" y1="3" x2="24" y2="33" stroke="#fff" stroke-width="0.8" opacity="0.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-6 lg:px-12 relative z-10">
+    <div class="max-w-3xl reveal">
+      <span class="section-label mb-5 block" style="color:rgba(212,230,225,0.55);">O primeiro passo</span>
       <h2 class="font-display text-5xl lg:text-6xl text-white leading-[1.05] mb-6">
         A dúvida já é<br />
-        <span class="font-display-italic" style="color: rgba(212,230,225,0.7);">um começo</span>
+        <em class="font-display-italic not-italic" style="color:rgba(212,230,225,0.65);">um começo</em>
       </h2>
-
       <p class="text-lg leading-relaxed mb-10 max-w-xl"
-         style="color: rgba(255,255,255,0.5); font-weight: 300;">
+         style="color:rgba(255,255,255,0.45);font-weight:300;">
         Se você chegou até aqui, algo te trouxe. Não é preciso saber exatamente o que está sentindo para entrar em contato — isso é justamente para o que a terapia serve.
       </p>
 
@@ -634,18 +638,16 @@
         </a>
         <a href="mailto:contato@layscoelho.com.br"
            class="btn-secondary"
-           style="color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.1);">
+           style="color:rgba(255,255,255,0.45);border-color:rgba(255,255,255,0.1);">
           Enviar um e-mail
         </a>
       </div>
 
-      <!-- Info discreta -->
-      <div class="flex flex-wrap gap-6 text-xs" style="color: rgba(255,255,255,0.3);">
+      <div class="flex flex-wrap gap-6 text-xs" style="color:rgba(255,255,255,0.25);">
         <span>Presencial · Rio de Janeiro</span>
         <span>Atendimento online disponível</span>
         <span>Sigilo ético e profissional</span>
       </div>
-
     </div>
   </div>
 </section>
@@ -653,18 +655,18 @@
 <!-- =========================================================
      FOOTER
      ========================================================= -->
-<footer style="background-color: #141817; border-top: 1px solid rgba(255,255,255,0.05);">
+<footer style="background-color:#141817;border-top:1px solid rgba(255,255,255,0.05);">
   <div class="max-w-6xl mx-auto px-6 lg:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
     <div>
       <span class="font-display text-white text-base">Lays Coelho</span>
-      <span class="text-xs ml-2" style="color: rgba(255,255,255,0.25);">Psicologia Sistêmica · CRP</span>
+      <span class="text-xs ml-2" style="color:rgba(255,255,255,0.22);">Psicologia Sistêmica · CRP</span>
     </div>
-    <p class="text-xs text-center" style="color: rgba(255,255,255,0.2);">
+    <p class="text-xs text-center" style="color:rgba(255,255,255,0.18);">
       © {{ currentYear() }} Lays Coelho · Todos os direitos reservados
     </p>
     <div class="flex gap-5">
-      <a href="#" class="text-xs transition-colors" style="color: rgba(255,255,255,0.25);">Instagram</a>
-      <a href="#" class="text-xs transition-colors" style="color: rgba(255,255,255,0.25);">LinkedIn</a>
+      <a href="#" class="text-xs transition-colors" style="color:rgba(255,255,255,0.22);">Instagram</a>
+      <a href="#" class="text-xs transition-colors" style="color:rgba(255,255,255,0.22);">LinkedIn</a>
     </div>
   </div>
 </footer>
