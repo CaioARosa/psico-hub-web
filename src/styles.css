@@ -886,3 +886,71 @@
 .step-connector.reveal-visible {
   transform: scaleX(1);
 }
+
+/* ----------------------------------------------------------
+   13. MENU FLUTUANTE EM PÍLULA (Antigravity Style)
+   ---------------------------------------------------------- */
+.nav-floating {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  z-index: 50;
+  max-width: 64rem; /* 5xl */
+  margin: 0 auto;
+  border-radius: 9999px;
+  border: 1px solid var(--border-whisper);
+  background-color: rgba(253, 251, 247, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 24px rgba(28, 34, 31, 0.04);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease, top 0.3s ease;
+}
+
+/* ----------------------------------------------------------
+   14. NATIVE SCROLL-DRIVEN PARALLAX (Progressive Enhancement)
+   ---------------------------------------------------------- */
+@supports (animation-timeline: scroll()) {
+  .parallax-slow {
+    animation: parallax-shift-slow linear both;
+    animation-timeline: scroll(root block);
+    animation-range: exit 0% entry 100%;
+  }
+
+  .parallax-medium {
+    animation: parallax-shift-medium linear both;
+    animation-timeline: scroll(root block);
+    animation-range: exit 0% entry 100%;
+  }
+
+  .butterfly-container {
+    animation: butterfly-scroll-float linear both;
+    animation-timeline: scroll(root block);
+  }
+
+  .blob {
+    animation: blob-scroll-float linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+
+@keyframes parallax-shift-slow {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50px); }
+}
+
+@keyframes parallax-shift-medium {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-100px); }
+}
+
+@keyframes butterfly-scroll-float {
+  0%   { transform: translateY(0) translateX(0) rotate(0deg); }
+  50%  { transform: translateY(-80px) translateX(15px) rotate(8deg); }
+  100% { transform: translateY(-180px) translateX(-10px) rotate(-5deg); }
+}
+
+@keyframes blob-scroll-float {
+  from { transform: translateY(0) scale(1); }
+  to   { transform: translateY(-120px) scale(1.08); }
+}
