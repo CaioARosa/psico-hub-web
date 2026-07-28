@@ -35,48 +35,25 @@ const ICON_HEART    = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 const ICON_MONITOR  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
 const ICON_LEAF     = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
 const ICON_COMPASS  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`;
+const ICON_BRAIN    = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-4.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2zM14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-4.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2z"/></svg>`;
 
 /** Gera a lista de borboletas com posições e tempos pseudo-aleatórios */
 function createButterflies(): Butterfly[] {
-  const palette = [
-    '#7AADA5', // verde sálvia médio
-    '#4D6D66', // verde sálvia escuro
-    '#A8C5BE', // verde acinzentado
-    '#C8B89A', // bege quente
-    '#9BBFB9', // aqua suave
-    '#B8D4CE', // verde pálido
-  ];
-
-  const positions = [
-    { left:  '8%', top: '18%' },
-    { left: '18%', top: '62%' },
-    { left: '28%', top: '32%' },
-    { left: '48%', top: '78%' },
-    { left: '62%', top: '22%' },
-    { left: '72%', top: '55%' },
-    { left: '82%', top: '38%' },
-    { left: '88%', top: '70%' },
-    { left: '55%', top: '12%' },
-    { left: '35%', top: '88%' },
-    { left: '92%', top: '20%' },
-    { left: '15%', top: '45%' },
-  ];
-
-  const durations    = ['7.5s','9s','10.5s','8.2s','11s','7s','12s','8.8s','9.7s','10.2s','8s','11.5s'];
-  const delays       = ['0s','1.2s','0.5s','2.3s','0.8s','1.8s','0.3s','2.8s','1.5s','0.7s','2s','3s'];
-  const flapSpeeds   = ['1.1s','1.4s','0.9s','1.6s','1.2s','1.0s','1.5s','0.85s','1.3s','1.7s','0.95s','1.25s'];
-  const sizes        = [32, 24, 40, 28, 36, 22, 44, 30, 26, 38, 34, 20];
-
-  return positions.map((pos, i) => ({
-    id:        i,
-    left:      pos.left,
-    top:       pos.top,
-    size:      sizes[i],
-    color:     palette[i % palette.length],
-    duration:  durations[i],
-    delay:     delays[i],
-    flapSpeed: flapSpeeds[i],
-  }));
+  const list: Butterfly[] = [];
+  const colors = ['#4D6D66', '#8B7355', '#6E8B75', '#A3B899'];
+  for (let i = 1; i <= 6; i++) {
+    list.push({
+      id: i,
+      left: `${10 + i * 13}%`,
+      top: `${15 + (i % 3) * 18}%`,
+      size: 16 + (i * 3) % 10,
+      color: colors[i % colors.length],
+      duration: `${14 + i * 2}s`,
+      delay: `${i * -1.5}s`,
+      flapSpeed: `${0.8 + (i * 0.2)}s`
+    });
+  }
+  return list;
 }
 
 @Component({
@@ -93,6 +70,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   private observer!: IntersectionObserver;
   private scrollHandler!: () => void;
+
+  readonly iconBrain  = ICON_BRAIN;
+  readonly iconLeaf   = ICON_LEAF;
+  readonly iconHeart  = ICON_HEART;
+  readonly iconPerson = ICON_PERSON;
 
   readonly currentYear = computed(() => new Date().getFullYear());
 
