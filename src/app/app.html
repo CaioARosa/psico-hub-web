@@ -1,7 +1,7 @@
 <!-- =========================================================
      NAVEGAÇÃO
      ========================================================= -->
-<nav class="fixed top-0 left-0 right-0 z-50 bg-[#FDFBF7]/90 backdrop-blur-md border-b border-[rgba(76,100,91,0.08)]">
+<nav class="nav-floating">
   <div class="max-w-6xl mx-auto px-6 lg:px-12 flex items-center justify-between h-16">
     <div>
       <span class="font-display text-lg text-[#1C221F] leading-none">Lays Coelho</span>
@@ -99,8 +99,7 @@
 
         <p class="text-[#556661] text-lg leading-relaxed max-w-md mb-8"
            style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:300;">
-          Não é necessário ter uma crise para buscar apoio. Se você sente que
-          algo não está no lugar certo, esse espaço existe para isso.
+          Não é necessário estar em crise para buscar apoio. Um espaço seguro de acolhimento e escuta terapêutica 100% online, no conforto e sigilo da sua casa.
         </p>
 
         <div class="flex flex-col sm:flex-row gap-3 mb-10">
@@ -112,7 +111,7 @@
           <div class="divider"></div>
           <span class="text-[#8F9C99] text-xs tracking-wide"
                 style="font-family:'Plus Jakarta Sans',sans-serif;">
-            CRP ativo · Rio de Janeiro · Presencial e Online
+            CRP ativo · Atendimento 100% Online · Em todo o Brasil
           </span>
         </div>
       </div>
@@ -140,7 +139,7 @@
 
       <div class="reveal-left">
         <img src="assets/clinic_consultation_room.png"
-             alt="Consultório de Lays Coelho"
+             alt="Espaço simbólico de acolhimento e escuta terapêutica"
              class="w-full rounded-[1.5rem] object-cover card-hover"
              style="box-shadow:0 8px 40px rgba(28,34,31,0.08);aspect-ratio:4/3;" />
       </div>
@@ -325,7 +324,7 @@
       </h2>
       <p class="text-[#8F9C99] text-sm mt-3 leading-relaxed" style="font-weight:300;">
         Veja os horários disponíveis e escolha o que funciona melhor para você.
-        Atendimento presencial e online.
+        Atendimento 100% online por videochamada segura.
       </p>
     </div>
 
@@ -551,7 +550,7 @@
              style="background-color:var(--bg-muted);border:1px solid var(--border-whisper);color:var(--text-secondary);">
           <div><strong>Tipo:</strong> {{ selectedService() }}</div>
           <div><strong>Data:</strong> {{ selectedDate()?.toLocaleDateString('pt-BR') }}, {{ selectedTimeSlot() }}</div>
-          <div><strong>Modalidade:</strong> A combinar (presencial ou online)</div>
+          <div><strong>Modalidade:</strong> Atendimento Online via Videochamada</div>
         </div>
 
         <div class="flex justify-between pt-4" style="border-top:1px solid var(--border-whisper);">
@@ -644,8 +643,8 @@
       </div>
 
       <div class="flex flex-wrap gap-6 text-xs" style="color:rgba(255,255,255,0.25);">
-        <span>Presencial · Rio de Janeiro</span>
-        <span>Atendimento online disponível</span>
+        <span>Atendimento 100% Online</span>
+        <span>Em todo o Brasil</span>
         <span>Sigilo ético e profissional</span>
       </div>
     </div>
