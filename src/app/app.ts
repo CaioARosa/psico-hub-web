@@ -306,31 +306,31 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   readonly stats = signal<Stat[]>([
     { value: '5+',   label: 'Anos de experiência clínica' },
-    { value: '200+', label: 'Pacientes acompanhados' },
-    { value: 'CRP',  label: 'Registro ativo e verificado' },
-    { value: '100%', label: 'Sigilo profissional' },
+    { value: '200+', label: 'Acolhimentos realizados' },
+    { value: 'CRP',  label: 'Registro profissional ativo' },
+    { value: '100%', label: 'Sigilo e confidencialidade' },
   ]);
 
   readonly serviceOptions = signal<ServiceOption[]>([
-    { value:'Terapia Individual', label:'Individual', desc:'Para se entender melhor e lidar com o que pesa.', svgIcon:ICON_PERSON },
-    { value:'Terapia de Casal',   label:'De Casal',   desc:'Para dois que querem se encontrar de novo.',     svgIcon:ICON_HEART  },
-    { value:'Terapia Familiar',   label:'Familiar',   desc:'Para trabalhar os vínculos que moldam a todos.', svgIcon:ICON_FAMILY },
+    { value:'Terapia Individual', label:'Individual', desc:'Para se entender melhor e lidar com o que pesa no seu cotidiano.', svgIcon:ICON_PERSON },
+    { value:'Terapia Familiar',   label:'Familiar',   desc:'Para restaurar e harmonizar os vínculos familiares.', svgIcon:ICON_FAMILY },
+    { value:'Terapia de Casal',   label:'De Casal',   desc:'Para melhorar a comunicação e conexão a dois.', svgIcon:ICON_HEART  },
   ]);
 
   readonly services = signal<ServiceItem[]>([
-    { svgIcon:ICON_PERSON,  title:'Terapia Individual', description:'Um espaço para explorar suas emoções, padrões e recursos internos — sem julgamentos, no seu ritmo.' },
-    { svgIcon:ICON_FAMILY,  title:'Terapia Familiar',   description:'Trabalhar os vínculos e dinâmicas que perpassam gerações, para que as relações se tornem mais saudáveis.' },
-    { svgIcon:ICON_HEART,   title:'Terapia de Casal',   description:'Para casais que querem aprofundar a conexão, melhorar a comunicação ou atravessar momentos difíceis juntos.' },
-    { svgIcon:ICON_MONITOR, title:'Atendimento Online',  description:'A mesma qualidade de presença e escuta do atendimento presencial, de onde você estiver.' },
-    { svgIcon:ICON_LEAF,    title:'Ansiedade e Esgotamento', description:'Escuta especializada para quem sente que o dia a dia pesou demais, sem conseguir nomear exatamente por quê.' },
-    { svgIcon:ICON_COMPASS, title:'Transições de Vida',  description:'Suporte em momentos de mudança — separações, lutos, novos começos — com cuidado e perspectiva sistêmica.' },
+    { svgIcon:ICON_PERSON,  title:'Autoconhecimento', description:'Compreender suas emoções, padrões repetitivos e resgatar seus recursos internos para o desenvolvimento pessoal.' },
+    { svgIcon:ICON_LEAF,    title:'Ansiedade e Depressão', description:'Apoio clínico e científico para tratar a sobrecarga mental, o esgotamento (burnout) e sintomas depressivos.' },
+    { svgIcon:ICON_FAMILY,  title:'Terapia Familiar',   description:'Olhar sistêmico sobre as relações, trabalhando os nós e dinâmicas que moldam as interações familiares.' },
+    { svgIcon:ICON_COMPASS, title:'Luto e Transições', description:'Acolhimento humanizado em momentos de perdas, lutos, divórcios e grandes mudanças no ciclo da vida.' },
+    { svgIcon:ICON_HEART,   title:'Terapia de Casal',   description:'Espaço seguro para casais resolverem conflitos, aprofundarem a conexão e reconstruírem a parceria.' },
+    { svgIcon:ICON_MONITOR, title:'Consulta 100% Online', description:'Sessões terapêuticas seguras e sigilosas por videochamada, oferecendo acolhimento no conforto da sua casa.' },
   ]);
 
   readonly steps = signal<Step[]>([
-    { number:'01', title:'Primeiro contato',        description:'Entre em contato pelo WhatsApp ou agende pelo site. Não precisa saber o que dizer — pode começar com o que está sentindo.' },
-    { number:'02', title:'Sessão inicial',           description:'Conversamos sobre o que te trouxe e entendemos juntos o que faz sentido explorar.' },
-    { number:'03', title:'Processo terapêutico',     description:'Sessões regulares, presenciais ou online, no ritmo que funciona para você.' },
-    { number:'04', title:'Transformação',             description:'Com o tempo, recursos internos emergem e mudanças reais, concretas, acontecem.' },
+    { number:'01', title:'Primeiro contato',        description:'Entre em contato por WhatsApp ou agende pelo site. Você não precisa saber o que dizer para começar.' },
+    { number:'02', title:'Sessão inicial',           description:'Alinhamos as suas principais queixas e definimos os objetivos do processo terapêutico online.' },
+    { number:'03', title:'Processo terapêutico',     description:'Sessões semanais ou quinzenais 100% online via chamada de vídeo segura, adaptadas ao seu tempo.' },
+    { number:'04', title:'Transformação',             description:'Com o tempo, novos caminhos se desenham, trazendo autonomia e alívio emocional.' },
   ]);
 
   readonly testimonials = signal<Testimonial[]>([
