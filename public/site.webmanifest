@@ -1,0 +1,21 @@
+{
+  "name": "Lays Coelho · Psicóloga",
+  "short_name": "Lays Coelho",
+  "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#2D4640",
+  "background_color": "#FDFBF7",
+  "display": "standalone"
+}

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Paleta de cores corporativa/premium -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D4640" />
+      <stop offset="100%" stop-color="#1C221F" />
+    </linearGradient>
+    
+    <linearGradient id="sageGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8F1EE" />
+      <stop offset="100%" stop-color="#A8C5BD" />
+    </linearGradient>
+
+    <linearGradient id="sageWarmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B5D1C8" />
+      <stop offset="100%" stop-color="#779A91" />
+    </linearGradient>
+
+    <!-- Sombra sutil para profundidade sobriedade -->
+    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Fundo Arredondado Orgânico Elegante -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  
+  <!-- Borda sutil de acabamento refinado -->
+  <rect x="6" y="6" width="500" height="500" rx="106" fill="none" stroke="#4D6D66" stroke-width="4" stroke-opacity="0.4" />
+
+  <!-- Símbolo da Marca: Monograma LC + Nó Sistêmico / Borboleta Orgânica Minimalista -->
+  <g filter="url(#subtleShadow)">
+    <!-- Asa / Elo Esquerdo (Letra L orgânica & curvada) -->
+    <path d="M 216 145 C 150 145 125 210 160 270 C 190 322 245 350 256 360 C 256 360 210 275 216 200 C 220 155 216 145 216 145 Z" 
+          fill="url(#sageGrad)" opacity="0.95" />
+
+    <!-- Asa / Elo Direito (Letra C elegante entrelaçada) -->
+    <path d="M 296 145 C 362 145 387 210 352 270 C 322 322 267 350 256 360 C 256 360 302 275 296 200 C 292 155 296 145 296 145 Z" 
+          fill="url(#sageGrad)" opacity="0.95" />
+
+    <!-- Centro Conector / Corpo Sistêmico Harmônico -->
+    <path d="M 256 160 Q 240 250 256 360 Q 272 250 256 160 Z" 
+          fill="url(#sageWarmGrad)" />
+
+    <!-- Nó Fluído Central (Representando o indivíduo no sistema) -->
+    <circle cx="256" cy="245" r="22" fill="#FDFBF7" />
+    <circle cx="256" cy="245" r="10" fill="#4D6D66" />
+  </g>
+</svg>
