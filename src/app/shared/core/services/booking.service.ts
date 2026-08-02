@@ -25,7 +25,7 @@ export interface AvailabilityResponse {
 })
 export class BookingService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = 'https://psico-hub-web.onrender.com';
 
   getAvailability(date: string): Observable<AvailabilityResponse> {
     return this.http.get<AvailabilityResponse>(`${this.apiUrl}/availability?date=${date}`).pipe(
