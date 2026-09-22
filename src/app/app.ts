@@ -289,7 +289,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   readonly stats = signal<Stat[]>([
     { value: '5+',   label: 'Anos de experiência clínica' },
     { value: '200+', label: 'Acolhimentos realizados' },
-    { value: 'CRP',  label: 'Registro profissional ativo' },
+    { value: 'CRP',  label: 'Registro profissional ativo: Nº 04/67406' },
     { value: '100%', label: 'Sigilo e confidencialidade' },
   ]);
 
@@ -311,7 +311,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   readonly steps = signal<Step[]>([
     { number:'01', title:'Primeiro contato',        description:'Entre em contato por WhatsApp ou agende pelo site. Você não precisa saber o que dizer para começar.' },
     { number:'02', title:'Sessão inicial',           description:'Alinhamos as suas principais queixas e definimos os objetivos do processo terapêutico online.' },
-    { number:'03', title:'Processo terapêutico',     description:'Sessões semanais ou quinzenais 100% online via chamada de vídeo segura, adaptadas ao seu tempo.' },
+    { number:'03', title:'Processo terapêutico',     description:'Sessões semanais ou quinzenais 100% online via chamada de vídeo segura.' },
     { number:'04', title:'Transformação',             description:'Com o tempo, novos caminhos se desenham, trazendo autonomia e alívio emocional.' },
   ]);
 
