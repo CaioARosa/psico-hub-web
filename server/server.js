@@ -57,7 +57,7 @@ const SIMULATED_BOOKINGS = [];
  * Route: GET /api/availability
  * Queries Google Calendar FreeBusy API to list available slots for a given date
  */
-app.get('/api/availability', async (req, res) => {
+app.get(['/api/availability', '/availability'], async (req, res) => {
   const { date } = req.query; // YYYY-MM-DD format
   
   if (!date) {
@@ -143,7 +143,7 @@ app.get('/api/availability', async (req, res) => {
  * Route: POST /api/book
  * Inserts booking event directly into Lays' Google Calendar
  */
-app.post('/api/book', async (req, res) => {
+app.post(['/api/book', '/book'], async (req, res) => {
   const { service, date, time, name, email, phone, message } = req.body;
 
   if (!service || !date || !time || !name || !phone) {
