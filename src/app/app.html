@@ -103,9 +103,9 @@
     </div>
 
     <!-- Seção Inferior: Abordagem & Calendário -->
-    <div class="grid lg:grid-cols-12 gap-8 items-start pt-12 border-t border-[rgba(76,100,91,0.08)]">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-12 border-t border-[rgba(76,100,91,0.08)]">
       <!-- Minha Abordagem -->
-      <div class="lg:col-span-5 space-y-8 animate-fade-in-up">
+      <div class="w-full lg:col-span-5 space-y-8 animate-fade-in-up">
         <h3 class="font-display text-3xl text-[#1C221F]">Minha Abordagem</h3>
         <div class="grid sm:grid-cols-2 gap-6">
           <!-- Item 1 -->
@@ -137,12 +137,12 @@
       </div>
 
       <!-- Widget de Agendamento -->
-      <div id="agenda" class="lg:col-span-7">
-        <div class="booking-card p-6 lg:p-10 reveal"
+      <div id="agenda" class="w-full lg:col-span-7">
+        <div class="booking-card p-4 sm:p-6 lg:p-10 reveal"
           style="background-color:var(--bg-surface);border:1px solid var(--border-whisper);border-radius:1.5rem;box-shadow:var(--shadow-float);">
 
           <!-- Indicador de progresso -->
-          <div class="flex items-center max-w-xs mb-10 gap-0">
+          <div class="flex items-center max-w-xs mb-8 sm:mb-10 gap-0">
             @for (s of [1,2,3]; track s; let last = $last) {
             <div class="flex items-center gap-0">
               <div class="flex flex-col items-center">
@@ -156,7 +156,7 @@
                 </span>
               </div>
               @if (!last) {
-              <div class="h-px w-8 mx-1 mb-4 transition-all duration-500"
+              <div class="h-px w-6 sm:w-8 mx-1 mb-4 transition-all duration-500"
                 [style.background-color]="bookingStep() > s ? 'var(--accent)' : 'var(--border-whisper)'"></div>
               }
             </div>
@@ -171,7 +171,7 @@
               Pode ser uma dúvida ou uma certeza — os dois são válidos para começar.
             </p>
 
-            <div class="grid md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
               @for (opt of serviceOptions(); track opt.value) {
               <button class="p-5 rounded-xl border text-left transition-all duration-200 cursor-pointer card-hover"
                 [style.border-color]="selectedService() === opt.value ? 'var(--accent)' : 'var(--border-whisper)'"
@@ -187,16 +187,16 @@
             </div>
 
             <div class="flex justify-end pt-4">
-              <button class="btn-primary" (click)="setStep(2)">Escolher data e horário</button>
+              <button class="btn-primary w-full sm:w-auto" (click)="setStep(2)">Escolher data e horário</button>
             </div>
           </div>
           }
 
           <!-- PASSO 2 -->
           @if (bookingStep() === 2) {
-          <div class="animate-fade-in grid lg:grid-cols-12 gap-8">
+          <div class="animate-fade-in grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
 
-            <div class="lg:col-span-7 space-y-4">
+            <div class="col-span-1 lg:col-span-7 space-y-4">
               <div class="flex items-center justify-between">
                 <span class="font-display text-lg text-[#1C221F]">{{ monthLabel() }}</span>
                 <div class="flex gap-1">
@@ -222,7 +222,7 @@
                 <span class="aspect-square"></span>
                 } @else {
                 <button (click)="selectDate(day)" [disabled]="isPastDate(day) || isSunday(day)"
-                  class="aspect-square rounded-full flex items-center justify-center text-sm font-medium transition-all duration-150"
+                  class="aspect-square rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-all duration-150"
                   [style.background-color]="isSelected(day) ? 'var(--accent)' : 'transparent'"
                   [style.color]="isSelected(day) ? '#fff' : isPastDate(day)||isSunday(day) ? 'rgba(28,34,31,0.2)' : isToday(day) ? 'var(--accent)' : 'var(--text-primary)'"
                   [style.cursor]="isPastDate(day)||isSunday(day) ? 'not-allowed' : 'pointer'"
@@ -233,7 +233,7 @@
                 }
               </div>
 
-              <div class="flex items-center gap-5 text-xs pt-2" style="color:var(--text-muted);">
+              <div class="flex flex-wrap items-center gap-3 sm:gap-5 text-xs pt-2" style="color:var(--text-muted);">
                 <span class="flex items-center gap-1.5">
                   <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color:var(--accent);"></span>
                   Selecionado
@@ -250,7 +250,7 @@
               </div>
             </div>
 
-            <div class="lg:col-span-5 space-y-4">
+            <div class="col-span-1 lg:col-span-5 space-y-4">
               <h4 class="font-display text-lg text-[#1C221F]">Horários disponíveis</h4>
 
               @if (slotsLoading()) {
@@ -271,16 +271,16 @@
               </div>
               } @else if (selectedDate()) {
               @if (availableTimeSlots().length > 0) {
-              <div class="grid grid-cols-2 gap-2">
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2">
                 @for (slot of availableTimeSlots(); track slot.time) {
                 <button [disabled]="!slot.available" (click)="selectTimeSlot(slot.time)"
-                  class="py-3 rounded-lg border text-sm font-medium transition-all duration-150"
+                  class="py-3 px-2 rounded-lg border text-xs sm:text-sm font-medium transition-all duration-150 text-center"
                   [style.border-color]="slot.available && selectedTimeSlot()===slot.time ? 'var(--accent)' : slot.available ? 'var(--border-whisper)' : 'transparent'"
                   [style.background-color]="slot.available && selectedTimeSlot()===slot.time ? 'var(--accent)' : slot.available ? 'var(--bg-canvas)' : 'var(--bg-muted)'"
                   [style.color]="slot.available && selectedTimeSlot()===slot.time ? '#fff' : slot.available ? 'var(--text-primary)' : 'var(--text-muted)'"
                   [style.cursor]="!slot.available ? 'not-allowed' : 'pointer'">
                   {{ slot.time }}
-                  @if (!slot.available) { <span class="text-xs opacity-60 ml-1">(ocupada!)</span> }
+                  @if (!slot.available) { <span class="block sm:inline text-[0.65rem] opacity-60 sm:ml-1">(ocupada)</span> }
                 </button>
                 }
               </div>
@@ -313,9 +313,9 @@
               }
             </div>
 
-            <div class="col-span-12 flex justify-between pt-6" style="border-top:1px solid var(--border-whisper);">
-              <button class="btn-secondary py-2.5 px-5 text-sm" (click)="setStep(1)">Voltar</button>
-              <button class="btn-primary" [disabled]="!selectedDate()||!selectedTimeSlot()"
+            <div class="col-span-1 lg:col-span-12 flex items-center justify-between gap-3 pt-6" style="border-top:1px solid var(--border-whisper);">
+              <button class="btn-secondary py-2.5 px-4 sm:px-5 text-sm" (click)="setStep(1)">Voltar</button>
+              <button class="btn-primary py-2.5 px-4 sm:px-5 text-sm" [disabled]="!selectedDate()||!selectedTimeSlot()"
                 (click)="setStep(3)">Continuar</button>
             </div>
           </div>
@@ -337,7 +337,7 @@
                 <input id="p-name" type="text" class="form-input" placeholder="Seu nome"
                   (input)="patientName.set($any($event.target).value)" [value]="patientName()" />
               </div>
-              <div class="grid sm:grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="form-label" for="p-phone">WhatsApp *</label>
                   <input id="p-phone" type="tel" class="form-input" placeholder="(21) 99999-9999"
@@ -365,10 +365,10 @@
               <div><strong>Modalidade:</strong> Atendimento Online via Videochamada</div>
             </div>
 
-            <div class="flex justify-between pt-4" style="border-top:1px solid var(--border-whisper);">
-              <button class="btn-secondary py-2.5 px-5 text-sm" [disabled]="bookingLoading()"
+            <div class="flex items-center justify-between gap-3 pt-4" style="border-top:1px solid var(--border-whisper);">
+              <button class="btn-secondary py-2.5 px-4 sm:px-5 text-sm" [disabled]="bookingLoading()"
                 (click)="setStep(2)">Voltar</button>
-              <button class="btn-primary" [disabled]="!patientName()||!patientPhone()||bookingLoading()"
+              <button class="btn-primary py-2.5 px-4 sm:px-5 text-sm" [disabled]="!patientName()||!patientPhone()||bookingLoading()"
                 (click)="confirmBooking()">
                 @if (bookingLoading()) { Confirmando... } @else { Confirmar sessão }
               </button>
