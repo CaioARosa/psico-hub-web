@@ -10,6 +10,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/links/links.component').then(m => m.LinksComponent),
   },
   {
+    path: 'story',
+    loadComponent: () => import('./pages/story/story.component').then(m => m.StoryComponent),
+  },
+  {
     path: 'bio',
     redirectTo: 'links',
     pathMatch: 'full'
