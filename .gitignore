@@ -46,4 +46,6 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 .vercel
+.firebase/
+firebase-debug.log*
 .env*
