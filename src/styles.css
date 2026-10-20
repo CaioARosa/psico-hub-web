@@ -4,6 +4,9 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Âncoras (#sobre, #servicos...) não ficam escondidas atrás da nav flutuante */
+[id] { scroll-margin-top: 5rem; }
+
 /* ============================================
    DESIGN TOKENS — Clínica Premium
    Paleta: Creme Quente + Verde Sálvia + Carvão Profundo
