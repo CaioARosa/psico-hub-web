@@ -9,7 +9,10 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { BookingService, TimeSlot } from '@/shared/core/services/booking.service';
+import { SafeHtmlPipe } from '@/shared/pipes/safe-html.pipe';
 
 interface Stat          { value: string; label: string; }
 interface ServiceItem   { svgIcon: string; title: string; description: string; }
@@ -59,12 +62,14 @@ function createButterflies(): Butterfly[] {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SafeHtmlPipe],
   templateUrl: './home.html',
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
   private bookingService = inject(BookingService);
   private platformId     = inject(PLATFORM_ID);
+  private route          = inject(ActivatedRoute);
+  private fragmentSub?: Subscription;
 
   private observer!: IntersectionObserver;
   private scrollHandler!: () => void;
@@ -148,11 +153,20 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       document.documentElement.style.setProperty('--scroll-y', `${y}px`);
     };
     window.addEventListener('scroll', this.scrollHandler, { passive: true });
+
+    // Âncora vinda de outra rota (ex.: /links -> /#sobre): rola após o layout estabilizar
+    this.fragmentSub = this.route.fragment.subscribe(fragment => {
+      if (!fragment) return;
+      setTimeout(() => {
+        document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    });
   }
 
   ngOnDestroy() {
     if (this.observer)      this.observer.disconnect();
     if (this.scrollHandler) window.removeEventListener('scroll', this.scrollHandler);
+    this.fragmentSub?.unsubscribe();
   }
 
   // --------------------------------------------------------
