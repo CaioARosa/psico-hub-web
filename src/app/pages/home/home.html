@@ -110,7 +110,7 @@
         <div class="grid sm:grid-cols-2 gap-6">
           <!-- Item 1 -->
           <div class="space-y-4">
-            <div class="w-8 h-8 text-[#4D6D66]" [innerHTML]="iconBrain"></div>
+            <div class="w-8 h-8 text-[#4D6D66]" [innerHTML]="iconBrain | safeHtml"></div>
             <h4 class="font-display text-lg text-[#1C221F]">1- Terapia Sistêmica</h4>
             <p class="text-[#8F9C99] text-xs leading-relaxed" style="font-weight:300;">
               Espaço dinâmico, provocações saudáveis, análises de padrões e apontamentos práticos para gerar movimento.
@@ -118,7 +118,7 @@
           </div>
           <!-- Item 2 -->
           <div class="space-y-4">
-            <div class="w-8 h-8 text-[#4D6D66]" [innerHTML]="iconLeaf"></div>
+            <div class="w-8 h-8 text-[#4D6D66]" [innerHTML]="iconLeaf | safeHtml"></div>
             <h4 class="font-display text-lg text-[#1C221F]">2- Visão ampliada das suas relações</h4>
             <p class="text-[#8F9C99] text-xs leading-relaxed" style="font-weight:300;">
               Análise das suas interações familiares, amorosas e profissionais.
@@ -126,7 +126,7 @@
           </div>
           <!-- Item 3 -->
           <div class="space-y-4">
-            <div class="w-8 h-8 text-[#4D6D66]" [innerHTML]="iconHeart"></div>
+            <div class="w-8 h-8 text-[#4D6D66]" [innerHTML]="iconHeart | safeHtml"></div>
             <h4 class="font-display text-lg text-[#1C221F]">3- Ressignificação de padrões</h4>
             <p class="text-[#8F9C99] text-xs leading-relaxed" style="font-weight:300;">
               Identificação de repetições invisiveis, papeis e expectativas herdadas transformando em
@@ -179,7 +179,7 @@
                 (click)="selectedService.set(opt.value)">
                 <div class="w-5 h-5 mb-3"
                   [style.color]="selectedService() === opt.value ? 'var(--accent)' : 'var(--text-muted)'"
-                  [innerHTML]="opt.svgIcon"></div>
+                  [innerHTML]="opt.svgIcon | safeHtml"></div>
                 <h4 class="font-display text-base text-[#1C221F] mb-1">{{ opt.label }}</h4>
                 <p class="text-[#8F9C99] text-xs leading-relaxed" style="font-weight:300;">{{ opt.desc }}</p>
               </button>
@@ -489,7 +489,7 @@
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-[rgba(76,100,91,0.12)] reveal-stagger">
       @for (service of services(); track service.title) {
       <div class="service-card">
-        <div class="w-8 h-8 mb-5" style="color:var(--accent)" [innerHTML]="service.svgIcon"></div>
+        <div class="w-8 h-8 mb-5" style="color:var(--accent)" [innerHTML]="service.svgIcon | safeHtml"></div>
         <h3 class="font-display text-xl text-[#1C221F] mb-2">{{ service.title }}</h3>
         <p class="text-[#8F9C99] text-sm leading-relaxed" style="font-weight:300;">{{ service.description }}</p>
       </div>
