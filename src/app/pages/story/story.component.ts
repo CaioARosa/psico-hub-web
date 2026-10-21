@@ -9,7 +9,7 @@ import { Component, signal } from '@angular/core';
   selector: 'app-story',
   standalone: true,
   template: `
-    <div class="stage">
+    <div class="stage" [class.rec]="recording">
       @if (playing()) {
         <div class="frame">
 
@@ -76,7 +76,9 @@ import { Component, signal } from '@angular/core';
         </div>
       }
 
-      <button type="button" class="replay" (click)="replay()">↻ Reiniciar</button>
+      @if (!recording) {
+        <button type="button" class="replay" (click)="replay()">↻ Reiniciar</button>
+      }
     </div>
   `,
   styles: [`
@@ -181,11 +183,18 @@ import { Component, signal } from '@angular/core';
     .replay { color:#D4E6E1; background:transparent; border:1px solid rgba(212,230,225,.3); border-radius:99px;
               padding:6px 16px; font-size:13px; cursor:pointer; }
 
+    /* Modo gravação (/story?rec=1): quadro 9:16 preenche toda a viewport, sem moldura */
+    .stage.rec { padding:0; gap:0; min-height:100vh; background:#FDFBF7; }
+    .stage.rec .frame { width:100vw; border-radius:0; }
+
     @media (prefers-reduced-motion: reduce) { .scene, .scene * { animation-duration:.01s !important; } }
   `],
 })
 export class StoryComponent {
   readonly playing = signal(true);
+
+  /** ?rec=1 → modo captura de vídeo (sem botão e sem moldura) */
+  readonly recording = new URLSearchParams(globalThis.location?.search ?? '').get('rec') === '1';
 
   /** Remove e recria o quadro para reiniciar todas as animações CSS do zero */
   replay() {
