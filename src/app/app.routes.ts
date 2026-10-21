@@ -14,6 +14,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/story/story.component').then(m => m.StoryComponent),
   },
   {
+    path: 'story-image/:n',
+    loadComponent: () => import('./pages/story-images/story-images.component').then(m => m.StoryImagesComponent),
+  },
+  {
     path: 'bio',
     redirectTo: 'links',
     pathMatch: 'full'
