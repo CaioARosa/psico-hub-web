@@ -47,7 +47,7 @@ interface BioLink {
         <header class="flex flex-col items-center text-center mb-8">
           <div class="relative mb-4">
             <div class="w-24 h-24 rounded-full p-1 border border-[#4D6D66]/25 shadow-sm overflow-hidden bg-white">
-              <img src="assets/lays_coelho_profile.jpg"
+              <img src="assets/lays_coelho_profile3.jpeg"
                    alt="Lays Coelho"
                    class="w-full h-full object-cover rounded-full select-none" />
             </div>
