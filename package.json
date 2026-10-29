@@ -7,7 +7,10 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "deploy": "ng build && npx firebase-tools deploy --only hosting"
+    "render:story": "node scripts/render-story.mjs",
+    "deploy": "ng build && npx firebase-tools deploy --only hosting",
+    "deploy:functions": "npx firebase-tools deploy --only functions",
+    "deploy:all": "ng build && npx firebase-tools deploy"
   },
   "private": true,
   "packageManager": "npm@11.8.0",
@@ -32,7 +35,9 @@
     "@angular/cli": "^21.2.3",
     "@angular/compiler-cli": "^21.2.0",
     "@tailwindcss/postcss": "^4.1.12",
+    "ffmpeg-static": "^5.3.0",
     "jsdom": "^28.0.0",
+    "playwright": "^1.64.1",
     "postcss": "^8.5.3",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.1.12",

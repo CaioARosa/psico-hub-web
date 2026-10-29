@@ -2,9 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { google } = require('googleapis');
+const { onRequest } = require('firebase-functions/v2/https');
 
-// Load environment variables
-dotenv.config();
+const path = require('path');
+
+// Load environment variables (.env from server directory)
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,8 +31,17 @@ let calendar = null;
 
 if (isGCalConfigured) {
   try {
-    // Format private key correctly in case newlines were lost
+    // Format private key correctly in case newlines were lost or replaced with spaces
     privateKey = privateKey.replace(/\\n/g, '\n');
+    if (privateKey.includes('-----BEGIN PRIVATE KEY-----') && !privateKey.includes('\n')) {
+      const cleanBody = privateKey
+        .replace('-----BEGIN PRIVATE KEY-----', '')
+        .replace('-----END PRIVATE KEY-----', '')
+        .trim()
+        .replace(/\s+/g, '');
+      const chunks = cleanBody.match(/.{1,64}/g) || [];
+      privateKey = `-----BEGIN PRIVATE KEY-----\n${chunks.join('\n')}\n-----END PRIVATE KEY-----\n`;
+    }
     
     const auth = new google.auth.JWT(
       serviceAccountEmail,
@@ -214,7 +226,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', calendarConfigured: isGCalConfigured });
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`🚀 Lays Landing Backend is running on http://localhost:${PORT}`);
-});
+// Export as Firebase Cloud Function (Google Cloud Run v2)
+exports.api = onRequest(
+  {
+    region: 'southamerica-east1',
+    cors: true,
+    maxInstances: 10
+  },
+  app
+);
+
+// Start standalone HTTP Server when executed directly (local development)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Lays Landing Backend is running on http://localhost:${PORT}`);
+  });
+}

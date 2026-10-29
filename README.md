@@ -25,7 +25,7 @@ Plataforma web profissional e interativa da psicóloga clínica **Lays Coelho (C
 - [Testes Automatizados](#testes-automatizados)
 - [Deploy em Produção](#deploy-em-produção)
   - [Frontend (Firebase Hosting)](#frontend-firebase-hosting)
-  - [Backend (Render)](#backend-render)
+  - [Backend (Firebase Functions / Cloud Run)](#backend-firebase-functions--cloud-run)
 - [Solução de Problemas (Troubleshooting)](#solução-de-problemas-troubleshooting)
 
 ---
@@ -59,7 +59,7 @@ Plataforma web profissional e interativa da psicóloga clínica **Lays Coelho (C
 
 ### Infraestrutura
 - **Frontend Hosting**: Firebase Hosting (com regras de rewrite para SPA)
-- **Backend Hosting**: Render (Web Service Node.js)
+- **Backend Hosting**: Firebase Cloud Functions 2nd Gen (Google Cloud Run)
 
 ---
 
@@ -311,22 +311,24 @@ O deploy do frontend é gerenciado via Firebase Hosting e configurado no arquivo
 
 O comando compila o Angular (`ng build`) e envia os artefatos da pasta `dist/lays-landing/browser` diretamente para o hosting, mantendo a regra de rewrite para SPAs (`/index.html`).
 
-### Backend (Render)
+### Backend (Firebase Functions / Cloud Run)
 
-A API do Google Calendar pode ser hospedada em um Web Service gratuito ou pago no [Render](https://render.com/):
+A API Express está empacotada como uma Cloud Function de 2ª geração no diretório `server/` e roteada automaticamente pelo Firebase Hosting (`/api/**`):
 
-1. Conecte o repositório GitHub ao Render.
-2. Selecione **New Web Service**.
-3. Configure os parâmetros:
-   - **Root Directory**: `server`
-   - **Environment**: `Node`
-   - **Build Command**: `npm install`
-   - **Start Command**: `node server.js`
-4. Na aba **Environment Variables**, cadastre:
-   - `GOOGLE_CALENDAR_ID`
-   - `GOOGLE_SERVICE_ACCOUNT_EMAIL`
-   - `GOOGLE_PRIVATE_KEY`
-5. No frontend, atualize a URL da API em `src/app/shared/core/services/booking.service.ts` caso o domínio do Render seja alterado.
+1. Certifique-se de que o projeto no Firebase Console está no plano **Blaze (Pay as you go)**.
+2. Defina as variáveis de ambiente e credenciais da Service Account no arquivo `server/.env` ou configure segredos via Firebase CLI:
+   ```bash
+   npx firebase functions:secrets:set GOOGLE_PRIVATE_KEY
+   ```
+3. Execute o deploy completo (frontend e backend):
+   ```bash
+   npx firebase deploy
+   ```
+   Ou apenas o backend:
+   ```bash
+   npx firebase deploy --only functions
+   ```
+4. As rotas `/api/availability` e `/api/book` ficam disponíveis sob o mesmo domínio da aplicação sem necessidade de configuração adicional de CORS.
 
 ---
 
