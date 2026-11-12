@@ -5,11 +5,9 @@ import type { Patient } from '../domain/models';
 import { newPatientDoc, patientFromDoc, patientToDoc } from '../domain/patient-doc';
 import type { PatientInput } from '../domain/patient-form';
 import { FIRESTORE } from './firebase';
-import { withTimeout } from './with-timeout';
+import { runWrite } from './safe-write';
 
 const LOAD_ERROR = 'Não foi possível carregar os pacientes.';
-const SAVE_ERROR = 'Não foi possível confirmar o salvamento. Verifique sua conexão e tente novamente.';
-const WRITE_TIMEOUT_MS = 10_000;
 
 @Injectable({ providedIn: 'root' })
 export class PatientsService {
@@ -46,23 +44,14 @@ export class PatientsService {
   }
 
   async create(id: string, input: PatientInput): Promise<void> {
-    await this.write(() => setDoc(doc(this.db, 'patients', id), newPatientDoc(input)));
+    await runWrite(() => setDoc(doc(this.db, 'patients', id), newPatientDoc(input)));
   }
 
   async update(id: string, input: PatientInput): Promise<void> {
-    await this.write(() => updateDoc(doc(this.db, 'patients', id), { ...patientToDoc(input) }));
+    await runWrite(() => updateDoc(doc(this.db, 'patients', id), { ...patientToDoc(input) }));
   }
 
   async setActive(id: string, active: boolean): Promise<void> {
-    await this.write(() => updateDoc(doc(this.db, 'patients', id), { active }));
-  }
-
-  /** Offline, as promessas de escrita do Firestore não terminam: o timeout vira erro repetível. */
-  private async write(operation: () => Promise<unknown>): Promise<void> {
-    try {
-      await withTimeout(operation(), WRITE_TIMEOUT_MS, new Error(SAVE_ERROR));
-    } catch {
-      throw new Error(SAVE_ERROR);
-    }
+    await runWrite(() => updateDoc(doc(this.db, 'patients', id), { active }));
   }
 }
