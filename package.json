@@ -7,6 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:rules": "npx firebase-tools emulators:exec --only firestore --project demo-psico-hub \"node --test test/firestore-rules/rules.test.mjs\"",
     "deploy": "ng build && npx firebase-tools deploy --only hosting",
     "deploy:backend": "npx firebase-tools deploy --only run",
     "deploy:all": "ng build && npx firebase-tools deploy --only run,hosting"
@@ -33,6 +34,7 @@
     "@angular/build": "^21.2.3",
     "@angular/cli": "^21.2.3",
     "@angular/compiler-cli": "^21.2.0",
+    "@firebase/rules-unit-testing": "^6.0.0",
     "@tailwindcss/postcss": "^4.1.12",
     "jsdom": "^28.0.0",
     "postcss": "^8.5.3",
