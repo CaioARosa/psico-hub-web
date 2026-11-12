@@ -1,12 +1,12 @@
 # Multi-stage Dockerfile for Cloud Run
 # Stage 1: Dependencies builder
-FROM node:20-slim AS builder
+FROM node:24-slim AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
 
 # Stage 2: Production runner
-FROM node:20-slim
+FROM node:24-slim
 WORKDIR /app
 
 # Cloud Run injects PORT (default 8080)
