@@ -17,6 +17,7 @@ ENV NODE_ENV=production
 COPY --from=builder /app/node_modules ./node_modules
 COPY package.json ./
 COPY server.js ./
+COPY lib ./lib
 
 # Run as non-root user for security
 USER node

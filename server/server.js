@@ -2,6 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { google } = require('googleapis');
+const { requireAdmin } = require('./lib/admin-auth');
+const { getAuth, getDb } = require('./lib/firebase');
+const { createFirestoreRepo } = require('./lib/firestore-repo');
+const { monthWindow, syncMonth } = require('./lib/calendar-sync');
 
 // Load environment variables
 dotenv.config();
@@ -208,6 +212,35 @@ app.post(['/api/book', '/book'], async (req, res) => {
     return res.status(500).json({ error: 'Falha ao agendar evento no Google Agenda.' });
   }
 });
+
+/**
+ * Route: POST /api/admin/sync-calendar
+ * Syncs one month of Google Calendar events into Firestore `sessions` (admin only)
+ */
+app.post(
+  ['/api/admin/sync-calendar', '/admin/sync-calendar'],
+  requireAdmin({ verifyIdToken: (token) => getAuth().verifyIdToken(token) }),
+  async (req, res) => {
+    if (!calendar) {
+      return res.status(503).json({ error: 'Google Agenda não configurado.' });
+    }
+
+    const month = req.body?.month;
+    try {
+      monthWindow(month);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    try {
+      const summary = await syncMonth({ month, calendar, calendarId, repo: createFirestoreRepo(getDb()) });
+      return res.json(summary);
+    } catch (error) {
+      console.error('Error syncing calendar:', error);
+      return res.status(500).json({ error: 'Falha ao sincronizar a agenda.' });
+    }
+  }
+);
 
 // Healthcheck
 app.get(['/api/health', '/health'], (req, res) => {
