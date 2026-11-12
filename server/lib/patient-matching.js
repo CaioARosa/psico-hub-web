@@ -7,19 +7,28 @@ function normalizeText(text) {
     .trim();
 }
 
+function toWords(text) {
+  return normalizeText(text).replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
+function containsWords(haystack, needle) {
+  return ` ${haystack} `.includes(` ${needle} `);
+}
+
 function findPatientForEvent(title, patients) {
-  const normalizedTitle = normalizeText(title);
+  const titleWords = toWords(title);
   const candidates = patients
     .filter((p) => p.active)
-    .map((p) => ({ id: p.id, name: normalizeText(p.name) }))
-    .filter((p) => p.name && normalizedTitle.includes(p.name));
+    .map((p) => ({ id: p.id, name: toWords(p.name) }))
+    .filter((p) => p.name && containsWords(titleWords, p.name));
 
   if (candidates.length === 0) return null;
   if (candidates.length === 1) return candidates[0].id;
 
   const longest = candidates.reduce((a, b) => (b.name.length > a.name.length ? b : a));
-  const containsAll = candidates.every((c) => c === longest || longest.name.includes(c.name));
-  return containsAll ? longest.id : null;
+  const isHomonym = candidates.some((c) => c !== longest && c.name === longest.name);
+  const containsAll = candidates.every((c) => c === longest || containsWords(longest.name, c.name));
+  return containsAll && !isHomonym ? longest.id : null;
 }
 
 function amountForNewSession(agreement) {

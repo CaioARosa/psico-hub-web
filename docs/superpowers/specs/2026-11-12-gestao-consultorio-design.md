@@ -79,7 +79,7 @@ Valores monetários são guardados em centavos (inteiros) para evitar erro de po
 1. A Lays clica em "Sincronizar agenda" na tela de Sessões, escolhendo o mês (padrão: mês atual).
 2. O frontend chama `POST /api/admin/sync-calendar` com `{ month }` e o ID token.
 3. O backend busca os eventos do mês e, para cada evento:
-   - **Vínculo com paciente:** compara o título do evento com `patients.name` de pacientes **ativos**, sem diferenciar maiúsculas e acentos, por substring. Os eventos criados pelo site têm título `Consulta [serviço] - Nome`, que já casa.
+   - **Vínculo com paciente:** compara o título do evento com `patients.name` de pacientes **ativos**, sem diferenciar maiúsculas e acentos, por palavras inteiras (o nome do paciente deve aparecer no título como palavra(s) completa(s), ignorando pontuação). Dois pacientes ativos com o mesmo nome são ambiguidade real (a sessão fica não identificada). Os eventos criados pelo site têm título `Consulta [serviço] - Nome`, que já casa.
    - Se exatamente **um** paciente casa, ou se vários casam mas o nome de um deles contém os nomes de todos os outros (ex.: "Ana" e "Ana Paula" em "Consulta - Ana Paula"), vale o de nome mais longo: cria/atualiza a sessão com `patientId` e `amountApplied`.
    - Caso contrário (nenhum casa, ou ambiguidade real): grava com `patientId = null` (aba "Não identificados"). Sessões não identificadas não podem ser marcadas como realizada/faltou/cancelada até serem vinculadas a um paciente.
    - Eventos de dia inteiro (sem horário) e eventos cancelados são ignorados.

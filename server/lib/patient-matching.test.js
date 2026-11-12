@@ -38,6 +38,26 @@ test('ignora pacientes inativos', () => {
   assert.equal(findPatientForEvent('Consulta - Maria Souza', patients), null);
 });
 
+test("não casa 'Ana' dentro de 'Mariana'", () => {
+  const patients = [patient('p1', 'Ana')];
+  assert.equal(findPatientForEvent('Consulta - Mariana', patients), null);
+});
+
+test('casa nome adjacente a pontuação', () => {
+  const patients = [patient('p1', 'Maria Souza')];
+  assert.equal(findPatientForEvent('Consulta [Individual] - Maria Souza (online)', patients), 'p1');
+});
+
+test('homônimos idênticos são ambíguos', () => {
+  const patients = [patient('p1', 'Ana Lima'), patient('p2', 'Ana Lima')];
+  assert.equal(findPatientForEvent('Consulta - Ana Lima', patients), null);
+});
+
+test("três candidatos: Ana, Ana Paula e Paula Souza em 'Ana Paula Souza' é ambíguo", () => {
+  const patients = [patient('p1', 'Ana'), patient('p2', 'Ana Paula'), patient('p3', 'Paula Souza')];
+  assert.equal(findPatientForEvent('Consulta - Ana Paula Souza', patients), null);
+});
+
 test('amountForNewSession: per_session devolve o valor do acordo', () => {
   assert.equal(amountForNewSession({ type: 'per_session', amount: 15000 }), 15000);
 });
