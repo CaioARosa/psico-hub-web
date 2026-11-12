@@ -217,7 +217,7 @@ test('rodar duas vezes seguidas com as sessões resultantes não gera novos crea
   assert.ok(second.upserts.every((u) => !('calendarEventId' in u.data)));
 });
 
-const makeFakes = ({ events = [], calendarError = null } = {}) => {
+const makeFakes = ({ events = [], sessions = [], calendarError = null } = {}) => {
   const calls = { list: [], applied: [], sessionsRange: [] };
   const calendar = {
     events: {
@@ -232,7 +232,7 @@ const makeFakes = ({ events = [], calendarError = null } = {}) => {
     listPatients: async () => [patient('p1', 'Maria Souza')],
     listSessionsBetween: async (start, end) => {
       calls.sessionsRange.push([start, end]);
-      return [];
+      return sessions;
     },
     applyUpserts: async (upserts) => {
       calls.applied.push(upserts);
@@ -243,7 +243,12 @@ const makeFakes = ({ events = [], calendarError = null } = {}) => {
 
 test('syncMonth chama o Agenda com a janela do mês, passa pacientes e sessões ao planejamento e aplica os upserts', async () => {
   const { calls, calendar, repo } = makeFakes({
-    events: [event('e1', 'Consulta - Maria Souza', '2026-11-10T13:00:00-03:00')],
+    events: [
+      event('e1', 'Consulta - Maria Souza', '2026-11-10T13:00:00-03:00'),
+      event('e2', 'Consulta - Maria Souza', '2026-11-11T13:00:00-03:00'),
+      event('e3', 'Consulta - Maria Souza', '2026-11-12T13:00:00-03:00'),
+    ],
+    sessions: [session('e2', { status: 'done' }), session('e3')],
   });
   const summary = await syncMonth({ month: '2026-11', calendar, calendarId: 'cal-id', repo });
 
@@ -257,12 +262,19 @@ test('syncMonth chama o Agenda com a janela do mês, passa pacientes e sessões 
       maxResults: 2500,
     },
   ]);
-  assert.equal(calls.sessionsRange[0][0].toISOString(), '2026-11-01T03:00:00.000Z');
-  assert.equal(calls.sessionsRange[0][1].toISOString(), '2026-12-01T03:00:00.000Z');
+  assert.equal(calls.sessionsRange.length, 1);
+  const [rangeStart, rangeEnd] = calls.sessionsRange[0];
+  assert.ok(rangeStart instanceof Date && rangeEnd instanceof Date);
+  assert.equal(rangeStart.toISOString(), '2026-11-01T03:00:00.000Z');
+  assert.equal(rangeEnd.toISOString(), '2026-12-01T03:00:00.000Z');
+
   assert.equal(calls.applied.length, 1);
-  assert.equal(calls.applied[0][0].id, 'e1');
-  assert.equal(calls.applied[0][0].data.patientId, 'p1');
-  assert.deepEqual(summary, { created: 1, updated: 0, unidentified: 0, missing: 0 });
+  const upserts = calls.applied[0];
+  assert.deepEqual(upserts.map((u) => u.id), ['e1', 'e3']);
+  assert.equal(upserts[0].data.patientId, 'p1');
+  assert.equal(upserts[0].data.calendarEventId, 'e1');
+  assert.equal('calendarEventId' in upserts[1].data, false);
+  assert.deepEqual(summary, { created: 1, updated: 1, unidentified: 0, missing: 0 });
 });
 
 test('syncMonth propaga erro do Agenda sem chamar applyUpserts', async () => {
