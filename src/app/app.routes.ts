@@ -18,6 +18,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/story-images/story-images.component').then(m => m.StoryImagesComponent),
   },
   {
+    path: 'feed-generator',
+    loadComponent: () => import('./pages/feed-generator/feed-generator.component').then(m => m.FeedGeneratorComponent),
+  },
+  {
     path: 'bio',
     redirectTo: 'links',
     pathMatch: 'full'
