@@ -19,6 +19,7 @@ Plataforma web profissional e interativa da psicóloga clínica **Lays Coelho (C
   - [Estrutura de Pastas](#estrutura-de-pastas)
   - [Fluxo de Agendamento e Modos de Operação](#fluxo-de-agendamento-e-modos-de-operação)
   - [Mapeamento de Rotas](#mapeamento-de-rotas)
+- [Área de Gestão (`/admin`)](#área-de-gestão-admin)
 - [Variáveis de Ambiente](#variáveis-de-ambiente)
   - [Configuração do Google Calendar Service Account](#configuração-do-google-calendar-service-account)
 - [Scripts Disponíveis](#scripts-disponíveis)
@@ -69,6 +70,7 @@ Antes de iniciar, certifique-se de possuir instalado em sua máquina:
 
 - **Node.js**: versão `20.x` ou superior (recomendado `22.x`)
 - **npm**: versão `10.x` ou superior (o projeto utiliza `npm@11.8.0`)
+- **JDK 11+ (Java)**: disponível no `PATH` (necessário para rodar o emulador do Firestore em `npm run test:rules`)
 - **Git** instalado e configurado
 
 ---
@@ -220,7 +222,58 @@ psico-hub-web/
 | `/bio` | *(Redirect)* | Redirecionamento automático permanente para `/links` |
 | `/story` | `StoryComponent` | Vídeo animado de 15 segundos em formato 9:16 para divulgação no Instagram |
 | `/story-image/:n` | `StoryImagesComponent` | Layouts estáticos de Stories (`:n = 1` para gancho/reflexão, `:n = 3` para CTA) |
+| `/admin` | `AdminShellComponent` | Área privada de gestão (redireciona para `/admin/sessoes`; exige claim `admin`) |
+| `/admin/login` | `LoginComponent` | Tela de autenticação da psicóloga (Firebase Auth E-mail/Senha) |
+| `/admin/sessoes` | `SessionsComponent` | Sincronização da agenda do mês, confirmação de sessões e vínculo de pacientes |
+| `/admin/pacientes` | `PatientsComponent` | Cadastro e edição de pacientes e seus acordos financeiros |
 | `**` | *(Redirect)* | Redireciona qualquer rota inválida para `/` |
+
+---
+
+## Área de Gestão (`/admin`)
+
+Painel privado de uso exclusivo da psicóloga para gestão operacional do consultório. O frontend Angular lê e grava diretamente no **Cloud Firestore** (protegido por regras que exigem o custom claim `admin: true`), enquanto a sincronização de eventos do Google Agenda ocorre no backend via `POST /api/admin/sync-calendar`. Nenhum dado clínico ou prontuário é armazenado.
+
+### O que a Fase 1 entrega
+
+- **Autenticação exclusiva (`/admin/login`)**: Login com Firebase Authentication (E-mail/Senha) validando o custom claim `admin: true` no `authGuard`, nas regras do Firestore (`firestore.rules`) e no middleware `requireAdmin` do backend (`401` sem token válido, `403` sem o claim `admin`).
+- **Cadastro de pacientes (`/admin/pacientes`)**: Criação e edição de pacientes com status ativo/inativo e acordo financeiro configurável como valor **por sessão** (`per_session`) ou **pacote mensal** (`monthly_package`), com valores monetários armazenados em **centavos inteiros (BRL)**.
+- **Sincronização do Google Agenda (`POST /api/admin/sync-calendar`)**: Importação idempotente dos eventos do mês selecionado (`YYYY-MM`, fuso fixo `-03:00`) usando `calendarEventId` como ID do documento na coleção `sessions`. Associa automaticamente o paciente por e-mail de convidado ou nome no título, ignora eventos de dia inteiro e preserva sessões já consolidadas (`done`, `no_show`, `cancelled`).
+- **Confirmação de sessões (`/admin/sessoes`)**: Marcação de sessões agendadas (`scheduled`) como **Realizada** (`done`), **Faltou** (`no_show`) ou **Cancelada** (`cancelled`), vinculação manual de sessões não identificadas a um paciente cadastrado e ajuste do valor cobrado na sessão.
+
+### Configuração Inicial no Firebase / GCP (Provisionamento único)
+
+1. **Criar o banco Cloud Firestore**: No console do Firebase/GCP, crie o banco Firestore em modo nativo na região `southamerica-east1` (São Paulo).
+2. **Ativar o Firebase Authentication**: Ative o provedor **E-mail/Senha** no Firebase Authentication e crie a conta de usuário da psicóloga.
+3. **Configurar o Web App do Firebase no Frontend**: Registre um aplicativo Web no projeto Firebase, obtenha as chaves públicas com o comando abaixo e cole os valores em `src/app/pages/admin/data/firebase-config.ts`:
+   ```bash
+   npx firebase-tools apps:sdkconfig web
+   ```
+4. **Conceder o custom claim `admin: true`**: Autentique-se com Application Default Credentials (`gcloud auth application-default login`) e execute o script administrativo informando o e-mail da psicóloga:
+   ```bash
+   cd server && node scripts/grant-admin.js <email>
+   ```
+5. **Permissão IAM no Cloud Run**: Conceda o papel `roles/datastore.user` à service account utilizada pelo serviço Cloud Run (`psico-hub-backend`) para permitir que o backend leia `patients` e grave `sessions` no Firestore.
+6. **Publicar as regras do Firestore**:
+   ```bash
+   npx firebase-tools deploy --only firestore:rules
+   ```
+
+### Testes da Área de Gestão
+
+- **Unitários do Frontend (Vitest)**:
+  ```bash
+  npx ng test --watch=false
+  ```
+- **Unitários do Backend (`node --test`)**:
+  ```bash
+  cd server && npm test
+  ```
+- **Regras de Segurança do Firestore (Emulador local)**:
+  ```bash
+  npm run test:rules
+  ```
+  > **Pré-requisito**: O comando `npm run test:rules` executa o emulador do Firestore via `npx firebase-tools` e exige **JDK 11+ (Java)** instalado e disponível no `PATH` (`java -version`).
 
 ---
 
@@ -234,6 +287,7 @@ As variáveis de ambiente devem ser declaradas no arquivo `server/.env`:
 | `GOOGLE_CALENDAR_ID` | Sim (p/ prod) | - | E-mail/Identificador da agenda no Google Calendar |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Sim (p/ prod) | - | E-mail da Service Account criada no Google Cloud |
 | `GOOGLE_PRIVATE_KEY` | Sim (p/ prod) | - | Chave privada da Service Account (formato PEM com quebras de linha `\n`) |
+| `FIREBASE_PROJECT_ID` | Não | `psico-hub-lays` | ID do projeto Firebase/GCP usado pelo `firebase-admin` no backend |
 
 ### Configuração do Google Calendar Service Account
 
@@ -263,6 +317,7 @@ Para sincronizar diretamente com a agenda do Google em produção:
 | `npm run watch` | Executa o build contínuo em modo de desenvolvimento |
 | `npm test` | Executa a suíte de testes unitários com Vitest |
 | `npx ng test --watch=false` | Executa os testes unitários uma única vez no terminal |
+| `npm run test:rules` | Executa os testes das regras do Firestore no emulador local via `npx firebase-tools` (exige JDK 11+ no `PATH`) |
 | `npm run deploy` | Realiza o build de produção e faz deploy para o Firebase Hosting |
 
 ### Backend (`server/`)
@@ -270,23 +325,26 @@ Para sincronizar diretamente com a agenda do Google em produção:
 | Comando | Descrição |
 | :--- | :--- |
 | `npm start` | Inicia a API Express utilizando `node server.js` na porta definida |
+| `npm test` | Executa a suíte de testes unitários do backend com `node --test` |
 | `node server.js` | Inicialização direta do servidor backend |
 
 ---
 
 ## Testes Automatizados
 
-O projeto utiliza o executor nativo do Angular integrado ao **Vitest** com ambiente DOM via `jsdom`:
+O projeto conta com três suítes de testes automatizados:
 
 ```bash
-# Execução interativa (watch mode)
+# 1. Testes unitários do Frontend (Vitest + jsdom, arquivos *.spec.ts)
 npm test
-
-# Execução única (ideal para CI/CD)
 npx ng test --watch=false
-```
 
-Os arquivos de teste seguem a convenção `*.spec.ts`.
+# 2. Testes unitários do Backend (node --test, arquivos server/**/*.test.js)
+cd server && npm test
+
+# 3. Testes das regras de segurança do Firestore no emulador (exige JDK 11+ no PATH)
+npm run test:rules
+```
 
 ---
 
