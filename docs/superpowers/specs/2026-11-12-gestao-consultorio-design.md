@@ -1,6 +1,6 @@
 # Gestão do Consultório — Design
 
-Data: 2026-11-12 · Projeto: `psico-hub-web` · Usuária: Lays Coelho (única)
+Data: 2026-11-12 · Projeto: `psico-hub-web` · Usuária: Lays Coelho (única) e usuários Admin, como o meu, somente para Testes 
 
 ## 1. Objetivo
 
@@ -60,7 +60,8 @@ Cada fase é usável sozinha e tem seu próprio plano de implementação. **Este
 | `startsAt` | timestamp | |
 | `calendarTitle` | string | Título original do evento |
 | `status` | `scheduled` \| `done` \| `no_show` \| `cancelled` | Definido pela Lays |
-| `amountApplied` | number (centavos) | **Valor congelado** na criação da sessão |
+| `amountApplied` | number (centavos) | **Valor congelado** na criação da sessão. Em `per_session` é `agreement.amount`; em `monthly_package` e em sessões não identificadas é `0` (o valor do pacote é cobrado no mês, não por sessão) |
+| `missingFromCalendar` | boolean | `true` quando uma sessão `scheduled` não aparece mais no Agenda após sincronizar |
 
 ### `payments`
 | Campo | Tipo | Observação |
@@ -78,10 +79,11 @@ Valores monetários são guardados em centavos (inteiros) para evitar erro de po
 1. A Lays clica em "Sincronizar agenda" na tela de Sessões, escolhendo o mês (padrão: mês atual).
 2. O frontend chama `POST /api/admin/sync-calendar` com `{ month }` e o ID token.
 3. O backend busca os eventos do mês e, para cada evento:
-   - **Vínculo com paciente:** compara o título do evento com `patients.name`, sem diferenciar maiúsculas e acentos, por substring. Os eventos criados pelo site têm título `Consulta [serviço] - Nome`, que já casa.
-   - Se exatamente **um** paciente casa: cria/atualiza a sessão com `patientId` e `amountApplied` (valor do acordo na criação).
-   - Se **nenhum ou mais de um** casa: grava com `patientId = null` (aba "Não identificados").
-4. **Regras de atualização:** só sessões ainda `scheduled` são atualizadas (horário, título). Sessões já marcadas como `done`, `no_show` ou `cancelled` nunca são alteradas pela sincronização. Eventos removidos do Agenda não apagam sessões existentes; ficam sinalizados na tela para decisão dela.
+   - **Vínculo com paciente:** compara o título do evento com `patients.name` de pacientes **ativos**, sem diferenciar maiúsculas e acentos, por substring. Os eventos criados pelo site têm título `Consulta [serviço] - Nome`, que já casa.
+   - Se exatamente **um** paciente casa, ou se vários casam mas o nome de um deles contém os nomes de todos os outros (ex.: "Ana" e "Ana Paula" em "Consulta - Ana Paula"), vale o de nome mais longo: cria/atualiza a sessão com `patientId` e `amountApplied`.
+   - Caso contrário (nenhum casa, ou ambiguidade real): grava com `patientId = null` (aba "Não identificados"). Sessões não identificadas não podem ser marcadas como realizada/faltou/cancelada até serem vinculadas a um paciente.
+   - Eventos de dia inteiro (sem horário) e eventos cancelados são ignorados.
+4. **Regras de atualização:** só sessões ainda `scheduled` são atualizadas (horário, título). Sessões já marcadas como `done`, `no_show` ou `cancelled` nunca são alteradas pela sincronização. Eventos removidos do Agenda não apagam sessões existentes: sessões `scheduled` ausentes do Agenda recebem `missingFromCalendar = true` e ficam sinalizadas na tela para decisão dela. Em novas sincronizações, sessões `scheduled` ainda sem paciente tentam o vínculo de novo; as que já têm paciente o mantêm.
 5. Sessões `scheduled` com data passada aparecem em "Pendentes de confirmação".
 
 ## 6. Regras de cálculo (mês de referência M)
@@ -115,10 +117,10 @@ Esta lógica fica em funções puras e isoladas (sem acesso a Firestore), cobert
 
 ## 8. Segurança e privacidade (LGPD)
 
-- **Acesso único:** `firestore.rules` permite leitura/escrita somente se `request.auth.uid` for o UID da Lays; todo o resto é negado.
+- **Acesso único:** a conta da Lays recebe o custom claim `admin: true` (via script único do backend). `firestore.rules` permite leitura/escrita somente se `request.auth.token.admin == true`; todo o resto é negado. O claim evita fixar o UID nas regras.
 - **Minimização:** apenas nome, telefone e dados financeiros. Nada clínico.
 - **Região:** Firestore em `southamerica-east1`.
-- **Backend:** `/api/admin/*` rejeita (401) requisições sem ID token válido do Firebase e com UID diferente do autorizado.
+- **Backend:** `/api/admin/*` rejeita com 401 requisições sem ID token válido do Firebase e com 403 tokens válidos sem o claim `admin`.
 - **Segredos:** a service account continua em variáveis de ambiente/Secret Manager, nunca no frontend.
 
 ## 9. Tratamento de erros
@@ -131,9 +133,9 @@ Esta lógica fica em funções puras e isoladas (sem acesso a Firestore), cobert
 ## 10. Testes
 
 - **Cálculos financeiros (Vitest):** recebido, a receber, em atraso, pacote com excesso de sessões, `chargeNoShow`, cancelamento, crédito, virada de mês.
-- **Vínculo evento → paciente (Vitest):** acento, caixa, zero/um/vários casamentos, formato `Consulta [serviço] - Nome`.
-- **Regras do Firestore:** testadas no emulador (usuária autorizada acessa; anônimo e outro UID são negados).
-- **Sincronização:** testada contra Agenda simulada (idempotência, não sobrescrever sessões confirmadas).
+- **Vínculo evento → paciente (backend, `node --test`, sem dependência nova):** acento, caixa, zero/um/vários casamentos, nomes contidos um no outro, formato `Consulta [serviço] - Nome`.
+- **Regras do Firestore:** testadas no emulador (usuária com claim `admin` acessa; anônimo e usuário sem o claim são negados). O emulador exige JDK 11+.
+- **Sincronização (backend, `node --test`):** testada com Agenda e repositório falsos (idempotência, não sobrescrever sessões confirmadas, janela do mês em UTC-3).
 
 ## 11. Premissas assumidas
 
