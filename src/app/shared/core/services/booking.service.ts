@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, isDevMode } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -25,7 +25,7 @@ export interface AvailabilityResponse {
 })
 export class BookingService {
   private http = inject(HttpClient);
-  private apiUrl = 'https://psico-hub-web.onrender.com';
+  private apiUrl = isDevMode() ? 'http://localhost:3000' : '/api';
 
   getAvailability(date: string): Observable<AvailabilityResponse> {
     return this.http.get<AvailabilityResponse>(`${this.apiUrl}/availability?date=${date}`).pipe(
@@ -67,4 +67,3 @@ export class BookingService {
     );
   }
 }
-

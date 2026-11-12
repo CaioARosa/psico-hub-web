@@ -210,11 +210,23 @@ app.post(['/api/book', '/book'], async (req, res) => {
 });
 
 // Healthcheck
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({ status: 'ok', calendarConfigured: isGCalConfigured });
 });
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`🚀 Lays Landing Backend is running on http://localhost:${PORT}`);
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Lays Landing Backend is running on port ${PORT}`);
 });
+
+// Graceful shutdown for Cloud Run container lifecycle
+const shutdown = (signal) => {
+  console.log(`🛑 ${signal} received: closing HTTP server gracefully...`);
+  server.close(() => {
+    console.log('✅ HTTP server closed. Process exiting.');
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
