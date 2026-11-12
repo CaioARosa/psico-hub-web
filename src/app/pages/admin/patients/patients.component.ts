@@ -170,7 +170,7 @@ export class PatientsComponent {
       await this.service.setActive(patient.id, active);
       this.confirmingId.set(null);
     } catch (err) {
-      this.actionError.set(err instanceof Error ? err.message : 'Não foi possível salvar. Tente novamente.');
+      this.actionError.set(err instanceof Error ? err.message : 'Não foi possível confirmar o salvamento. Verifique sua conexão e tente novamente.');
     } finally {
       this.busyId.set(null);
     }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, input, output, signal } from '@angular/core';
 
 import { ZardButtonComponent } from '@/shared/components/button';
 import { PatientsService } from '../data/patients.service';
@@ -134,7 +134,7 @@ import type { PatientFormErrors } from '../domain/patient-form';
       }
 
       <div class="flex flex-wrap gap-2 justify-end">
-        <button z-button zType="outline" type="button" [zDisabled]="busy()" (click)="cancelled.emit()">Cancelar</button>
+        <button z-button zType="outline" type="button" (click)="cancelled.emit()">Cancelar</button>
         <button z-button type="submit" [zLoading]="busy()" [zDisabled]="busy()">Salvar</button>
       </div>
     </form>
@@ -142,6 +142,10 @@ import type { PatientFormErrors } from '../domain/patient-form';
 })
 export class PatientFormComponent implements OnInit {
   private readonly patients = inject(PatientsService);
+  private destroyed = false;
+
+  /** Gerado uma vez por formulário: toda tentativa de criar usa o mesmo documento. */
+  private readonly newPatientId = this.patients.newId();
 
   /** Paciente em edição; `null` cria um novo. */
   readonly patient = input<Patient | null>(null);
@@ -158,6 +162,10 @@ export class PatientFormComponent implements OnInit {
   readonly errors = signal<PatientFormErrors>({});
   readonly saveError = signal<string | null>(null);
   readonly busy = signal(false);
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => (this.destroyed = true));
+  }
 
   ngOnInit(): void {
     const patient = this.patient();
@@ -197,11 +205,12 @@ export class PatientFormComponent implements OnInit {
       if (patient) {
         await this.patients.update(patient.id, result.value);
       } else {
-        await this.patients.create(result.value);
+        await this.patients.create(this.newPatientId, result.value);
       }
-      this.saved.emit();
+      if (!this.destroyed) this.saved.emit();
     } catch (err) {
-      this.saveError.set(err instanceof Error ? err.message : 'Não foi possível salvar. Tente novamente.');
+      if (this.destroyed) return;
+      this.saveError.set(err instanceof Error ? err.message : 'Não foi possível confirmar o salvamento. Verifique sua conexão e tente novamente.');
     } finally {
       this.busy.set(false);
     }

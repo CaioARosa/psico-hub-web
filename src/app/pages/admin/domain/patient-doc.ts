@@ -30,6 +30,10 @@ export function patientFromDoc(id: string, data: Record<string, any>): Patient {
   };
 }
 
+export function newPatientDoc(input: PatientInput): PatientDoc {
+  return { ...patientToDoc(input), active: true };
+}
+
 export function patientToDoc(input: PatientInput): Omit<PatientDoc, 'active'> {
   return {
     name: input.name,

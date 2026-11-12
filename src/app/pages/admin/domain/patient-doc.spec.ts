@@ -1,4 +1,4 @@
-import { patientFromDoc, patientToDoc } from './patient-doc';
+import { newPatientDoc, patientFromDoc, patientToDoc } from './patient-doc';
 import type { PatientInput } from './patient-form';
 
 const doc = {
@@ -36,5 +36,17 @@ describe('patientToDoc', () => {
       phone: '(11) 98888-7777',
       agreement: { type: 'monthly_package', amount: 60000, sessionsPerMonth: 4, chargeNoShow: true },
     });
+  });
+});
+
+describe('newPatientDoc', () => {
+  it('é o documento de um novo paciente: mesmo mapeamento, sempre ativo', () => {
+    const input: PatientInput = {
+      name: 'Maria Souza',
+      phone: '(11) 98888-7777',
+      agreement: { type: 'per_session', amount: 15000, sessionsPerMonth: 4, chargeNoShow: false },
+    };
+    expect(newPatientDoc(input)).toEqual({ ...patientToDoc(input), active: true });
+    expect(newPatientDoc(input).active).toBe(true);
   });
 });

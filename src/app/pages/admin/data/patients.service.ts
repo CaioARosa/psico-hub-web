@@ -1,13 +1,15 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
-import { addDoc, collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, orderBy, query, setDoc, updateDoc } from 'firebase/firestore';
 
 import type { Patient } from '../domain/models';
-import { patientFromDoc, patientToDoc } from '../domain/patient-doc';
+import { newPatientDoc, patientFromDoc, patientToDoc } from '../domain/patient-doc';
 import type { PatientInput } from '../domain/patient-form';
 import { FIRESTORE } from './firebase';
+import { withTimeout } from './with-timeout';
 
 const LOAD_ERROR = 'Não foi possível carregar os pacientes.';
-const SAVE_ERROR = 'Não foi possível salvar. Tente novamente.';
+const SAVE_ERROR = 'Não foi possível confirmar o salvamento. Verifique sua conexão e tente novamente.';
+const WRITE_TIMEOUT_MS = 10_000;
 
 @Injectable({ providedIn: 'root' })
 export class PatientsService {
@@ -38,10 +40,13 @@ export class PatientsService {
     inject(DestroyRef).onDestroy(unsubscribe);
   }
 
-  async create(input: PatientInput): Promise<void> {
-    await this.write(async () => {
-      await addDoc(collection(this.db, 'patients'), { ...patientToDoc(input), active: true });
-    });
+  /** Id gerado uma vez por formulário de criação; repetir `create` com o mesmo id não duplica. */
+  newId(): string {
+    return doc(collection(this.db, 'patients')).id;
+  }
+
+  async create(id: string, input: PatientInput): Promise<void> {
+    await this.write(() => setDoc(doc(this.db, 'patients', id), newPatientDoc(input)));
   }
 
   async update(id: string, input: PatientInput): Promise<void> {
@@ -52,9 +57,10 @@ export class PatientsService {
     await this.write(() => updateDoc(doc(this.db, 'patients', id), { active }));
   }
 
+  /** Offline, as promessas de escrita do Firestore não terminam: o timeout vira erro repetível. */
   private async write(operation: () => Promise<unknown>): Promise<void> {
     try {
-      await operation();
+      await withTimeout(operation(), WRITE_TIMEOUT_MS, new Error(SAVE_ERROR));
     } catch {
       throw new Error(SAVE_ERROR);
     }
