@@ -236,10 +236,10 @@ Painel privado de uso exclusivo da psicóloga para gestão operacional do consul
 
 ### O que a Fase 1 entrega
 
-- **Autenticação exclusiva (`/admin/login`)**: Login com Firebase Authentication (E-mail/Senha) validando o custom claim `admin: true` no `authGuard`, nas regras do Firestore (`firestore.rules`) e no middleware `requireAdmin` do backend (`401` sem token válido, `403` sem o claim `admin`).
+- **Autenticação exclusiva (`/admin/login`)**: Login com Firebase Authentication (E-mail/Senha); o `authGuard` protege as rotas `/admin` exigindo usuário autenticado, enquanto as regras do Firestore (`firestore.rules`) e o middleware `requireAdmin` do backend exigem o custom claim `admin: true` (`401` sem token válido, `403` sem o claim `admin`).
 - **Cadastro de pacientes (`/admin/pacientes`)**: Criação e edição de pacientes com status ativo/inativo e acordo financeiro configurável como valor **por sessão** (`per_session`) ou **pacote mensal** (`monthly_package`), com valores monetários armazenados em **centavos inteiros (BRL)**.
-- **Sincronização do Google Agenda (`POST /api/admin/sync-calendar`)**: Importação idempotente dos eventos do mês selecionado (`YYYY-MM`, fuso fixo `-03:00`) usando `calendarEventId` como ID do documento na coleção `sessions`. Associa automaticamente o paciente por e-mail de convidado ou nome no título, ignora eventos de dia inteiro e preserva sessões já consolidadas (`done`, `no_show`, `cancelled`).
-- **Confirmação de sessões (`/admin/sessoes`)**: Marcação de sessões agendadas (`scheduled`) como **Realizada** (`done`), **Faltou** (`no_show`) ou **Cancelada** (`cancelled`), vinculação manual de sessões não identificadas a um paciente cadastrado e ajuste do valor cobrado na sessão.
+- **Sincronização do Google Agenda (`POST /api/admin/sync-calendar`)**: Importação idempotente dos eventos do mês selecionado (`YYYY-MM`, fuso fixo `-03:00`) usando `calendarEventId` como ID do documento na coleção `sessions`. Vincula automaticamente eventos a pacientes ativos pelo nome em palavras inteiras no título do evento (insensível a acentos e maiúsculas/minúsculas), ignora eventos de dia inteiro e preserva sessões já consolidadas (`done`, `no_show`, `cancelled`).
+- **Confirmação de sessões (`/admin/sessoes`)**: Confirmação do status da sessão (`scheduled`, `done`, `no_show`, `cancelled`) e vinculação manual de sessões não identificadas a um paciente cadastrado (congelando `amountApplied` a partir do acordo do paciente; não há edição manual de valor por sessão na Fase 1).
 
 ### Configuração Inicial no Firebase / GCP (Provisionamento único)
 

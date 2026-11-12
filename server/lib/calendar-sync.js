@@ -37,7 +37,7 @@ function planSessionSync({ events, patients, existingSessions, window }) {
 
     if (!existing) {
       const patientId = findPatientForEvent(event.title, patients);
-      const amountApplied = patientId ? amountForNewSession(patientsById.get(patientId).agreement) : null;
+      const amountApplied = amountForNewSession(patientId ? patientsById.get(patientId).agreement : null);
       upserts.push({
         id: event.id,
         data: {

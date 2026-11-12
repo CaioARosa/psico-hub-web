@@ -73,7 +73,7 @@ test('evento sem paciente vira patientId null e conta em unidentified', () => {
     patients: [patient('p1', 'Maria Souza')],
   });
   assert.equal(result.upserts[0].data.patientId, null);
-  assert.equal(result.upserts[0].data.amountApplied, null);
+  assert.equal(result.upserts[0].data.amountApplied, 0);
   assert.deepEqual(result.summary, { created: 1, updated: 0, unidentified: 1, missing: 0 });
 });
 
