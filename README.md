@@ -59,7 +59,7 @@ Plataforma web profissional e interativa da psicóloga clínica **Lays Coelho (C
 
 ### Infraestrutura
 - **Frontend Hosting**: Firebase Hosting (com regras de rewrite para SPA)
-- **Backend Hosting**: Render (Web Service Node.js)
+- **Backend Hosting**: Google Cloud Run (Container serverless Node.js em southamerica-east1)
 
 ---
 
@@ -311,22 +311,20 @@ O deploy do frontend é gerenciado via Firebase Hosting e configurado no arquivo
 
 O comando compila o Angular (`ng build`) e envia os artefatos da pasta `dist/lays-landing/browser` diretamente para o hosting, mantendo a regra de rewrite para SPAs (`/index.html`).
 
-### Backend (Render)
+### Backend (Google Cloud Run)
 
-A API do Google Calendar pode ser hospedada em um Web Service gratuito ou pago no [Render](https://render.com/):
+A API do backend é hospedada em container no **Google Cloud Run** (região southamerica-east1 - São Paulo), com roteamento unificado no Firebase Hosting (/api/**):
 
-1. Conecte o repositório GitHub ao Render.
-2. Selecione **New Web Service**.
-3. Configure os parâmetros:
-   - **Root Directory**: `server`
-   - **Environment**: `Node`
-   - **Build Command**: `npm install`
-   - **Start Command**: `node server.js`
-4. Na aba **Environment Variables**, cadastre:
-   - `GOOGLE_CALENDAR_ID`
-   - `GOOGLE_SERVICE_ACCOUNT_EMAIL`
-   - `GOOGLE_PRIVATE_KEY`
-5. No frontend, atualize a URL da API em `src/app/shared/core/services/booking.service.ts` caso o domínio do Render seja alterado.
+1. **Deploy do backend (Cloud Run)**:
+   `ash
+   npm run deploy:backend
+   `
+2. **Deploy completo (Frontend + Backend)**:
+   `ash
+   npm run deploy:all
+   `
+3. **Variáveis de Ambiente** (GOOGLE_CALENDAR_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY):
+   Configure no Console do Google Cloud Run no serviço psico-hub-backend em **Editar e implantar nova revisão** -> **Variáveis e segredos**, ou via GCP Secret Manager.
 
 ---
 
