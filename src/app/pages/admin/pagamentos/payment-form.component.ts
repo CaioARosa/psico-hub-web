@@ -16,6 +16,9 @@ import {
 } from '../domain/payment-form';
 import type { PaymentFormErrors } from '../domain/payment-form';
 
+/** Criar Pix pode ter gravado antes do timeout; repetir às cegas duplica o registro. */
+const POSSIBLY_SAVED_ERROR = `${SAVE_ERROR} O Pix pode ter sido salvo; confira o histórico antes de registrar de novo.`;
+
 @Component({
   selector: 'app-payment-form',
   standalone: true,
@@ -244,8 +247,9 @@ export class PaymentFormComponent implements OnInit {
       if (!this.destroyed) this.saved.emit();
     } catch (err) {
       const message = err instanceof Error ? err.message : SAVE_ERROR;
-      this.onFailed()(message);
-      if (!this.destroyed) this.saveError.set(message);
+      const failure = this.payment() ? message : POSSIBLY_SAVED_ERROR;
+      this.onFailed()(failure);
+      if (!this.destroyed) this.saveError.set(failure);
     } finally {
       this.busy.set(false);
     }
