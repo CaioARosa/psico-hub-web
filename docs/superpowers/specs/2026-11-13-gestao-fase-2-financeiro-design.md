@@ -9,7 +9,8 @@ Complementa `2026-11-12-gestao-consultorio-design.md` (spec geral, §6 e §7 "Fa
 Permitir que a Lays registre os Pix recebidos e veja, por mês e por paciente, quanto foi **recebido**, quanto **falta receber** e quanto está **em atraso**, sem planilha. A Fase 1 já entrega pacientes, acordos financeiros e sessões confirmadas; a Fase 2 usa esses dados.
 
 ### Decisões acordadas
-- **Pacote mensal:** o valor do mês fica congelado na sessão (campo novo `packageAmountApplied`). Mudar o preço do pacote depois não altera meses passados.
+- **Meses passados nunca mudam:** alterar o acordo de um paciente (valor por sessão, valor do pacote ou "cobrar faltas") não altera o devido de sessões já realizadas, faltadas ou canceladas, nem de meses anteriores. Cada sessão guarda o valor e a regra de falta vigentes quando foi criada ou confirmada.
+- **Pacote mensal:** o valor do mês fica congelado na sessão (campo novo `packageAmountApplied`).
 - **Crédito:** o excedente de qualquer mês, inclusive Pix adiantado de mês futuro, abate automaticamente os atrasos dos meses anteriores a ele, do mais antigo para o mais novo. O que sobrar fica como crédito daquele mês.
 - **Mês de referência:** a Lays escolhe o mês ao registrar o Pix (padrão: mês da data do pagamento).
 - **Correções:** o Pix pode ser editado e excluído (exclusão com confirmação), sem histórico de alterações.
@@ -18,7 +19,6 @@ Permitir que a Lays registre os Pix recebidos e veja, por mês e por paciente, q
 - Painel, gráficos e alertas de frequência (Fase 3).
 - Lembrete de cobrança e mensagem de WhatsApp (Fase 4; a lista "em atraso" desta fase será a fonte dela).
 - Estorno ou lançamento negativo, trilha de auditoria e conciliação automática de Pix.
-- Congelar `chargeNoShow` por sessão (limitação conhecida, seção 8).
 - Agregação de valores no servidor: o cálculo é feito no frontend.
 
 ## 2. Modelo de dados
@@ -26,7 +26,8 @@ Permitir que a Lays registre os Pix recebidos e veja, por mês e por paciente, q
 ### `sessions` — campo novo
 | Campo | Tipo | Observação |
 | :-- | :-- | :-- |
-| `packageAmountApplied` | number (centavos) \| ausente | Valor do pacote vigente quando a sessão é criada ou vinculada a um paciente. `monthly_package` → `agreement.amount`; `per_session`, sessão sem paciente → `0`. Sessões criadas antes da Fase 2 não têm o campo (ver "reserva" na seção 3) |
+| `packageAmountApplied` | number (centavos) \| ausente | Valor do pacote vigente quando a sessão é criada ou vinculada a um paciente. `monthly_package` → `agreement.amount`; `per_session`, sessão sem paciente → `0`. Sessões criadas antes da Fase 2 não têm o campo (ver "valor de contingência" na seção 3) |
+| `chargeNoShowApplied` | boolean \| ausente | Gravado quando a Lays marca a sessão como *Faltou*: guarda o "cobrar faltas" do paciente naquele momento. Sessões *Faltou* anteriores à Fase 2 não têm o campo (valor de contingência) |
 
 Quem grava o campo: o backend (`planSessionSync`, ao criar a sessão e ao vincular uma sessão `scheduled` antes sem paciente) e o frontend (`linkPatient`, ao vincular manualmente). Ambos usam a mesma regra, como já ocorre com `amountApplied`. Sessões já vinculadas não são regravadas.
 
@@ -48,8 +49,8 @@ Funções puras em `src/app/pages/admin/domain/finance.ts`, sem acesso ao Firest
 ### Devido de um paciente em um mês `m`
 `due(m) = perSessionDue(m) + packageDue(m)`
 
-- `perSessionDue(m)`: soma de `amountApplied` das sessões do mês com status `done`; sessões `no_show` entram só se o paciente tem `agreement.chargeNoShow = true` (valor do acordo atual). Sessões de pacote têm `amountApplied = 0`, então não somam aqui.
-- `packageDue(m)`: o valor efetivo do pacote da **primeira sessão do mês, por data, que não seja `cancelled`** (inclui `scheduled`, `done` e `no_show`). Valor efetivo de uma sessão = `packageAmountApplied`, ou, se o campo não existe, `agreement.amount` do paciente quando o acordo atual é `monthly_package`, senão `0` (reserva para sessões antigas).
+- `perSessionDue(m)`: soma de `amountApplied` das sessões do mês com status `done`; sessões `no_show` entram só se `chargeNoShowApplied = true`; se o campo não existe, vale o `agreement.chargeNoShow` atual do paciente (valor de contingência). Sessões de pacote têm `amountApplied = 0`, então não somam aqui.
+- `packageDue(m)`: o valor efetivo do pacote da **primeira sessão do mês, por data, que não seja `cancelled`** (inclui `scheduled`, `done` e `no_show`). Valor efetivo de uma sessão = `packageAmountApplied`, ou, se o campo não existe, `agreement.amount` do paciente quando o acordo atual é `monthly_package`, senão `0`. Esse **valor de contingência** existe só para sessões antigas, criadas na Fase 1, que ainda não têm o valor congelado; sessões novas sempre têm.
 - O mês de uma sessão é o de `startsAt` em UTC-3.
 
 ### Recebido
@@ -100,6 +101,16 @@ O resumo precisa de todas as sessões e todos os pagamentos para calcular os aba
 
 `server/lib/patient-matching.js` ganha `packageAmountForNewSession(agreement)` (`monthly_package` → `agreement.amount`; caso contrário, inclusive `null` → `0`). `planSessionSync` grava `packageAmountApplied` na criação e no vínculo de sessões antes sem paciente. O cliente repete a regra em `domain/money.ts`, com teste, como já é feito para `amountForNewSession`.
 
+No frontend, `SessionsService.setStatus` passa a gravar `chargeNoShowApplied` (o "cobrar faltas" do paciente naquele momento) ao marcar uma sessão como *Faltou*.
+
+### Reajuste do acordo
+Ao salvar um paciente (criar não se aplica; só editar), as sessões **ainda `scheduled`** dele recebem os valores do acordo salvo: `amountApplied` e `packageAmountApplied`, pelas mesmas regras da criação. Sessões `done`, `no_show` e `cancelled` não são tocadas, e a atualização vale também para `scheduled` com data passada (ainda não confirmadas).
+
+- **Sem detectar mudança:** a atualização roda a cada salvamento de paciente, não só quando o valor mudou. Assim, se ela falhar no meio, salvar de novo repete tudo (a operação é idempotente). Edições raras de paciente tornam o custo irrelevante.
+- **Atomicidade:** a gravação do paciente vem primeiro; depois as sessões, em lotes de até 400. Se as sessões falharem, a tela mostra "Paciente salvo, mas não foi possível atualizar as sessões agendadas. Salve novamente." e o paciente continua salvo.
+- **Consulta:** sessões do paciente com `patientId = id` e `status = 'scheduled'` (dois filtros de igualdade, sem índice composto).
+- **Efeito no pacote:** o devido do mês de pacote vem da primeira sessão não cancelada. Se essa primeira sessão já foi realizada com o preço antigo, o mês continua com o valor antigo mesmo depois do reajuste; o valor novo vale para o mês seguinte. Isso é consequência direta de "meses passados não mudam".
+
 ## 7. Erros e casos de borda
 
 - **Valor do Pix inválido** (zero, negativo, fora do formato), **data inválida** e **mês fora de `YYYY-MM`**: rejeitados com mensagem em português antes de gravar.
@@ -110,8 +121,7 @@ O resumo precisa de todas as sessões e todos os pagamentos para calcular os aba
 
 ## 8. Limitações conhecidas
 
-- `chargeNoShow` vale pelo acordo atual do paciente, não por sessão: se ela alterar o interruptor, meses passados podem mudar.
-- Sessões criadas antes da Fase 2 usam a reserva da seção 3 (valor atual do pacote). Se o preço do pacote já tiver mudado antes desta fase, esses meses antigos não refletem o valor da época.
+- Sessões criadas na Fase 1 não têm os valores congelados novos (`packageAmountApplied` e `chargeNoShowApplied`) e usam o valor de contingência da seção 3 (acordo atual do paciente). Se o acordo já tiver mudado antes da Fase 2, esses meses antigos não refletem a regra da época. Sessões novas não têm esse problema.
 - Sem trilha de auditoria: editar ou excluir um Pix não deixa histórico.
 - Um Pix adiantado pode abater um atraso mais antigo que a Lays não esperava; a tela explica a origem do abatimento para não haver surpresa.
 
@@ -119,23 +129,24 @@ O resumo precisa de todas as sessões e todos os pagamentos para calcular os aba
 
 - §6 "Devido (pacote)": passa de "`agreement.amount` do paciente no mês" para o valor congelado na primeira sessão não cancelada do mês.
 - §6 "A receber / Em atraso": passa a considerar o abatimento por crédito de qualquer mês (inclusive adiantado) contra meses anteriores.
-- §6 "Devido (por sessão)": mantém a regra, e `no_show` segue o interruptor do acordo atual.
+- §6 "Devido (por sessão)": mantém a regra, e `no_show` segue o `chargeNoShowApplied` gravado na própria sessão (e não o acordo atual).
 - §4 `sessions`: ganha `packageAmountApplied`.
 
 ## 10. Testes
 
 - **`finance.ts` (Vitest):**
-  - Devido por sessão: só `done`; `no_show` apenas com `chargeNoShow`; `cancelled` nunca.
-  - Devido de pacote: primeira sessão não cancelada; ignora `cancelled`; mês só com sessões `cancelled` não gera cobrança; reserva para sessão sem `packageAmountApplied`; mudança de preço não altera mês antigo.
+  - Devido por sessão: só `done`; `no_show` apenas com `chargeNoShowApplied = true`; `cancelled` nunca; trocar o "cobrar faltas" do paciente depois não altera uma falta já marcada; valor de contingência para `no_show` sem o campo.
+  - Devido de pacote: primeira sessão não cancelada; ignora `cancelled`; mês só com sessões `cancelled` não gera cobrança; valor de contingência para sessão sem `packageAmountApplied`; mudança de preço não altera mês antigo.
   - Abatimento: excedente abate o déficit mais antigo primeiro; abate vários déficits em ordem; sobra vira crédito; crédito de mês futuro abate o mês atual e os anteriores; crédito de mês antigo não abate mês posterior; `toReceive` nunca negativo; pacientes isolados entre si.
   - Resumo: os cartões batem com a soma das linhas; mês de virada UTC-3 (sessão em 23:30 do último dia).
+- **Reajuste do acordo (função pura que decide as gravações nas sessões):** só `scheduled` recebe o valor novo; `done`, `no_show` e `cancelled` ficam intactas; `per_session` → `monthly_package` e o inverso; repetir o salvamento dá o mesmo resultado; paciente sem sessões agendadas não gera gravação.
 - **Formulário de Pix e mapeamento do documento:** valor, data, mês e padrão do mês de referência.
 - **Backend (`node --test`):** `packageAmountApplied` na criação, no vínculo automático e em sessão sem paciente.
 - **Tela Financeiro (componente, dados falsos):** cartões e tabela mostram os números esperados; aviso de mês sem sessões; botão *Registrar Pix* leva os valores pré-preenchidos.
 
 ## 11. Ordem de entrega
 
-1. Valor do pacote na sessão: campo `packageAmountApplied` no backend, no mapeamento do documento e no vínculo manual.
+1. Valores congelados na sessão: `packageAmountApplied` (backend, mapeamento do documento e vínculo manual), `chargeNoShowApplied` (ao marcar *Faltou*) e o reajuste das sessões agendadas ao salvar o paciente.
 2. Cálculo financeiro: `finance.ts` com testes, sem tela.
 3. Pagamentos: serviço (listener, criar, editar, excluir) e a tela *Pagamentos*.
 4. Financeiro: a tela de resumo, o botão *Registrar Pix* nas linhas e a atualização do README.
