@@ -30,3 +30,15 @@ export interface Session {
   chargeNoShowApplied: boolean | null;
   missingFromCalendar: boolean;
 }
+
+export interface Payment {
+  id: string;
+  patientId: string;
+  /** Centavos inteiros maiores que zero. */
+  amount: number;
+  /** `YYYY-MM-DD`. */
+  paidAt: string;
+  /** `YYYY-MM`. */
+  referenceMonth: string;
+  note: string;
+}
