@@ -40,7 +40,7 @@ export type Ledger = {
   readonly sessionMonths: ReadonlySet<string>;
 };
 
-const REMOVED_PATIENT = 'Paciente removido';
+export const REMOVED_PATIENT_LABEL = 'Paciente removido';
 
 /** Devido do paciente por mês, só com meses de valor maior que zero. */
 export function dueByMonth(patient: Patient, sessions: Session[]): Map<string, number> {
@@ -113,7 +113,7 @@ export function buildLedger(input: {
   const allocations = new Map<string, MonthAllocation[]>();
   for (const patientId of patientIds) {
     const patient = patientsById.get(patientId);
-    names.set(patientId, patient?.name ?? REMOVED_PATIENT);
+    names.set(patientId, patient?.name ?? REMOVED_PATIENT_LABEL);
     const due = dueFor(patient?.agreement ?? null, sessionsByPatient.get(patientId) ?? []);
     const received = receivedByMonth(paymentsByPatient.get(patientId) ?? []);
     allocations.set(patientId, allocateCredits(due, received));
@@ -134,7 +134,7 @@ export function summarizeMonth(ledger: Ledger, month: string): MonthSummary {
     if (line) lines.push(line);
   }
 
-  const nameOf = (patientId: string) => ledger.names.get(patientId) ?? REMOVED_PATIENT;
+  const nameOf = (patientId: string) => ledger.names.get(patientId) ?? REMOVED_PATIENT_LABEL;
   lines.sort(
     (a, b) =>
       nameOf(a.patientId).localeCompare(nameOf(b.patientId), 'pt-BR') ||

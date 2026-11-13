@@ -25,6 +25,11 @@ import { useNoIndex } from './noindex';
               routerLinkActive="bg-[#D4E6E1]/60 text-[#1C221F]"
               class="px-3 py-1.5 rounded-lg text-sm font-medium text-[#556661] hover:bg-[#D4E6E1]/30"
             >Sessões</a>
+            <a
+              routerLink="/admin/pagamentos"
+              routerLinkActive="bg-[#D4E6E1]/60 text-[#1C221F]"
+              class="px-3 py-1.5 rounded-lg text-sm font-medium text-[#556661] hover:bg-[#D4E6E1]/30"
+            >Pagamentos</a>
           </nav>
           <button z-button zType="outline" zSize="sm" type="button" (click)="logout()">Sair</button>
         </div>
