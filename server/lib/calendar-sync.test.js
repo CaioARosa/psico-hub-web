@@ -52,6 +52,7 @@ test('cria sessão para evento que casa (per_session)', () => {
         calendarTitle: 'Consulta [Individual] - Maria Souza',
         status: 'scheduled',
         amountApplied: 15000,
+        packageAmountApplied: 0,
         missingFromCalendar: false,
       },
     },
@@ -65,6 +66,33 @@ test('cria sessão com valor 0 em monthly_package', () => {
     patients: [patient('p1', 'Maria Souza', monthly)],
   });
   assert.equal(result.upserts[0].data.amountApplied, 0);
+});
+
+test('cria sessão de pacote com packageAmountApplied do acordo', () => {
+  const result = plan({
+    events: [event('e1', 'Consulta - Maria Souza', '2026-11-10T13:00:00-03:00')],
+    patients: [patient('p1', 'Maria Souza', monthly)],
+  });
+  assert.equal(result.upserts[0].data.amountApplied, 0);
+  assert.equal(result.upserts[0].data.packageAmountApplied, 60000);
+});
+
+test('cria sessão por sessão com packageAmountApplied 0', () => {
+  const result = plan({
+    events: [event('e1', 'Consulta - Maria Souza', '2026-11-10T13:00:00-03:00')],
+    patients: [patient('p1', 'Maria Souza', perSession)],
+  });
+  assert.equal(result.upserts[0].data.amountApplied, 15000);
+  assert.equal(result.upserts[0].data.packageAmountApplied, 0);
+});
+
+test('evento sem paciente cria sessão com packageAmountApplied 0', () => {
+  const result = plan({
+    events: [event('e1', 'Reunião qualquer', '2026-11-10T13:00:00-03:00')],
+    patients: [patient('p1', 'Maria Souza', monthly)],
+  });
+  assert.equal(result.upserts[0].data.patientId, null);
+  assert.equal(result.upserts[0].data.packageAmountApplied, 0);
 });
 
 test('evento sem paciente vira patientId null e conta em unidentified', () => {
@@ -164,6 +192,7 @@ test('sessão scheduled sem paciente tenta vincular de novo', () => {
     missingFromCalendar: false,
     patientId: 'p1',
     amountApplied: 15000,
+    packageAmountApplied: 0,
   });
   assert.deepEqual(result.summary, { created: 0, updated: 1, unidentified: 0, missing: 0 });
 });
@@ -176,7 +205,28 @@ test('sessão scheduled sem paciente que continua sem casar conta em unidentifie
   });
   assert.equal('patientId' in result.upserts[0].data, false);
   assert.equal('amountApplied' in result.upserts[0].data, false);
+  assert.equal('packageAmountApplied' in result.upserts[0].data, false);
   assert.deepEqual(result.summary, { created: 0, updated: 1, unidentified: 1, missing: 0 });
+});
+
+test('sessão scheduled sem paciente que passa a casar recebe packageAmountApplied', () => {
+  const result = plan({
+    events: [event('s1', 'Consulta - Maria Souza', '2026-11-10T10:00:00-03:00')],
+    patients: [patient('p1', 'Maria Souza', monthly)],
+    existingSessions: [session('s1', { patientId: null, amountApplied: null })],
+  });
+  assert.equal(result.upserts[0].data.patientId, 'p1');
+  assert.equal(result.upserts[0].data.amountApplied, 0);
+  assert.equal(result.upserts[0].data.packageAmountApplied, 60000);
+});
+
+test('sessão scheduled que já tem paciente não recebe packageAmountApplied na atualização', () => {
+  const result = plan({
+    events: [event('s1', 'Consulta - Maria Souza', '2026-11-10T10:00:00-03:00')],
+    patients: [patient('p1', 'Maria Souza', monthly)],
+    existingSessions: [session('s1', { amountApplied: 0, packageAmountApplied: 60000 })],
+  });
+  assert.equal('packageAmountApplied' in result.upserts[0].data, false);
 });
 
 test('sessão scheduled ausente do Agenda recebe missingFromCalendar true', () => {

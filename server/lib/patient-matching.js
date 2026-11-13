@@ -35,4 +35,8 @@ function amountForNewSession(agreement) {
   return agreement && agreement.type === 'per_session' ? agreement.amount : 0;
 }
 
-module.exports = { normalizeText, findPatientForEvent, amountForNewSession };
+function packageAmountForNewSession(agreement) {
+  return agreement && agreement.type === 'monthly_package' ? agreement.amount : 0;
+}
+
+module.exports = { normalizeText, findPatientForEvent, amountForNewSession, packageAmountForNewSession };

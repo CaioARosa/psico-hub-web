@@ -1,4 +1,4 @@
-const { findPatientForEvent, amountForNewSession } = require('./patient-matching');
+const { findPatientForEvent, amountForNewSession, packageAmountForNewSession } = require('./patient-matching');
 
 const UTC_OFFSET_HOURS = 3;
 
@@ -37,7 +37,7 @@ function planSessionSync({ events, patients, existingSessions, window }) {
 
     if (!existing) {
       const patientId = findPatientForEvent(event.title, patients);
-      const amountApplied = amountForNewSession(patientId ? patientsById.get(patientId).agreement : null);
+      const agreement = patientId ? patientsById.get(patientId).agreement : null;
       upserts.push({
         id: event.id,
         data: {
@@ -46,7 +46,8 @@ function planSessionSync({ events, patients, existingSessions, window }) {
           startsAt: event.startsAt,
           calendarTitle: event.title,
           status: 'scheduled',
-          amountApplied,
+          amountApplied: amountForNewSession(agreement),
+          packageAmountApplied: packageAmountForNewSession(agreement),
           missingFromCalendar: false,
         },
       });
@@ -62,8 +63,10 @@ function planSessionSync({ events, patients, existingSessions, window }) {
     if (resultingPatientId === null) {
       const matched = findPatientForEvent(event.title, patients);
       if (matched) {
+        const { agreement } = patientsById.get(matched);
         data.patientId = matched;
-        data.amountApplied = amountForNewSession(patientsById.get(matched).agreement);
+        data.amountApplied = amountForNewSession(agreement);
+        data.packageAmountApplied = packageAmountForNewSession(agreement);
         resultingPatientId = matched;
       }
     }

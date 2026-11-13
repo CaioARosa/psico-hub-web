@@ -1,6 +1,11 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { normalizeText, findPatientForEvent, amountForNewSession } = require('./patient-matching');
+const {
+  normalizeText,
+  findPatientForEvent,
+  amountForNewSession,
+  packageAmountForNewSession,
+} = require('./patient-matching');
 
 const patient = (id, name, active = true) => ({ id, name, active });
 
@@ -68,4 +73,16 @@ test('amountForNewSession: monthly_package devolve 0', () => {
 
 test('amountForNewSession: sem acordo devolve 0', () => {
   assert.equal(amountForNewSession(null), 0);
+});
+
+test('packageAmountForNewSession: monthly_package devolve o valor do pacote', () => {
+  assert.equal(packageAmountForNewSession({ type: 'monthly_package', amount: 60000 }), 60000);
+});
+
+test('packageAmountForNewSession: per_session devolve 0', () => {
+  assert.equal(packageAmountForNewSession({ type: 'per_session', amount: 15000 }), 0);
+});
+
+test('packageAmountForNewSession: sem acordo devolve 0', () => {
+  assert.equal(packageAmountForNewSession(null), 0);
 });
