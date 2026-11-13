@@ -25,6 +25,14 @@ export interface MonthWatch {
   readonly error: Signal<string | null>;
 }
 
+/** Estado em tempo real de todas as sessões, ordenadas por `startsAt`. */
+export interface AllSessionsWatch {
+  readonly sessions: Signal<Session[]>;
+  /** False até o primeiro resultado (ou erro) do listener. */
+  readonly loaded: Signal<boolean>;
+  readonly error: Signal<string | null>;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SessionsService {
   private readonly db = inject(FIRESTORE);
@@ -33,8 +41,13 @@ export class SessionsService {
 
   private current: { watch: MonthWatch; unsubscribe: () => void } | null = null;
 
+  private all: { watch: AllSessionsWatch; unsubscribe: () => void } | null = null;
+
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.current?.unsubscribe());
+    inject(DestroyRef).onDestroy(() => {
+      this.current?.unsubscribe();
+      this.all?.unsubscribe();
+    });
   }
 
   /**
@@ -82,6 +95,36 @@ export class SessionsService {
 
   sessionsOfMonth(month: string): Signal<Session[]> {
     return this.watchMonth(month).sessions;
+  }
+
+  /** Listener único da coleção inteira: criado na primeira chamada e reaproveitado depois. */
+  watchAll(): AllSessionsWatch {
+    if (this.all) return this.all.watch;
+
+    const sessions = signal<Session[]>([]);
+    const loaded = signal(false);
+    const error = signal<string | null>(null);
+
+    const unsubscribe = onSnapshot(
+      query(collection(this.db, 'sessions'), orderBy('startsAt')),
+      snapshot => {
+        sessions.set(snapshot.docs.map(d => sessionFromDoc(d.id, d.data())));
+        error.set(null);
+        loaded.set(true);
+      },
+      () => {
+        error.set(LOAD_ERROR);
+        loaded.set(true);
+      },
+    );
+
+    const watch: AllSessionsWatch = {
+      sessions: sessions.asReadonly(),
+      loaded: loaded.asReadonly(),
+      error: error.asReadonly(),
+    };
+    this.all = { watch, unsubscribe };
+    return watch;
   }
 
   /** Recusa sessão sem paciente, conferindo os dados que o serviço tem (não só a UI). */

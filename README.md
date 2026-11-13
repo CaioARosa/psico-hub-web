@@ -226,6 +226,8 @@ psico-hub-web/
 | `/admin/login` | `LoginComponent` | Tela de autenticação da psicóloga (Firebase Auth E-mail/Senha) |
 | `/admin/sessoes` | `SessionsComponent` | Sincronização da agenda do mês, confirmação de sessões e vínculo de pacientes |
 | `/admin/pacientes` | `PatientsComponent` | Cadastro e edição de pacientes e seus acordos financeiros |
+| `/admin/pagamentos` | `PaymentsComponent` | Registro de Pix (paciente, valor, data, mês de referência), histórico em tempo real, edição e exclusão |
+| `/admin/financeiro` | `FinanceComponent` | Resumo do mês: recebido, a receber e em atraso por paciente, com abatimento por crédito e atalho *Registrar Pix* |
 | `**` | *(Redirect)* | Redireciona qualquer rota inválida para `/` |
 
 ---
@@ -240,6 +242,23 @@ Painel privado de uso exclusivo da psicóloga para gestão operacional do consul
 - **Cadastro de pacientes (`/admin/pacientes`)**: Criação e edição de pacientes com status ativo/inativo e acordo financeiro configurável como valor **por sessão** (`per_session`) ou **pacote mensal** (`monthly_package`), com valores monetários armazenados em **centavos inteiros (BRL)**.
 - **Sincronização do Google Agenda (`POST /api/admin/sync-calendar`)**: Importação idempotente dos eventos do mês selecionado (`YYYY-MM`, fuso fixo `-03:00`) usando `calendarEventId` como ID do documento na coleção `sessions`. Vincula automaticamente eventos a pacientes ativos pelo nome em palavras inteiras no título do evento (insensível a acentos e maiúsculas/minúsculas), ignora eventos de dia inteiro e preserva sessões já consolidadas (`done`, `no_show`, `cancelled`).
 - **Confirmação de sessões (`/admin/sessoes`)**: Confirmação do status da sessão (`scheduled`, `done`, `no_show`, `cancelled`) e vinculação manual de sessões não identificadas a um paciente cadastrado (congelando `amountApplied` a partir do acordo do paciente; não há edição manual de valor por sessão na Fase 1).
+
+### O que a Fase 2 entrega
+
+- **Pagamentos (`/admin/pagamentos`)**: registro de Pix com paciente, valor (`150,00`), data do Pix (padrão: hoje), mês de referência (padrão: mês da data, editável) e observação opcional. O histórico é em tempo real, do mais recente ao mais antigo, com filtros por mês de referência e paciente. Editar e excluir (com confirmação) são permitidos. Pix de paciente inativo ou removido continua visível e editável; quando o cadastro não existe mais, aparece como "Paciente removido".
+- **Financeiro (`/admin/financeiro`)**: escolha o mês e veja os cartões *Recebido*, *A receber* e *Em atraso*, e a tabela por paciente com devido, recebido, abatido, a receber, em atraso e crédito, mais a linha de total. O botão *Registrar Pix* abre Pagamentos já preenchido com paciente, mês e valor a receber. Em mês sem sessões, o aviso "Sincronize a agenda deste mês para ver o devido." substitui o valor de *A receber*.
+- **Valores congelados por sessão**: cada sessão guarda o valor por sessão, o valor do pacote do mês (`packageAmountApplied`) e, ao ser marcada como *Faltou*, a regra de cobrança de faltas (`chargeNoShowApplied`). Alterar o acordo depois não muda meses já realizados.
+- **Reajuste ao salvar o paciente**: ao editar um paciente, as sessões ainda *agendadas* dele recebem os valores do acordo salvo. Sessões realizadas, faltadas ou canceladas não são alteradas. Salvar de novo repete a operação com o mesmo resultado. O valor do pacote de um mês vem da primeira sessão não cancelada: se ela já foi realizada, o mês mantém o valor antigo e o novo vale a partir do mês seguinte.
+- **Abatimento por crédito**: o excedente de um mês, inclusive de Pix adiantado de mês futuro, abate automaticamente os atrasos de meses anteriores, do mais antigo para o mais novo. O que sobra vira crédito do mês. A origem de cada abatimento aparece no detalhe da linha, por exemplo "R$ 100,00 abatidos com o crédito de 2026-11".
+
+> **Deploy do backend**: o campo `packageAmountApplied` só é gravado pelo backend em produção depois que você executar `npm run deploy:backend`. Até lá, sessões criadas pelo backend não recebem o campo e usam o valor de contingência (acordo atual do paciente).
+
+#### Limitações conhecidas (Fase 2)
+
+- **Sessões da Fase 1**: não têm os valores congelados novos. Usam o acordo atual do paciente como contingência; se o acordo mudou antes da Fase 2, os meses antigos podem não refletir a regra da época. Sessões novas não têm esse problema.
+- **Cobrar faltas**: só é congelado por sessão a partir desta fase. Faltas marcadas antes seguem o acordo atual do paciente.
+- **Pix adiantado**: pode abater um atraso mais antigo que você não esperava. A tela Financeiro mostra a origem do abatimento para evitar surpresas.
+- **Sem auditoria**: editar ou excluir um Pix não deixa histórico.
 
 ### Configuração Inicial no Firebase / GCP (Provisionamento único)
 
