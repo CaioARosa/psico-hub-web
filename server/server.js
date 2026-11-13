@@ -6,6 +6,7 @@ const { requireAdmin } = require('./lib/admin-auth');
 const { getAuth, getDb } = require('./lib/firebase');
 const { createFirestoreRepo } = require('./lib/firestore-repo');
 const { monthWindow, syncMonth } = require('./lib/calendar-sync');
+const { buildBookingEvent } = require('./lib/booking-event');
 
 // Load environment variables
 dotenv.config();
@@ -155,9 +156,6 @@ app.post(['/api/book', '/book'], async (req, res) => {
   }
 
   try {
-    const slotStart = new Date(`${date}T${time}:00-03:00`);
-    const slotEnd = new Date(slotStart.getTime() + 50 * 60 * 1000); // 50 min session
-
     if (!isGCalConfigured || !calendar) {
       // --- SIMULATION MODE ---
       const simulatedBooking = {
@@ -171,33 +169,7 @@ app.post(['/api/book', '/book'], async (req, res) => {
     }
 
     // --- REAL GOOGLE CALENDAR MODE ---
-    const eventDescription = 
-      `Nova consulta agendada pelo site:\n\n` +
-      `👤 Nome do Paciente: ${name}\n` +
-      `📞 WhatsApp: ${phone}\n` +
-      `📧 E-mail: ${email || 'Não informado'}\n` +
-      `🧩 Tipo de Sessão: ${service}\n` +
-      `💬 Notas/Queixas: ${message || 'Nenhuma observação informada.'}`;
-
-    const event = {
-      summary: `Consulta [${service}] - ${name}`,
-      description: eventDescription,
-      start: {
-        dateTime: slotStart.toISOString(),
-        timeZone: 'America/Sao_Paulo'
-      },
-      end: {
-        dateTime: slotEnd.toISOString(),
-        timeZone: 'America/Sao_Paulo'
-      },
-      reminders: {
-        useDefault: false,
-        overrides: [
-          { method: 'email', minutes: 24 * 60 },
-          { method: 'popup', minutes: 60 }
-        ]
-      }
-    };
+    const event = buildBookingEvent({ service, date, time, name, phone });
 
     const insertedEvent = await calendar.events.insert({
       calendarId: calendarId,
