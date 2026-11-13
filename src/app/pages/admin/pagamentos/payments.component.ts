@@ -33,10 +33,13 @@ type FormState =
 
       @if (form(); as current) {
         @if (current.mode === 'create') {
-          <app-payment-form [prefill]="current.prefill" (saved)="closeForm()" (cancelled)="closeForm()" />
+          <!-- Pix de link só abre com a lista de pacientes carregada; antes disso o paciente pareceria inexistente. -->
+          @if (patientsService.loaded()) {
+            <app-payment-form [prefill]="current.prefill" [onFailed]="reportFailure" (saved)="closeForm()" (cancelled)="closeForm()" />
+          }
         } @else if (current.mode === 'edit') {
           @for (p of [current.payment]; track p.id) {
-            <app-payment-form [payment]="p" (saved)="closeForm()" (cancelled)="closeForm()" />
+            <app-payment-form [payment]="p" [onFailed]="reportFailure" (saved)="closeForm()" (cancelled)="closeForm()" />
           }
         }
       }
@@ -101,7 +104,7 @@ type FormState =
                 @if (confirmingId() === payment.id) {
                   <div class="flex flex-wrap items-center gap-2" role="group" [attr.aria-label]="'Confirmar exclusão do Pix de ' + patientName(payment)">
                     <span class="text-sm text-[#1C221F]">Excluir o Pix de {{ formatCents(payment.amount) }}?</span>
-                    <button z-button zType="destructive" zSize="sm" type="button" [zLoading]="busyId() === payment.id" [zDisabled]="busyId() === payment.id" (click)="remove(payment)">Confirmar</button>
+                    <button z-button zType="destructive" zSize="sm" type="button" [zLoading]="busyId() === payment.id" [zDisabled]="busyId() !== null" (click)="remove(payment)">Confirmar</button>
                     <button z-button zType="outline" zSize="sm" type="button" [zDisabled]="busyId() === payment.id" (click)="confirmingId.set(null)">Cancelar</button>
                   </div>
                 } @else {
@@ -133,6 +136,7 @@ export class PaymentsComponent {
   readonly confirmingId = signal<string | null>(null);
   readonly busyId = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
+  protected readonly reportFailure = (message: string) => this.actionError.set(message);
 
   readonly ready = computed(() => this.service.loaded() && this.patientsService.loaded());
   readonly loadError = computed(() => this.service.error() ?? this.patientsService.error());
@@ -174,6 +178,7 @@ export class PaymentsComponent {
   }
 
   closeForm(): void {
+    this.actionError.set(null);
     this.form.set({ mode: 'closed' });
   }
 

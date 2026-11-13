@@ -6,6 +6,7 @@ import { PaymentsService } from '../data/payments.service';
 import { SAVE_ERROR } from '../data/safe-write';
 import { REMOVED_PATIENT_LABEL } from '../domain/finance';
 import type { Payment } from '../domain/models';
+import { prefillPatientExists } from '../domain/pix-prefill';
 import type { PixPrefill } from '../domain/pix-prefill';
 import {
   paymentToFormValue,
@@ -149,6 +150,8 @@ export class PaymentFormComponent implements OnInit {
   readonly prefill = input<PixPrefill | null>(null);
   readonly saved = output<void>();
   readonly cancelled = output<void>();
+  /** Callback, não `output`: o Angular descarta `emit` de formulário destruído (Cancelar durante o salvamento). */
+  readonly onFailed = input.required<(message: string) => void>();
 
   protected readonly removedPatientLabel = REMOVED_PATIENT_LABEL;
 
@@ -193,7 +196,7 @@ export class PaymentFormComponent implements OnInit {
     }
 
     const prefill = this.prefill();
-    if (prefill) {
+    if (prefill && prefillPatientExists(prefill, this.patientsService.patients().map(patient => patient.id))) {
       this.patientId.set(prefill.patientId);
       this.amount.set(prefill.amount);
       this.referenceMonth.set(prefill.referenceMonth);
@@ -240,8 +243,9 @@ export class PaymentFormComponent implements OnInit {
       }
       if (!this.destroyed) this.saved.emit();
     } catch (err) {
-      if (this.destroyed) return;
-      this.saveError.set(err instanceof Error ? err.message : SAVE_ERROR);
+      const message = err instanceof Error ? err.message : SAVE_ERROR;
+      this.onFailed()(message);
+      if (!this.destroyed) this.saveError.set(message);
     } finally {
       this.busy.set(false);
     }

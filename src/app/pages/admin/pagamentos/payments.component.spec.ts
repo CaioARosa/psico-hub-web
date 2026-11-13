@@ -5,6 +5,7 @@ import { By } from '@angular/platform-browser';
 
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
+import { SAVE_ERROR } from '../data/safe-write';
 import type { Patient, Payment } from '../domain/models';
 import type { PaymentInput } from '../domain/payment-form';
 import { PaymentFormComponent } from './payment-form.component';
@@ -36,20 +37,25 @@ describe('PaymentsComponent', () => {
   let updateCalls: Array<{ id: string; input: PaymentInput }> = [];
   let createCalls: Array<{ id: string; input: PaymentInput }> = [];
   let queryParams: Record<string, string> = {};
+  let createSave: () => Promise<void> = async () => {};
+  let patientsLoaded = signal(true);
 
   beforeEach(() => {
     paymentsSignal = signal<Payment[]>([pixAna, pixGone]);
     updateCalls = [];
     createCalls = [];
     queryParams = {};
+    createSave = async () => {};
+    patientsLoaded = signal(true);
 
     const fakePayments: Pick<PaymentsService, 'payments' | 'error' | 'loaded' | 'newId' | 'create' | 'update' | 'remove'> = {
       payments: paymentsSignal.asReadonly(),
       error: signal<string | null>(null).asReadonly(),
       loaded: signal(true).asReadonly(),
       newId: () => 'new-pix',
-      create: async (id, input) => {
+      create: (id, input) => {
         createCalls.push({ id, input });
+        return createSave();
       },
       update: async (id, input) => {
         updateCalls.push({ id, input });
@@ -59,7 +65,7 @@ describe('PaymentsComponent', () => {
 
     const fakePatients: Pick<PatientsService, 'patients' | 'loaded' | 'error'> = {
       patients: signal<Patient[]>([activePatient, inactivePatient]).asReadonly(),
-      loaded: signal(true).asReadonly(),
+      loaded: patientsLoaded.asReadonly(),
       error: signal<string | null>(null).asReadonly(),
     };
 
@@ -82,6 +88,14 @@ describe('PaymentsComponent', () => {
 
   function paymentForm(fixture: ComponentFixture<PaymentsComponent>): PaymentFormComponent {
     return fixture.debugElement.query(By.directive(PaymentFormComponent)).componentInstance;
+  }
+
+  function buttonWithText(fixture: ComponentFixture<PaymentsComponent>, text: string): HTMLButtonElement {
+    const button = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(
+      b => b.textContent?.trim() === text,
+    );
+    if (!button) throw new Error(`Botão "${text}" não encontrado`);
+    return button;
   }
 
   it('lista o Pix de paciente removido com "Paciente removido" e o de paciente inativo com o nome', () => {
@@ -156,5 +170,88 @@ describe('PaymentsComponent', () => {
     expect(root.querySelector<HTMLInputElement>('#payment-amount')?.value).toBe('150,00');
     expect(root.querySelector<HTMLInputElement>('#payment-reference-month')?.value).toBe('2026-11');
     expect(root.querySelector<HTMLSelectElement>('#payment-patient')?.value).toBe('p1');
+  });
+
+  it('não aplica o Pix de link de um paciente que não existe', async () => {
+    queryParams = { paciente: 'p-inexistente', mes: '2026-11', valor: '15000' };
+    const fixture = TestBed.createComponent(PaymentsComponent);
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector<HTMLInputElement>('#payment-amount')?.value).toBe('');
+    expect(root.querySelector<HTMLSelectElement>('#payment-patient')?.value).toBe('');
+
+    await paymentForm(fixture).submit(new Event('submit'));
+    fixture.detectChanges();
+    expect(createCalls).toEqual([]);
+    expect(textOf(fixture)).toContain('Escolha o paciente.');
+  });
+
+  it('espera a lista de pacientes antes de abrir o Pix de link', () => {
+    queryParams = { paciente: 'p1', mes: '2026-11', valor: '15000' };
+    patientsLoaded.set(false);
+    const fixture = TestBed.createComponent(PaymentsComponent);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('#payment-amount')).toBeNull();
+
+    patientsLoaded.set(true);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector<HTMLSelectElement>('#payment-patient')?.value).toBe('p1');
+    expect(root.querySelector<HTMLInputElement>('#payment-amount')?.value).toBe('150,00');
+  });
+
+  it('desabilita Confirmar enquanto outro Pix está sendo excluído', () => {
+    const fixture = TestBed.createComponent(PaymentsComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.askRemove(pixAna);
+    fixture.componentInstance.busyId.set('pix-2');
+    fixture.detectChanges();
+
+    expect(buttonWithText(fixture, 'Confirmar').disabled).toBe(true);
+  });
+
+  it('mostra a falha do salvamento mesmo depois de Cancelar', async () => {
+    let failSave: (error: Error) => void = () => {};
+    createSave = () => new Promise<void>((_, reject) => (failSave = reject));
+    const fixture = TestBed.createComponent(PaymentsComponent);
+    fixture.componentInstance.openCreate();
+    fixture.detectChanges();
+
+    const form = paymentForm(fixture);
+    form.patientId.set('p1');
+    form.amount.set('150');
+    const saving = form.submit(new Event('submit'));
+    buttonWithText(fixture, 'Cancelar').click();
+    fixture.detectChanges();
+
+    failSave(new Error(SAVE_ERROR));
+    await saving;
+    fixture.detectChanges();
+
+    expect(textOf(fixture)).toContain(SAVE_ERROR);
+  });
+
+  it('limpa a falha anterior quando o Pix é salvo na nova tentativa', async () => {
+    createSave = async () => {
+      throw new Error(SAVE_ERROR);
+    };
+    const fixture = TestBed.createComponent(PaymentsComponent);
+    fixture.componentInstance.openCreate();
+    fixture.detectChanges();
+
+    const form = paymentForm(fixture);
+    form.patientId.set('p1');
+    form.amount.set('150');
+    await form.submit(new Event('submit'));
+    fixture.detectChanges();
+    expect(textOf(fixture)).toContain(SAVE_ERROR);
+
+    createSave = async () => {};
+    await form.submit(new Event('submit'));
+    fixture.detectChanges();
+
+    expect(textOf(fixture)).not.toContain(SAVE_ERROR);
   });
 });

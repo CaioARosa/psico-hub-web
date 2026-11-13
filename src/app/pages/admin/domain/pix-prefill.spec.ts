@@ -1,4 +1,4 @@
-import { parsePixPrefill, pixPrefillQuery } from './pix-prefill';
+import { parsePixPrefill, pixPrefillQuery, prefillPatientExists } from './pix-prefill';
 
 function params(values: Record<string, string>): { get(name: string): string | null } {
   return new URLSearchParams(values);
@@ -24,6 +24,22 @@ describe('parsePixPrefill', () => {
     ['sem valor', { paciente: 'p1', mes: '2026-11' }],
   ])('devolve null com %s', (_label, values) => {
     expect(parsePixPrefill(params(values))).toBeNull();
+  });
+});
+
+describe('prefillPatientExists', () => {
+  const prefill = { patientId: 'p1', referenceMonth: '2026-11', amount: '150,00' };
+
+  it('aceita o paciente que existe na lista', () => {
+    expect(prefillPatientExists(prefill, ['p2', 'p1'])).toBe(true);
+  });
+
+  it('recusa paciente que não existe na lista', () => {
+    expect(prefillPatientExists(prefill, ['p2', 'p3'])).toBe(false);
+  });
+
+  it('recusa quando a lista de pacientes está vazia', () => {
+    expect(prefillPatientExists(prefill, [])).toBe(false);
   });
 });
 

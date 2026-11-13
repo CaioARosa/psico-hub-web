@@ -28,10 +28,10 @@ export function agreementSummary(agreement: Agreement): string {
 
       @if (form(); as current) {
         @if (current.mode === 'create') {
-          <app-patient-form (saved)="closeForm()" (cancelled)="closeForm()" />
+          <app-patient-form [onFailed]="reportFailure" (saved)="closeForm()" (cancelled)="closeForm()" />
         } @else if (current.mode === 'edit') {
           @for (p of [current.patient]; track p.id) {
-            <app-patient-form [patient]="p" (saved)="closeForm()" (cancelled)="closeForm()" />
+            <app-patient-form [patient]="p" [onFailed]="reportFailure" (saved)="closeForm()" (cancelled)="closeForm()" />
           }
         }
       }
@@ -126,6 +126,7 @@ export class PatientsComponent {
   readonly confirmingId = signal<string | null>(null);
   readonly busyId = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
+  protected readonly reportFailure = (message: string) => this.actionError.set(message);
 
   readonly visible = computed(() => {
     const query = this.search();
@@ -154,6 +155,7 @@ export class PatientsComponent {
   }
 
   closeForm(): void {
+    this.actionError.set(null);
     this.form.set({ mode: 'closed' });
   }
 

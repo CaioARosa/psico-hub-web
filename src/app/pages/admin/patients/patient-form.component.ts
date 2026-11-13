@@ -151,6 +151,8 @@ export class PatientFormComponent implements OnInit {
   readonly patient = input<Patient | null>(null);
   readonly saved = output<void>();
   readonly cancelled = output<void>();
+  /** Callback, não `output`: o Angular descarta `emit` de formulário destruído (Cancelar durante o salvamento). */
+  readonly onFailed = input.required<(message: string) => void>();
 
   readonly name = signal('');
   readonly phone = signal('');
@@ -209,8 +211,9 @@ export class PatientFormComponent implements OnInit {
       }
       if (!this.destroyed) this.saved.emit();
     } catch (err) {
-      if (this.destroyed) return;
-      this.saveError.set(err instanceof Error ? err.message : 'Não foi possível confirmar o salvamento. Verifique sua conexão e tente novamente.');
+      const message = err instanceof Error ? err.message : 'Não foi possível confirmar o salvamento. Verifique sua conexão e tente novamente.';
+      this.onFailed()(message);
+      if (!this.destroyed) this.saveError.set(message);
     } finally {
       this.busy.set(false);
     }

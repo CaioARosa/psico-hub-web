@@ -21,6 +21,10 @@ export function parsePixPrefill(params: { get(name: string): string | null }): P
   return { patientId, referenceMonth, amount: centsToInput(cents) };
 }
 
+export function prefillPatientExists(prefill: PixPrefill, patientIds: string[]): boolean {
+  return patientIds.includes(prefill.patientId);
+}
+
 export function pixPrefillQuery(line: {
   patientId: string;
   month: string;
