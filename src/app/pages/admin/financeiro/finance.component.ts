@@ -69,7 +69,7 @@ import { pixPrefillQuery } from '../domain/pix-prefill';
           </div>
           <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
             <dt class="text-sm text-[#556661]">Em atraso</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ formatCents(summary().overdue) }}</dd>
+            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ valueOrDash(summary().overdue) }}</dd>
           </div>
         </dl>
 
@@ -94,10 +94,10 @@ import { pixPrefillQuery } from '../domain/pix-prefill';
                     <th scope="row" class="px-4 py-2.5 text-left font-medium">{{ row.name }}</th>
                     <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.due) }}</td>
                     <td class="px-4 py-2.5 text-right">{{ formatCents(row.line.received) }}</td>
-                    <td class="px-4 py-2.5 text-right">{{ formatCents(row.line.abated) }}</td>
+                    <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.abated) }}</td>
                     <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.toReceive) }}</td>
-                    <td class="px-4 py-2.5 text-right">{{ formatCents(row.line.overdue) }}</td>
-                    <td class="px-4 py-2.5 text-right">{{ formatCents(row.line.credit) }}</td>
+                    <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.overdue) }}</td>
+                    <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.credit) }}</td>
                     <td class="px-4 py-2.5">
                       <div class="flex flex-wrap items-center justify-end gap-2">
                         @if (row.line.sources.length > 0) {
@@ -138,10 +138,10 @@ import { pixPrefillQuery } from '../domain/pix-prefill';
                   <th scope="row" class="px-4 py-2.5 text-left">Total</th>
                   <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.due) }}</td>
                   <td class="px-4 py-2.5 text-right">{{ formatCents(summary().totals.received) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ formatCents(summary().totals.abated) }}</td>
+                  <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.abated) }}</td>
                   <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.toReceive) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ formatCents(summary().totals.overdue) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ formatCents(summary().totals.credit) }}</td>
+                  <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.overdue) }}</td>
+                  <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.credit) }}</td>
                   <td class="px-4 py-2.5"></td>
                 </tr>
               </tfoot>
@@ -217,7 +217,7 @@ export class FinanceComponent {
     return this.expanded().has(patientId);
   }
 
-  /** Sem sessão vinculada a paciente no mês o devido é desconhecido: mostra traço em vez de zero (spec §4). */
+  /** Sem sessão vinculada a paciente no mês o devido é desconhecido, e tudo que deriva dele vira traço (spec §4). Só o recebido é fato. */
   protected valueOrDash(cents: number): string {
     return this.summary().hasLinkedSessions ? formatCents(cents) : '—';
   }

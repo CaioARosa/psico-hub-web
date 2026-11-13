@@ -257,18 +257,11 @@ describe('FinanceComponent', () => {
     expect(cardValue(fixture, 'A receber')).toBe('—');
   });
 
-  it('sem sessões no mês, devido e a receber viram traço na linha e no total', () => {
+  it('sem sessões no mês, só o recebido tem valor: o resto vira traço na linha e no total', () => {
     const fixture = openMonth('2026-12');
 
-    expect(rowCells(fixture, 'Ana Paula')).toEqual([
-      '—',
-      money(0),
-      money(0),
-      '—',
-      money(30000),
-      money(0),
-    ]);
-    expect(totalCells(fixture)).toEqual(['—', money(0), money(0), '—', money(90000), money(0)]);
+    expect(rowCells(fixture, 'Ana Paula')).toEqual(['—', money(0), '—', '—', '—', '—']);
+    expect(totalCells(fixture)).toEqual(['—', money(0), '—', '—', '—', '—']);
   });
 
   it('o botão Registrar Pix leva paciente, mês e valor a receber, não o em atraso', () => {
@@ -363,7 +356,7 @@ describe('FinanceComponent', () => {
     expect(textOf(fixture)).not.toContain('Sincronize a agenda deste mês');
   });
 
-  it('mês só com sessões sem paciente: devido e a receber viram traço, sem aviso de sincronia', () => {
+  it('mês só com sessões sem paciente: os valores derivados viram traço, sem aviso de sincronia', () => {
     sessionsSignal.update(list => [
       ...list,
       makeSession({
@@ -377,16 +370,40 @@ describe('FinanceComponent', () => {
     expect(textOf(fixture)).toContain('1 sessão sem paciente neste mês.');
     expect(textOf(fixture)).not.toContain('Sincronize a agenda deste mês');
     expect(cardValue(fixture, 'A receber')).toBe('—');
-    expect(cardValue(fixture, 'Em atraso')).toBe(money(90000));
-    expect(rowCells(fixture, 'Ana Paula')).toEqual([
-      '—',
-      money(0),
-      money(0),
-      '—',
-      money(30000),
-      money(0),
+    expect(cardValue(fixture, 'Em atraso')).toBe('—');
+    expect(rowCells(fixture, 'Ana Paula')).toEqual(['—', money(0), '—', '—', '—', '—']);
+    expect(totalCells(fixture)).toEqual(['—', money(0), '—', '—', '—', '—']);
+  });
+
+  it('mês só com sessões sem paciente e um Pix: só o recebido tem valor, o resto vira traço', () => {
+    sessionsSignal.update(list => [
+      ...list,
+      makeSession({
+        id: 'solta',
+        patientId: null,
+        startsAt: new Date('2026-12-03T13:00:00.000Z'),
+      }),
     ]);
-    expect(totalCells(fixture)).toEqual(['—', money(0), money(0), '—', money(90000), money(0)]);
+    paymentsSignal.update(list => [
+      ...list,
+      makePayment({
+        id: 'pix-dez',
+        patientId: 'p1',
+        amount: 50000,
+        paidAt: '2026-12-10',
+        referenceMonth: '2026-12',
+      }),
+    ]);
+    const fixture = openMonth('2026-12');
+
+    expect(textOf(fixture)).toContain('1 sessão sem paciente neste mês.');
+    expect(textOf(fixture)).not.toContain('Sincronize a agenda deste mês');
+    expect(cardValue(fixture, 'Recebido')).toBe(money(50000));
+    expect(cardValue(fixture, 'A receber')).toBe('—');
+    expect(cardValue(fixture, 'Em atraso')).toBe('—');
+    expect(rowCells(fixture, 'Ana Paula')).toEqual(['—', money(50000), '—', '—', '—', '—']);
+    expect(rowCells(fixture, 'Bruno Lima')).toEqual(['—', money(0), '—', '—', '—', '—']);
+    expect(totalCells(fixture)).toEqual(['—', money(50000), '—', '—', '—', '—']);
   });
 
   it('mês inválido no seletor volta ao mês da tela e não troca a tabela', () => {

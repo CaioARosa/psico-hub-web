@@ -748,6 +748,25 @@ describe('summarizeMonth', () => {
     expect(summarizeMonth(ledger, '2026-11')).toMatchObject({ hasLinkedSessions: true });
   });
 
+  it('sessão com patientId fora da lista (paciente removido) conta como vinculada', () => {
+    const ledger = buildLedger({
+      patients: [ana],
+      sessions: [
+        session('g1', '2026-11-03T13:00:00.000Z', 'done', {
+          patientId: 'gone',
+          amountApplied: 15000,
+        }),
+      ],
+      payments: [],
+    });
+    expect(summarizeMonth(ledger, '2026-11')).toMatchObject({
+      hasSessions: true,
+      hasLinkedSessions: true,
+      unlinkedSessions: 0,
+      totals: { due: 15000, toReceive: 15000 },
+    });
+  });
+
   it('hasLinkedSessions e hasSessions são falsos em mês sem sessões', () => {
     const ledger = buildLedger({ patients: [ana], sessions: [], payments: [] });
     expect(summarizeMonth(ledger, '2026-11')).toMatchObject({
