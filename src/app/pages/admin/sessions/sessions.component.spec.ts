@@ -34,6 +34,8 @@ function makeSession(overrides: Partial<Session> & { id: string }): Session {
     calendarTitle: 'Consulta [Individual] - Ana Paula',
     status: 'scheduled',
     amountApplied: 15000,
+    packageAmountApplied: null,
+    chargeNoShowApplied: null,
     missingFromCalendar: false,
     ...overrides,
   };

@@ -24,5 +24,9 @@ export interface Session {
   calendarTitle: string;
   status: SessionStatus;
   amountApplied: number;
+  /** `null` em sessões anteriores à Fase 2 (valor de contingência; ver spec financeiro §3). */
+  packageAmountApplied: number | null;
+  /** `null` em sessões anteriores à Fase 2 (ou ainda não marcadas como falta). */
+  chargeNoShowApplied: boolean | null;
   missingFromCalendar: boolean;
 }

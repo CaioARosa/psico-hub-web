@@ -8,6 +8,8 @@ function session(overrides: Partial<Session> & { id: string }): Session {
     calendarTitle: 'Consulta [Individual] - Ana',
     status: 'scheduled',
     amountApplied: 0,
+    packageAmountApplied: null,
+    chargeNoShowApplied: null,
     missingFromCalendar: false,
     ...overrides,
   };

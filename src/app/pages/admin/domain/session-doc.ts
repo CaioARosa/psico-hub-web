@@ -19,6 +19,8 @@ export function sessionFromDoc(id: string, data: Record<string, any>): Session {
     calendarTitle: String(data['calendarTitle'] ?? ''),
     status,
     amountApplied: Number(data['amountApplied'] ?? 0),
+    packageAmountApplied: typeof data['packageAmountApplied'] === 'number' ? data['packageAmountApplied'] : null,
+    chargeNoShowApplied: typeof data['chargeNoShowApplied'] === 'boolean' ? data['chargeNoShowApplied'] : null,
     missingFromCalendar: data['missingFromCalendar'] === true,
   };
 }

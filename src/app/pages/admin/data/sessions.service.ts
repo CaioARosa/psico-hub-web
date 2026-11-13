@@ -1,17 +1,20 @@
 import { DestroyRef, Injectable, Signal, inject, signal } from '@angular/core';
 import { collection, doc, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
 
-import { amountForNewSession } from '../domain/money';
+import { pricingForAgreement } from '../domain/money';
 import { monthWindow } from '../domain/month';
 import type { Patient, Session, SessionStatus } from '../domain/models';
 import { sessionFromDoc } from '../domain/session-doc';
+import { sessionStatusUpdate } from '../domain/session-update';
 import { canConfirm } from '../domain/sessions-view';
 import { FIRESTORE } from './firebase';
+import { PatientsService } from './patients.service';
 import { runWrite } from './safe-write';
 
 const LOAD_ERROR = 'Não foi possível carregar as sessões.';
 const UNIDENTIFIED_ERROR = 'Vincule um paciente a esta sessão antes de confirmá-la.';
 const NOT_FOUND_ERROR = 'Sessão não encontrada. Atualize a página e tente novamente.';
+const PATIENT_NOT_FOUND_ERROR = 'Paciente não encontrado. Atualize a página e tente novamente.';
 
 /** Estado em tempo real das sessões de um mês; o listener vive até outro mês ser observado. */
 export interface MonthWatch {
@@ -25,6 +28,8 @@ export interface MonthWatch {
 @Injectable({ providedIn: 'root' })
 export class SessionsService {
   private readonly db = inject(FIRESTORE);
+
+  private readonly patients = inject(PatientsService);
 
   private current: { watch: MonthWatch; unsubscribe: () => void } | null = null;
 
@@ -84,14 +89,16 @@ export class SessionsService {
     const session = this.known(id);
     if (!session) throw new Error(NOT_FOUND_ERROR);
     if (!canConfirm(session)) throw new Error(UNIDENTIFIED_ERROR);
-    await runWrite(() => updateDoc(doc(this.db, 'sessions', id), { status }));
+    const patient = this.patients.patients().find(p => p.id === session.patientId);
+    if (!patient) throw new Error(PATIENT_NOT_FOUND_ERROR);
+    await runWrite(() => updateDoc(doc(this.db, 'sessions', id), sessionStatusUpdate(status, patient)));
   }
 
   async linkPatient(id: string, patient: Patient): Promise<void> {
     await runWrite(() =>
       updateDoc(doc(this.db, 'sessions', id), {
         patientId: patient.id,
-        amountApplied: amountForNewSession(patient.agreement),
+        ...pricingForAgreement(patient.agreement),
       }),
     );
   }

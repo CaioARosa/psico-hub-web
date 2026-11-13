@@ -5,6 +5,7 @@ import type { Patient } from '../domain/models';
 import { newPatientDoc, patientFromDoc, patientToDoc } from '../domain/patient-doc';
 import type { PatientInput } from '../domain/patient-form';
 import { FIRESTORE } from './firebase';
+import { RepriceService } from './reprice.service';
 import { runWrite } from './safe-write';
 
 const LOAD_ERROR = 'Não foi possível carregar os pacientes.';
@@ -12,6 +13,7 @@ const LOAD_ERROR = 'Não foi possível carregar os pacientes.';
 @Injectable({ providedIn: 'root' })
 export class PatientsService {
   private readonly db = inject(FIRESTORE);
+  private readonly reprice = inject(RepriceService);
 
   private readonly patientsState = signal<Patient[]>([]);
   private readonly errorState = signal<string | null>(null);
@@ -47,8 +49,10 @@ export class PatientsService {
     await runWrite(() => setDoc(doc(this.db, 'patients', id), newPatientDoc(input)));
   }
 
+  /** Grava o paciente e, depois, reajusta as sessões agendadas; falha do reajuste sobe sem desfazer a gravação. */
   async update(id: string, input: PatientInput): Promise<void> {
     await runWrite(() => updateDoc(doc(this.db, 'patients', id), { ...patientToDoc(input) }));
+    await this.reprice.repriceScheduled(id, input.agreement);
   }
 
   async setActive(id: string, active: boolean): Promise<void> {

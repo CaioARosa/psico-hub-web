@@ -29,3 +29,23 @@ export function formatCents(cents: number): string {
 export function amountForNewSession(agreement: Agreement | null): number {
   return agreement?.type === 'per_session' ? agreement.amount : 0;
 }
+
+export function packageAmountForNewSession(agreement: Agreement | null): number {
+  return agreement?.type === 'monthly_package' ? agreement.amount : 0;
+}
+
+export function pricingForAgreement(agreement: Agreement | null): {
+  amountApplied: number;
+  packageAmountApplied: number;
+} {
+  return {
+    amountApplied: amountForNewSession(agreement),
+    packageAmountApplied: packageAmountForNewSession(agreement),
+  };
+}
+
+/** Centavos inteiros não negativos para texto `150,50`, sem separador de milhar. */
+export function centsToInput(cents: number): string {
+  const digits = String(cents).padStart(3, '0');
+  return `${digits.slice(0, -2)},${digits.slice(-2)}`;
+}

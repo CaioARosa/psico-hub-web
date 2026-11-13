@@ -21,6 +21,8 @@ describe('sessionFromDoc', () => {
       calendarTitle: 'Consulta [Individual] - Ana',
       status: 'done',
       amountApplied: 15000,
+      packageAmountApplied: null,
+      chargeNoShowApplied: null,
       missingFromCalendar: true,
     });
   });
@@ -34,6 +36,25 @@ describe('sessionFromDoc', () => {
     expect(session.amountApplied).toBe(0);
     expect(session.missingFromCalendar).toBe(false);
     expect(session.startsAt).toBeInstanceOf(Date);
+  });
+
+  it('mapeia valores congelados ausentes para null (sessão anterior à Fase 2)', () => {
+    const session = sessionFromDoc('x', { amountApplied: 15000, status: 'no_show' });
+    expect(session.packageAmountApplied).toBeNull();
+    expect(session.chargeNoShowApplied).toBeNull();
+  });
+
+  it('lê os valores congelados quando presentes', () => {
+    const session = sessionFromDoc('y', {
+      packageAmountApplied: 60000,
+      chargeNoShowApplied: true,
+    });
+    expect(session.packageAmountApplied).toBe(60000);
+    expect(session.chargeNoShowApplied).toBe(true);
+  });
+
+  it('preserva chargeNoShowApplied false (não confunde com ausente)', () => {
+    expect(sessionFromDoc('z', { chargeNoShowApplied: false }).chargeNoShowApplied).toBe(false);
   });
 
   it('aceita startsAt já como Date e ignora status desconhecido', () => {

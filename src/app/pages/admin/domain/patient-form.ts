@@ -1,5 +1,5 @@
 import type { AgreementType, Patient } from './models';
-import { parseBRLToCents } from './money';
+import { centsToInput, parseBRLToCents } from './money';
 
 export interface PatientFormValue {
   name: string;
@@ -26,7 +26,7 @@ export function patientToFormValue(patient: Patient): PatientFormValue {
     name: patient.name,
     phone: patient.phone,
     type: agreement.type,
-    amount: (agreement.amount / 100).toFixed(2).replace('.', ','),
+    amount: centsToInput(agreement.amount),
     sessionsPerMonth: String(agreement.sessionsPerMonth),
     chargeNoShow: agreement.chargeNoShow,
   };
