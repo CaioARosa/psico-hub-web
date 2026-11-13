@@ -4,14 +4,25 @@ import { By } from '@angular/platform-browser';
 
 import { PatientsService } from '../data/patients.service';
 import { SAVE_ERROR } from '../data/safe-write';
+import type { Patient } from '../domain/models';
 import { PatientFormComponent } from './patient-form.component';
 import { PatientsComponent } from './patients.component';
 
+const activePatient: Patient = {
+  id: 'p1',
+  name: 'Ana Paula',
+  phone: '11999999999',
+  active: true,
+  agreement: { type: 'per_session', amount: 15000, sessionsPerMonth: 4, chargeNoShow: true },
+};
+
 describe('PatientsComponent', () => {
   let createSave: () => Promise<void> = async () => {};
+  let setActiveSave: () => Promise<void> = async () => {};
 
   beforeEach(() => {
     createSave = async () => {};
+    setActiveSave = async () => {};
 
     const fakePatients: Pick<PatientsService, 'patients' | 'loaded' | 'error' | 'newId' | 'create' | 'update' | 'setActive'> = {
       patients: signal([]).asReadonly(),
@@ -20,7 +31,7 @@ describe('PatientsComponent', () => {
       newId: () => 'new-patient',
       create: () => createSave(),
       update: async () => {},
-      setActive: async () => {},
+      setActive: () => setActiveSave(),
     };
 
     TestBed.configureTestingModule({
@@ -60,6 +71,23 @@ describe('PatientsComponent', () => {
 
     failSave(new Error(SAVE_ERROR));
     await saving;
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(SAVE_ERROR);
+  });
+
+  it('mantém a falha de inativação ao cancelar um formulário aberto', async () => {
+    setActiveSave = async () => {
+      throw new Error(SAVE_ERROR);
+    };
+    const fixture = TestBed.createComponent(PatientsComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.askDeactivate(activePatient);
+    await fixture.componentInstance.setActive(activePatient, false);
+    fixture.componentInstance.openCreate();
+    fixture.detectChanges();
+    buttonWithText(fixture, 'Cancelar').click();
     fixture.detectChanges();
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain(SAVE_ERROR);

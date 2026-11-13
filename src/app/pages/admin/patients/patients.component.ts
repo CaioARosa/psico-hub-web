@@ -28,10 +28,10 @@ export function agreementSummary(agreement: Agreement): string {
 
       @if (form(); as current) {
         @if (current.mode === 'create') {
-          <app-patient-form [onFailed]="reportFailure" (saved)="closeForm()" (cancelled)="closeForm()" />
+          <app-patient-form [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
         } @else if (current.mode === 'edit') {
           @for (p of [current.patient]; track p.id) {
-            <app-patient-form [patient]="p" [onFailed]="reportFailure" (saved)="closeForm()" (cancelled)="closeForm()" />
+            <app-patient-form [patient]="p" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
           }
         }
       }
@@ -154,8 +154,12 @@ export class PatientsComponent {
     this.form.set({ mode: 'edit', patient });
   }
 
-  closeForm(): void {
+  onSaved(): void {
     this.actionError.set(null);
+    this.closeForm();
+  }
+
+  closeForm(): void {
     this.form.set({ mode: 'closed' });
   }
 

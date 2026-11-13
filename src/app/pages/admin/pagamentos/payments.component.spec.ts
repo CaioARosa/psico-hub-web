@@ -38,6 +38,7 @@ describe('PaymentsComponent', () => {
   let createCalls: Array<{ id: string; input: PaymentInput }> = [];
   let queryParams: Record<string, string> = {};
   let createSave: () => Promise<void> = async () => {};
+  let removeSave: () => Promise<void> = async () => {};
   let patientsLoaded = signal(true);
 
   beforeEach(() => {
@@ -46,6 +47,7 @@ describe('PaymentsComponent', () => {
     createCalls = [];
     queryParams = {};
     createSave = async () => {};
+    removeSave = async () => {};
     patientsLoaded = signal(true);
 
     const fakePayments: Pick<PaymentsService, 'payments' | 'error' | 'loaded' | 'newId' | 'create' | 'update' | 'remove'> = {
@@ -60,7 +62,7 @@ describe('PaymentsComponent', () => {
       update: async (id, input) => {
         updateCalls.push({ id, input });
       },
-      remove: async () => {},
+      remove: () => removeSave(),
     };
 
     const fakePatients: Pick<PatientsService, 'patients' | 'loaded' | 'error'> = {
@@ -228,6 +230,23 @@ describe('PaymentsComponent', () => {
 
     failSave(new Error(SAVE_ERROR));
     await saving;
+    fixture.detectChanges();
+
+    expect(textOf(fixture)).toContain(SAVE_ERROR);
+  });
+
+  it('mantém a falha de exclusão ao cancelar um formulário aberto', async () => {
+    removeSave = async () => {
+      throw new Error(SAVE_ERROR);
+    };
+    const fixture = TestBed.createComponent(PaymentsComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.askRemove(pixAna);
+    await fixture.componentInstance.remove(pixAna);
+    fixture.componentInstance.openEdit(pixGone);
+    fixture.detectChanges();
+    buttonWithText(fixture, 'Cancelar').click();
     fixture.detectChanges();
 
     expect(textOf(fixture)).toContain(SAVE_ERROR);

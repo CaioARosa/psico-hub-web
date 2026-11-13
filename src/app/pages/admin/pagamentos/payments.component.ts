@@ -35,11 +35,11 @@ type FormState =
         @if (current.mode === 'create') {
           <!-- Pix de link só abre com a lista de pacientes carregada; antes disso o paciente pareceria inexistente. -->
           @if (patientsService.loaded()) {
-            <app-payment-form [prefill]="current.prefill" [onFailed]="reportFailure" (saved)="closeForm()" (cancelled)="closeForm()" />
+            <app-payment-form [prefill]="current.prefill" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
           }
         } @else if (current.mode === 'edit') {
           @for (p of [current.payment]; track p.id) {
-            <app-payment-form [payment]="p" [onFailed]="reportFailure" (saved)="closeForm()" (cancelled)="closeForm()" />
+            <app-payment-form [payment]="p" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
           }
         }
       }
@@ -177,8 +177,12 @@ export class PaymentsComponent {
     this.form.set({ mode: 'edit', payment });
   }
 
-  closeForm(): void {
+  onSaved(): void {
     this.actionError.set(null);
+    this.closeForm();
+  }
+
+  closeForm(): void {
     this.form.set({ mode: 'closed' });
   }
 
