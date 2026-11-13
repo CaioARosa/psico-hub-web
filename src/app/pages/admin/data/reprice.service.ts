@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { collection, doc, getDocs, query, where, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDocs, query, runTransaction, where } from 'firebase/firestore';
 
 import type { Agreement } from '../domain/models';
-import { planReprice } from '../domain/reprice';
+import { decideRepriceWrite, planReprice } from '../domain/reprice';
 import { sessionFromDoc } from '../domain/session-doc';
 import { FIRESTORE } from './firebase';
 import { withTimeout } from './with-timeout';
@@ -34,14 +34,24 @@ export class RepriceService {
       const plan = planReprice(sessions, agreement);
 
       for (let start = 0; start < plan.length; start += BATCH_LIMIT) {
-        const batch = writeBatch(this.db);
-        for (const item of plan.slice(start, start + BATCH_LIMIT)) {
-          batch.update(doc(this.db, 'sessions', item.id), {
-            amountApplied: item.amountApplied,
-            packageAmountApplied: item.packageAmountApplied,
-          });
-        }
-        await withTimeout(batch.commit(), TIMEOUT_MS, new Error(REPRICE_ERROR));
+        const chunk = plan.slice(start, start + BATCH_LIMIT);
+        await withTimeout(
+          runTransaction(this.db, async tx => {
+            const reads = await Promise.all(
+              chunk.map(async item => {
+                const ref = doc(this.db, 'sessions', item.id);
+                return { ref, item, snapshot: await tx.get(ref) };
+              }),
+            );
+            for (const read of reads) {
+              const current = read.snapshot.exists() ? { status: read.snapshot.data()['status'] } : undefined;
+              const write = decideRepriceWrite(current, read.item);
+              if (write) tx.update(read.ref, write);
+            }
+          }),
+          TIMEOUT_MS,
+          new Error(REPRICE_ERROR),
+        );
       }
     } catch {
       throw new Error(REPRICE_ERROR);

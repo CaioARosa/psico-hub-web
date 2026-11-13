@@ -1,4 +1,4 @@
-import { planReprice } from './reprice';
+import { decideRepriceWrite, planReprice } from './reprice';
 import type { Agreement, Session, SessionStatus } from './models';
 
 function session(id: string, status: SessionStatus): Session {
@@ -68,5 +68,24 @@ describe('planReprice', () => {
   it('chamar duas vezes com a mesma entrada dá o mesmo resultado (idempotente)', () => {
     const sessions = [session('a', 'scheduled'), session('b', 'done')];
     expect(planReprice(sessions, monthly)).toEqual(planReprice(sessions, monthly));
+  });
+});
+
+describe('decideRepriceWrite', () => {
+  const planned = { amountApplied: 18000, packageAmountApplied: 0 };
+
+  it('sessão ainda scheduled recebe os valores planejados', () => {
+    expect(decideRepriceWrite({ status: 'scheduled' }, planned)).toEqual({
+      amountApplied: 18000,
+      packageAmountApplied: 0,
+    });
+  });
+
+  it.each(['done', 'no_show', 'cancelled'] as const)('sessão %s não é regravada', status => {
+    expect(decideRepriceWrite({ status }, planned)).toBeNull();
+  });
+
+  it('documento inexistente não é regravado', () => {
+    expect(decideRepriceWrite(undefined, planned)).toBeNull();
   });
 });
