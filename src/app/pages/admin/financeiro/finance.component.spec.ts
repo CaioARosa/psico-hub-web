@@ -363,6 +363,32 @@ describe('FinanceComponent', () => {
     expect(textOf(fixture)).not.toContain('Sincronize a agenda deste mês');
   });
 
+  it('mês só com sessões sem paciente: devido e a receber viram traço, sem aviso de sincronia', () => {
+    sessionsSignal.update(list => [
+      ...list,
+      makeSession({
+        id: 'solta',
+        patientId: null,
+        startsAt: new Date('2026-12-03T13:00:00.000Z'),
+      }),
+    ]);
+    const fixture = openMonth('2026-12');
+
+    expect(textOf(fixture)).toContain('1 sessão sem paciente neste mês.');
+    expect(textOf(fixture)).not.toContain('Sincronize a agenda deste mês');
+    expect(cardValue(fixture, 'A receber')).toBe('—');
+    expect(cardValue(fixture, 'Em atraso')).toBe(money(90000));
+    expect(rowCells(fixture, 'Ana Paula')).toEqual([
+      '—',
+      money(0),
+      money(0),
+      '—',
+      money(30000),
+      money(0),
+    ]);
+    expect(totalCells(fixture)).toEqual(['—', money(0), money(0), '—', money(90000), money(0)]);
+  });
+
   it('mês inválido no seletor volta ao mês da tela e não troca a tabela', () => {
     const fixture = openMonth('2026-11');
     const input = rootOf(fixture).querySelector<HTMLInputElement>('#finance-month');

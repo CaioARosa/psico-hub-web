@@ -468,6 +468,7 @@ describe('summarizeMonth', () => {
         credit: 0,
       },
       hasSessions: true,
+      hasLinkedSessions: true,
       unlinkedSessions: 0,
       lines: [
         {
@@ -524,6 +525,7 @@ describe('summarizeMonth', () => {
       overdue: 95000,
       totals: { due: 0, received: 0, abated: 0, toReceive: 0, overdue: 95000, credit: 0 },
       hasSessions: false,
+      hasLinkedSessions: false,
       unlinkedSessions: 0,
       lines: [
         {
@@ -722,6 +724,38 @@ describe('summarizeMonth', () => {
     expect(summarizeMonth(ledger, '2026-10').hasSessions).toBe(false);
   });
 
+  it('hasLinkedSessions é falso em mês só com sessões sem paciente, que seguem em hasSessions e unlinkedSessions', () => {
+    const ledger = buildLedger({
+      patients: [ana],
+      sessions: [
+        session('u1', '2026-11-03T13:00:00.000Z', 'done', { patientId: null, amountApplied: 15000 }),
+      ],
+      payments: [],
+    });
+    expect(summarizeMonth(ledger, '2026-11')).toMatchObject({
+      hasSessions: true,
+      hasLinkedSessions: false,
+      unlinkedSessions: 1,
+    });
+  });
+
+  it('hasLinkedSessions vale para sessão vinculada de qualquer status, inclusive cancelada', () => {
+    const ledger = buildLedger({
+      patients: [ana],
+      sessions: [session('a', '2026-11-03T13:00:00.000Z', 'cancelled')],
+      payments: [],
+    });
+    expect(summarizeMonth(ledger, '2026-11')).toMatchObject({ hasLinkedSessions: true });
+  });
+
+  it('hasLinkedSessions e hasSessions são falsos em mês sem sessões', () => {
+    const ledger = buildLedger({ patients: [ana], sessions: [], payments: [] });
+    expect(summarizeMonth(ledger, '2026-11')).toMatchObject({
+      hasSessions: false,
+      hasLinkedSessions: false,
+    });
+  });
+
   it('sessões sem paciente contam por mês, de qualquer status, e ficam fora dos valores', () => {
     const ledger = buildLedger({
       patients: [ana],
@@ -761,6 +795,7 @@ describe('summarizeMonth', () => {
       overdue: 0,
       totals: { due: 0, received: 0, abated: 0, toReceive: 0, overdue: 0, credit: 0 },
       hasSessions: true,
+      hasLinkedSessions: false,
       unlinkedSessions: 2,
       lines: [],
     });
@@ -798,6 +833,7 @@ describe('summarizeMonth', () => {
       overdue: 0,
       totals: { due: 0, received: 0, abated: 0, toReceive: 0, overdue: 0, credit: 0 },
       hasSessions: false,
+      hasLinkedSessions: false,
       unlinkedSessions: 0,
       lines: [],
     });

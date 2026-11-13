@@ -40,15 +40,17 @@ export interface MonthSummary {
   overdue: number;
   totals: MonthTotals;
   hasSessions: boolean;
+  hasLinkedSessions: boolean;
   unlinkedSessions: number;
   lines: PatientMonthLine[];
 }
 
-/** Alocações por paciente, nomes, meses com sessão e sessões sem paciente por mês. Opaco para quem consome. */
+/** Alocações por paciente, nomes, meses com sessão (vinculada ou não) e sessões sem paciente por mês. Opaco para quem consome. */
 export type Ledger = {
   readonly names: ReadonlyMap<string, string>;
   readonly allocations: ReadonlyMap<string, MonthAllocation[]>;
   readonly sessionMonths: ReadonlySet<string>;
+  readonly linkedSessionMonths: ReadonlySet<string>;
   readonly unlinkedByMonth: ReadonlyMap<string, number>;
 };
 
@@ -142,6 +144,11 @@ export function buildLedger(input: {
     names,
     allocations,
     sessionMonths: new Set(input.sessions.map(session => currentMonth(session.startsAt))),
+    linkedSessionMonths: new Set(
+      input.sessions
+        .filter(session => session.patientId !== null)
+        .map(session => currentMonth(session.startsAt)),
+    ),
     unlinkedByMonth,
   };
 }
@@ -177,6 +184,7 @@ export function summarizeMonth(ledger: Ledger, month: string): MonthSummary {
     overdue: totals.overdue,
     totals,
     hasSessions: ledger.sessionMonths.has(month),
+    hasLinkedSessions: ledger.linkedSessionMonths.has(month),
     unlinkedSessions: ledger.unlinkedByMonth.get(month) ?? 0,
     lines,
   };

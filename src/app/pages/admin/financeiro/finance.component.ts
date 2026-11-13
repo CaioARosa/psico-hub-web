@@ -217,9 +217,9 @@ export class FinanceComponent {
     return this.expanded().has(patientId);
   }
 
-  /** Sem sessões no mês o devido é desconhecido: mostra traço em vez de zero (spec §4). */
+  /** Sem sessão vinculada a paciente no mês o devido é desconhecido: mostra traço em vez de zero (spec §4). */
   protected valueOrDash(cents: number): string {
-    return this.summary().hasSessions ? formatCents(cents) : '—';
+    return this.summary().hasLinkedSessions ? formatCents(cents) : '—';
   }
 
   /** Sessões sem paciente ficam fora dos valores (spec §3); a nota diz quantas são. */
