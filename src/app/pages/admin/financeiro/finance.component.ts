@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { ZardButtonComponent } from '@/shared/components/button';
@@ -6,7 +14,6 @@ import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService } from '../data/sessions.service';
 import { REMOVED_PATIENT_LABEL, buildLedger, summarizeMonth } from '../domain/finance';
-import { totalsOf } from '../domain/finance-view';
 import { currentMonth, isValidMonth } from '../domain/month';
 import { formatCents } from '../domain/money';
 import { pixPrefillQuery } from '../domain/pix-prefill';
@@ -24,6 +31,7 @@ import { pixPrefillQuery } from '../domain/pix-prefill';
         <div class="space-y-1.5">
           <label for="finance-month" class="block text-sm font-medium text-[#1C221F]">Mês</label>
           <input
+            #monthInput
             id="finance-month"
             name="month"
             type="month"
@@ -44,6 +52,11 @@ import { pixPrefillQuery } from '../domain/pix-prefill';
             Sincronize a agenda deste mês para ver o devido.
           </p>
         }
+        @if (summary().unlinkedSessions > 0) {
+          <p role="status" class="text-sm rounded-xl bg-amber-100 border border-amber-300 px-3.5 py-2.5 text-amber-900">
+            {{ unlinkedNote(summary().unlinkedSessions) }}
+          </p>
+        }
 
         <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
@@ -52,7 +65,7 @@ import { pixPrefillQuery } from '../domain/pix-prefill';
           </div>
           <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
             <dt class="text-sm text-[#556661]">A receber</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ toReceiveLabel(summary().toReceive) }}</dd>
+            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ valueOrDash(summary().toReceive) }}</dd>
           </div>
           <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
             <dt class="text-sm text-[#556661]">Em atraso</dt>
@@ -60,9 +73,7 @@ import { pixPrefillQuery } from '../domain/pix-prefill';
           </div>
         </dl>
 
-        @if (rows().length === 0) {
-          <p class="text-sm text-[#556661]">Nenhum movimento neste mês.</p>
-        } @else {
+        @if (rows().length > 0) {
           <div class="overflow-x-auto bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm">
             <table class="w-full min-w-[44rem] text-sm">
               <thead class="text-[#556661] border-b border-[#4C645B]/15">
@@ -81,10 +92,10 @@ import { pixPrefillQuery } from '../domain/pix-prefill';
                 @for (row of rows(); track row.line.patientId) {
                   <tr>
                     <th scope="row" class="px-4 py-2.5 text-left font-medium">{{ row.name }}</th>
-                    <td class="px-4 py-2.5 text-right">{{ formatCents(row.line.due) }}</td>
+                    <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.due) }}</td>
                     <td class="px-4 py-2.5 text-right">{{ formatCents(row.line.received) }}</td>
                     <td class="px-4 py-2.5 text-right">{{ formatCents(row.line.abated) }}</td>
-                    <td class="px-4 py-2.5 text-right">{{ toReceiveLabel(row.line.toReceive) }}</td>
+                    <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.toReceive) }}</td>
                     <td class="px-4 py-2.5 text-right">{{ formatCents(row.line.overdue) }}</td>
                     <td class="px-4 py-2.5 text-right">{{ formatCents(row.line.credit) }}</td>
                     <td class="px-4 py-2.5">
@@ -125,17 +136,19 @@ import { pixPrefillQuery } from '../domain/pix-prefill';
               <tfoot class="border-t border-[#4C645B]/15 font-medium text-[#1C221F]">
                 <tr>
                   <th scope="row" class="px-4 py-2.5 text-left">Total</th>
-                  <td class="px-4 py-2.5 text-right">{{ formatCents(total().due) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ formatCents(total().received) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ formatCents(total().abated) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ toReceiveLabel(total().toReceive) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ formatCents(total().overdue) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ formatCents(total().credit) }}</td>
+                  <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.due) }}</td>
+                  <td class="px-4 py-2.5 text-right">{{ formatCents(summary().totals.received) }}</td>
+                  <td class="px-4 py-2.5 text-right">{{ formatCents(summary().totals.abated) }}</td>
+                  <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.toReceive) }}</td>
+                  <td class="px-4 py-2.5 text-right">{{ formatCents(summary().totals.overdue) }}</td>
+                  <td class="px-4 py-2.5 text-right">{{ formatCents(summary().totals.credit) }}</td>
                   <td class="px-4 py-2.5"></td>
                 </tr>
               </tfoot>
             </table>
           </div>
+        } @else if (summary().unlinkedSessions === 0) {
+          <p class="text-sm text-[#556661]">Nenhum movimento neste mês.</p>
         }
       }
     </section>
@@ -151,6 +164,7 @@ export class FinanceComponent {
 
   readonly month = signal(currentMonth(new Date()));
   readonly expanded = signal<ReadonlySet<string>>(new Set());
+  private readonly monthInput = viewChild<ElementRef<HTMLInputElement>>('monthInput');
 
   readonly ready = computed(
     () => this.allSessions.loaded() && this.patientsService.loaded() && this.paymentsService.loaded(),
@@ -167,7 +181,6 @@ export class FinanceComponent {
     }),
   );
   readonly summary = computed(() => summarizeMonth(this.ledger(), this.month()));
-  readonly total = computed(() => totalsOf(this.summary().lines));
 
   readonly patientNames = computed(
     () => new Map(this.patientsService.patients().map(patient => [patient.id, patient.name] as const)),
@@ -181,7 +194,12 @@ export class FinanceComponent {
   );
 
   setMonth(value: string): void {
-    if (!isValidMonth(value) || value === this.month()) return;
+    if (!isValidMonth(value)) {
+      const input = this.monthInput();
+      if (input) input.nativeElement.value = this.month();
+      return;
+    }
+    if (value === this.month()) return;
     this.month.set(value);
     this.expanded.set(new Set());
   }
@@ -200,7 +218,14 @@ export class FinanceComponent {
   }
 
   /** Sem sessões no mês o devido é desconhecido: mostra traço em vez de zero (spec §4). */
-  protected toReceiveLabel(cents: number): string {
+  protected valueOrDash(cents: number): string {
     return this.summary().hasSessions ? formatCents(cents) : '—';
+  }
+
+  /** Sessões sem paciente ficam fora dos valores (spec §3); a nota diz quantas são. */
+  protected unlinkedNote(count: number): string {
+    return count === 1
+      ? '1 sessão sem paciente neste mês. Vincule-a na tela Sessões para entrar no cálculo.'
+      : `${count} sessões sem paciente neste mês. Vincule-as na tela Sessões para entrarem no cálculo.`;
   }
 }

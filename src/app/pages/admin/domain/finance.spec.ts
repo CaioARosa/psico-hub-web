@@ -459,7 +459,16 @@ describe('summarizeMonth', () => {
       received: 10000,
       toReceive: 80000,
       overdue: 15000,
+      totals: {
+        due: 90000,
+        received: 10000,
+        abated: 0,
+        toReceive: 80000,
+        overdue: 15000,
+        credit: 0,
+      },
       hasSessions: true,
+      unlinkedSessions: 0,
       lines: [
         {
           patientId: 'p1',
@@ -496,6 +505,14 @@ describe('summarizeMonth', () => {
       expect(summary.received).toBe(sum(line => line.received));
       expect(summary.toReceive).toBe(sum(line => line.toReceive));
       expect(summary.overdue).toBe(sum(line => line.overdue));
+      expect(summary.totals).toEqual({
+        due: sum(line => line.due),
+        received: sum(line => line.received),
+        abated: sum(line => line.abated),
+        toReceive: sum(line => line.toReceive),
+        overdue: sum(line => line.overdue),
+        credit: sum(line => line.credit),
+      });
     }
   });
 
@@ -505,7 +522,9 @@ describe('summarizeMonth', () => {
       received: 0,
       toReceive: 0,
       overdue: 95000,
+      totals: { due: 0, received: 0, abated: 0, toReceive: 0, overdue: 95000, credit: 0 },
       hasSessions: false,
+      unlinkedSessions: 0,
       lines: [
         {
           patientId: 'p1',
@@ -703,6 +722,72 @@ describe('summarizeMonth', () => {
     expect(summarizeMonth(ledger, '2026-10').hasSessions).toBe(false);
   });
 
+  it('sessões sem paciente contam por mês, de qualquer status, e ficam fora dos valores', () => {
+    const ledger = buildLedger({
+      patients: [ana],
+      sessions: [
+        session('u1', '2026-11-03T13:00:00.000Z', 'done', {
+          patientId: null,
+          amountApplied: 15000,
+        }),
+        session('u2', '2026-11-10T13:00:00.000Z', 'cancelled', { patientId: null }),
+        session('u3', '2026-10-05T13:00:00.000Z', 'scheduled', { patientId: null }),
+        session('a1', '2026-11-12T13:00:00.000Z', 'done', { amountApplied: 15000 }),
+      ],
+      payments: [],
+    });
+    expect(summarizeMonth(ledger, '2026-11').unlinkedSessions).toBe(2);
+    expect(summarizeMonth(ledger, '2026-10').unlinkedSessions).toBe(1);
+    expect(summarizeMonth(ledger, '2026-12').unlinkedSessions).toBe(0);
+    expect(summarizeMonth(ledger, '2026-11').toReceive).toBe(15000);
+  });
+
+  it('mês só com sessões sem paciente: zera os valores e mantém hasSessions', () => {
+    const ledger = buildLedger({
+      patients: [ana],
+      sessions: [
+        session('u1', '2026-11-03T13:00:00.000Z', 'done', {
+          patientId: null,
+          amountApplied: 15000,
+        }),
+        session('u2', '2026-11-10T13:00:00.000Z', 'cancelled', { patientId: null }),
+      ],
+      payments: [],
+    });
+    expect(summarizeMonth(ledger, '2026-11')).toEqual({
+      month: '2026-11',
+      received: 0,
+      toReceive: 0,
+      overdue: 0,
+      totals: { due: 0, received: 0, abated: 0, toReceive: 0, overdue: 0, credit: 0 },
+      hasSessions: true,
+      unlinkedSessions: 2,
+      lines: [],
+    });
+  });
+
+  it('totals soma as seis colunas das linhas, inclusive abatimento e crédito', () => {
+    const ledger = buildLedger({
+      patients: [ana, patient('p2', 'Bruno', monthly)],
+      sessions: [
+        session('a1', '2026-11-03T13:00:00.000Z', 'done', { amountApplied: 20000 }),
+        session('b1', '2026-11-04T13:00:00.000Z', 'scheduled', {
+          patientId: 'p2',
+          packageAmountApplied: 60000,
+        }),
+      ],
+      payments: [payment('x1', 'p1', 40000, '2026-12'), payment('x2', 'p2', 70000, '2026-11')],
+    });
+    expect(summarizeMonth(ledger, '2026-11').totals).toEqual({
+      due: 80000,
+      received: 70000,
+      abated: 20000,
+      toReceive: 0,
+      overdue: 0,
+      credit: 10000,
+    });
+  });
+
   it('sem pacientes, sessões ou pagamentos, o resumo é zerado', () => {
     expect(
       summarizeMonth(buildLedger({ patients: [], sessions: [], payments: [] }), '2026-11'),
@@ -711,7 +796,9 @@ describe('summarizeMonth', () => {
       received: 0,
       toReceive: 0,
       overdue: 0,
+      totals: { due: 0, received: 0, abated: 0, toReceive: 0, overdue: 0, credit: 0 },
       hasSessions: false,
+      unlinkedSessions: 0,
       lines: [],
     });
   });

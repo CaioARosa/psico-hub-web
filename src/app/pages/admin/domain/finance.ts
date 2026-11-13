@@ -24,20 +24,32 @@ export interface PatientMonthLine {
   sources: MonthAllocation['sources'];
 }
 
+export interface MonthTotals {
+  due: number;
+  received: number;
+  abated: number;
+  toReceive: number;
+  overdue: number;
+  credit: number;
+}
+
 export interface MonthSummary {
   month: string;
   received: number;
   toReceive: number;
   overdue: number;
+  totals: MonthTotals;
   hasSessions: boolean;
+  unlinkedSessions: number;
   lines: PatientMonthLine[];
 }
 
-/** Alocações por paciente, nomes para ordenação e meses com alguma sessão. Opaco para quem consome. */
+/** Alocações por paciente, nomes, meses com sessão e sessões sem paciente por mês. Opaco para quem consome. */
 export type Ledger = {
   readonly names: ReadonlyMap<string, string>;
   readonly allocations: ReadonlyMap<string, MonthAllocation[]>;
   readonly sessionMonths: ReadonlySet<string>;
+  readonly unlinkedByMonth: ReadonlyMap<string, number>;
 };
 
 export const REMOVED_PATIENT_LABEL = 'Paciente removido';
@@ -119,14 +131,22 @@ export function buildLedger(input: {
     allocations.set(patientId, allocateCredits(due, received));
   }
 
+  const unlinkedByMonth = new Map<string, number>();
+  for (const session of input.sessions) {
+    if (session.patientId !== null) continue;
+    const sessionMonth = currentMonth(session.startsAt);
+    unlinkedByMonth.set(sessionMonth, (unlinkedByMonth.get(sessionMonth) ?? 0) + 1);
+  }
+
   return {
     names,
     allocations,
     sessionMonths: new Set(input.sessions.map(session => currentMonth(session.startsAt))),
+    unlinkedByMonth,
   };
 }
 
-/** Resumo de um mês: cartões são a soma das linhas, e só entram pacientes com movimento. */
+/** Resumo de um mês: totals é a soma das linhas e alimenta os cartões e a linha de total; só entram pacientes com movimento. */
 export function summarizeMonth(ledger: Ledger, month: string): MonthSummary {
   const lines: PatientMonthLine[] = [];
   for (const [patientId, allocations] of ledger.allocations) {
@@ -141,12 +161,23 @@ export function summarizeMonth(ledger: Ledger, month: string): MonthSummary {
       a.patientId.localeCompare(b.patientId),
   );
 
-  return {
-    month,
+  const totals: MonthTotals = {
+    due: sumOf(lines, line => line.due),
     received: sumOf(lines, line => line.received),
+    abated: sumOf(lines, line => line.abated),
     toReceive: sumOf(lines, line => line.toReceive),
     overdue: sumOf(lines, line => line.overdue),
+    credit: sumOf(lines, line => line.credit),
+  };
+
+  return {
+    month,
+    received: totals.received,
+    toReceive: totals.toReceive,
+    overdue: totals.overdue,
+    totals,
     hasSessions: ledger.sessionMonths.has(month),
+    unlinkedSessions: ledger.unlinkedByMonth.get(month) ?? 0,
     lines,
   };
 }

@@ -1,12 +1,12 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { afterEach, vi } from 'vitest';
 
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService, type AllSessionsWatch } from '../data/sessions.service';
 import type { Agreement, Patient, Payment, Session } from '../domain/models';
-import { currentMonth } from '../domain/month';
 import { formatCents } from '../domain/money';
 import { FinanceComponent } from './finance.component';
 
@@ -134,6 +134,10 @@ describe('FinanceComponent', () => {
     });
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   function rootOf(fixture: ComponentFixture<FinanceComponent>): HTMLElement {
     return fixture.nativeElement as HTMLElement;
   }
@@ -253,15 +257,34 @@ describe('FinanceComponent', () => {
     expect(cardValue(fixture, 'A receber')).toBe('—');
   });
 
-  it('o botão Registrar Pix leva paciente, mês e valor a receber', () => {
+  it('sem sessões no mês, devido e a receber viram traço na linha e no total', () => {
+    const fixture = openMonth('2026-12');
+
+    expect(rowCells(fixture, 'Ana Paula')).toEqual([
+      '—',
+      money(0),
+      money(0),
+      '—',
+      money(30000),
+      money(0),
+    ]);
+    expect(totalCells(fixture)).toEqual(['—', money(0), money(0), '—', money(90000), money(0)]);
+  });
+
+  it('o botão Registrar Pix leva paciente, mês e valor a receber, não o em atraso', () => {
+    sessionsSignal.update(list => [
+      ...list,
+      makeSession({ id: 'ana-nov-3', startsAt: new Date('2026-11-19T13:00:00.000Z') }),
+    ]);
     const fixture = openMonth('2026-11');
 
+    expect(rowCells(fixture, 'Ana Paula')[4]).toBe(money(15000));
     const anaLink = pixLinkOf(fixture, 'Ana Paula');
     expect(anaLink?.pathname).toBe('/admin/pagamentos');
     expect(Object.fromEntries(anaLink?.searchParams ?? [])).toEqual({
       paciente: 'p1',
       mes: '2026-11',
-      valor: '15000',
+      valor: '30000',
     });
 
     const brunoLink = pixLinkOf(fixture, 'Bruno Lima');
@@ -272,6 +295,85 @@ describe('FinanceComponent', () => {
     });
 
     expect(pixLinkOf(fixture, 'Paciente removido')).toBeNull();
+  });
+
+  it('mostra a nota de sessões sem paciente no singular, sem mudar os valores', () => {
+    sessionsSignal.update(list => [
+      ...list,
+      makeSession({
+        id: 'solta',
+        patientId: null,
+        startsAt: new Date('2026-11-20T13:00:00.000Z'),
+      }),
+    ]);
+    const fixture = openMonth('2026-11');
+
+    expect(textOf(fixture)).toContain(
+      '1 sessão sem paciente neste mês. Vincule-a na tela Sessões para entrar no cálculo.',
+    );
+    expect(cardValue(fixture, 'A receber')).toBe(money(75000));
+  });
+
+  it('mostra a nota de sessões sem paciente no plural', () => {
+    sessionsSignal.update(list => [
+      ...list,
+      makeSession({
+        id: 'solta-1',
+        patientId: null,
+        startsAt: new Date('2026-11-20T13:00:00.000Z'),
+      }),
+      makeSession({
+        id: 'solta-2',
+        patientId: null,
+        startsAt: new Date('2026-11-21T13:00:00.000Z'),
+      }),
+    ]);
+    const fixture = openMonth('2026-11');
+
+    expect(textOf(fixture)).toContain(
+      '2 sessões sem paciente neste mês. Vincule-as na tela Sessões para entrarem no cálculo.',
+    );
+  });
+
+  it('mês sem movimento nem sessões sem paciente mostra "Nenhum movimento"', () => {
+    const fixture = openMonth('2026-09');
+
+    expect(textOf(fixture)).toContain('Nenhum movimento neste mês.');
+    expect(rootOf(fixture).querySelector('table')).toBeNull();
+  });
+
+  it('quando nenhuma sessão do mês está sem paciente, não mostra a nota', () => {
+    const fixture = openMonth('2026-11');
+
+    expect(textOf(fixture)).not.toContain('sem paciente neste mês');
+  });
+
+  it('mês só com sessões sem paciente mostra a nota, não "Nenhum movimento"', () => {
+    sessionsSignal.set([
+      makeSession({
+        id: 'solta',
+        patientId: null,
+        startsAt: new Date('2026-12-03T13:00:00.000Z'),
+      }),
+    ]);
+    const fixture = openMonth('2026-12');
+
+    expect(textOf(fixture)).toContain('1 sessão sem paciente neste mês.');
+    expect(textOf(fixture)).not.toContain('Nenhum movimento neste mês.');
+    expect(textOf(fixture)).not.toContain('Sincronize a agenda deste mês');
+  });
+
+  it('mês inválido no seletor volta ao mês da tela e não troca a tabela', () => {
+    const fixture = openMonth('2026-11');
+    const input = rootOf(fixture).querySelector<HTMLInputElement>('#finance-month');
+    if (!input) throw new Error('Seletor de mês não encontrado');
+
+    input.value = '';
+    input.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(input.value).toBe('2026-11');
+    expect(cardValue(fixture, 'Recebido')).toBe(money(35000));
   });
 
   it('trocar o mês recalcula a tabela e os cartões', () => {
@@ -309,13 +411,15 @@ describe('FinanceComponent', () => {
     expect(textOf(fixture)).toContain(`${money(15000)} abatidos com o crédito de 2026-11`);
   });
 
-  it('abre no mês atual em UTC-3', () => {
+  it('abre no mês atual em UTC-3: 2026-12-01T02:30Z ainda é novembro', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-12-01T02:30:00Z'));
     const fixture = TestBed.createComponent(FinanceComponent);
     fixture.detectChanges();
 
-    expect(rootOf(fixture).querySelector<HTMLInputElement>('#finance-month')?.value).toBe(
-      currentMonth(new Date()),
-    );
+    expect(
+      rootOf(fixture).querySelector<HTMLInputElement>('#finance-month')?.value,
+    ).toBe('2026-11');
   });
 
   it('mostra carregando enquanto o listener de sessões não respondeu', () => {
