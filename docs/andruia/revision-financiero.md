@@ -1,5 +1,19 @@
 # Revisión del módulo Financiero (Fase 2)
 
+> **Actualización 2026-11-13:** la Fase 2 fue implementada en otro equipo (spec `docs/superpowers/specs/2026-11-13-gestao-fase-2-financeiro-design.md`, commits `4e81230`..`a4bf78d`). Verificado: backend 64/64, frontend 259/259, reglas 4/4, build OK.
+>
+> | Hallazgo | Estado |
+> | :-- | :-- |
+> | F1 paquete reescribe el pasado | **Resuelto** de otra forma: `packageAmountApplied` congelado en cada sesión. La opción A (historial) y la tarea F2-0 quedan **descartadas**. |
+> | F2 `paidAt` con fuso | **Resuelto**: texto `YYYY-MM-DD`. |
+> | F3 valor congelado al sincronizar | **Resuelto**: reajuste de sesiones `scheduled` al guardar el paciente. |
+> | F4 valor manual por sesión | Abierto (fuera del alcance de la Fase 2). |
+> | F5 atraso vs. crédito entre meses | **Resuelto**: abatimiento por crédito del más antiguo al más nuevo, con explicación en la tela. |
+> | F6 / Receita Saúde | Abierto: no hay marca de recibo emitido. |
+> | Reporte por fecha de pago (carnê-leão) | Abierto. |
+>
+> El resto de este documento es la revisión previa a la implementación.
+
 Fecha: 2026-11-12 · Base: spec §4 y §6, código de la Fase 1, `dossier-inteligencia-nicho.md`
 
 ## 1. Estado
