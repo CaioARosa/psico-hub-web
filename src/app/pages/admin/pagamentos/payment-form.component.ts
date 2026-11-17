@@ -71,10 +71,13 @@ const POSSIBLY_SAVED_ERROR = `${SAVE_ERROR} O Pix pode ter sido salvo; confira o
             placeholder="150,00"
             class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
             [attr.aria-invalid]="errors().amount ? 'true' : null"
-            [attr.aria-describedby]="errors().amount ? 'payment-amount-error' : null"
+            [attr.aria-describedby]="errors().amount ? 'payment-amount-hint payment-amount-error' : 'payment-amount-hint'"
             [value]="amount()"
             (input)="amount.set($any($event.target).value)"
           />
+          <p id="payment-amount-hint" class="text-xs text-[#556661]">
+            Se passar do devido do mês, o excedente abate atrasos antigos ou vira crédito automaticamente.
+          </p>
           @if (errors().amount) {
             <p id="payment-amount-error" class="text-sm text-red-700">{{ errors().amount }}</p>
           }
@@ -105,10 +108,13 @@ const POSSIBLY_SAVED_ERROR = `${SAVE_ERROR} O Pix pode ter sido salvo; confira o
             type="month"
             class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
             [attr.aria-invalid]="errors().referenceMonth ? 'true' : null"
-            [attr.aria-describedby]="errors().referenceMonth ? 'payment-reference-month-error' : null"
+            [attr.aria-describedby]="errors().referenceMonth ? 'payment-reference-month-hint payment-reference-month-error' : 'payment-reference-month-hint'"
             [value]="referenceMonth()"
             (input)="setReferenceMonth($any($event.target).value)"
           />
+          <p id="payment-reference-month-hint" class="text-xs text-[#556661]">
+            Mês das sessões que este Pix paga — ajuste se for pagamento atrasado ou adiantado.
+          </p>
           @if (errors().referenceMonth) {
             <p id="payment-reference-month-error" class="text-sm text-red-700">{{ errors().referenceMonth }}</p>
           }

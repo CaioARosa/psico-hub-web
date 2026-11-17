@@ -144,6 +144,9 @@ import { RevenueChartComponent } from './revenue-chart.component';
           class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4 space-y-3"
         >
           <h2 id="alerts-title" class="text-base font-medium text-[#1C221F]">Alertas de frequência</h2>
+          <p class="text-xs text-[#556661]">
+            No mês atual e futuros, soma realizadas + agendadas; em meses passados, apenas realizadas.
+          </p>
           @if (dashboard().alerts.length > 0) {
             <ul class="space-y-1 text-sm text-[#1C221F]">
               @for (alert of dashboard().alerts; track alert.patientId) {

@@ -165,6 +165,9 @@ import { unlinkedNote } from '../domain/unlinked-note';
               </tfoot>
             </table>
           </div>
+          <p class="text-xs text-[#556661]">
+            Abatido: valor deste mês coberto por crédito de outro mês. Crédito: sobra deste mês após abater atrasos anteriores.
+          </p>
         } @else if (summary().unlinkedSessions === 0) {
           <p class="text-sm text-[#556661]">Nenhum movimento neste mês.</p>
         }

@@ -562,4 +562,12 @@ describe('FinanceComponent', () => {
       'Telefone inválido para WhatsApp',
     );
   });
+
+  it('exibe legenda explicando Abatido e Crédito abaixo da tabela', () => {
+    const fixture = openMonth('2026-11');
+
+    expect(textOf(fixture)).toContain(
+      'Abatido: valor deste mês coberto por crédito de outro mês. Crédito: sobra deste mês após abater atrasos anteriores.',
+    );
+  });
 });

@@ -188,4 +188,24 @@ describe('SessionsComponent', () => {
     await fixture.componentInstance.changeStatus(missing, 'cancelled');
     expect(setStatusCalls).toEqual([{ id: 's-miss', status: 'cancelled' }]);
   });
+
+  it('exibe microcopy explicando por que vincular sessão sem paciente identificado', () => {
+    sessionsSignal.set([
+      makeSession({
+        id: 's-unid',
+        patientId: null,
+        calendarTitle: 'Consulta - Desconhecido',
+      }),
+    ]);
+
+    const fixture = TestBed.createComponent(SessionsComponent);
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const select = root.querySelector('#link-patient-s-unid');
+    expect(select?.getAttribute('aria-describedby')).toBe('link-patient-hint-s-unid');
+    expect((root.textContent ?? '').replace(/\s+/g, ' ')).toContain(
+      'O título do evento no Agenda não casou com nenhum cadastro. Vincule para liberar a confirmação e calcular o valor.',
+    );
+  });
 });

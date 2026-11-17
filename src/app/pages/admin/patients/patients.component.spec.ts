@@ -109,4 +109,42 @@ describe('PatientsComponent', () => {
 
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(SAVE_ERROR);
   });
+
+  it('exibe microcopy apenas nos campos de acordo e mantém nome, telefone e valor limpos', async () => {
+    const fixture = TestBed.createComponent(PatientsComponent);
+    fixture.componentInstance.openCreate();
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const text = (root.textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(root.querySelector('#patient-name')?.getAttribute('aria-describedby')).toBeNull();
+    expect(root.querySelector('#patient-phone')?.getAttribute('aria-describedby')).toBeNull();
+    expect(root.querySelector('#patient-amount')?.getAttribute('aria-describedby')).toBeNull();
+
+    expect(root.querySelector('#patient-type')?.getAttribute('aria-describedby')).toBe('patient-type-hint');
+    expect(text).toContain(
+      'Por sessão soma cada sessão realizada; pacote mensal cobra o valor fechado se houver sessão ativa no mês.',
+    );
+
+    expect(root.querySelector('#patient-sessions')?.getAttribute('aria-describedby')).toBe('patient-sessions-hint');
+    expect(text).toContain(
+      'Usado para calcular a receita prevista e avisar no Painel quando faltarem ou sobrarem sessões.',
+    );
+
+    expect(root.querySelector('#patient-charge-no-show')?.getAttribute('aria-describedby')).toBe(
+      'patient-charge-no-show-hint',
+    );
+    expect(text).toContain(
+      "Se ativo, sessões marcadas como 'Faltou' entram no valor devido (no acordo por sessão).",
+    );
+
+    const form = fixture.debugElement.query(By.directive(PatientFormComponent)).componentInstance as PatientFormComponent;
+    await form.submit(new Event('submit'));
+    fixture.detectChanges();
+
+    expect(root.querySelector('#patient-sessions')?.getAttribute('aria-describedby')).toBe(
+      'patient-sessions-hint patient-sessions-error',
+    );
+  });
 });

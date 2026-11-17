@@ -51,4 +51,36 @@ describe('PaymentFormComponent', () => {
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('O Pix pode ter sido salvo');
   });
+
+  it('exibe microcopy em valor e mês de referência e mantém paciente, data e observação limpos', async () => {
+    const fixture = TestBed.createComponent(PaymentFormComponent);
+    fixture.componentRef.setInput('onFailed', () => {});
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const text = (root.textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(root.querySelector('#payment-patient')?.getAttribute('aria-describedby')).toBeNull();
+    expect(root.querySelector('#payment-paid-at')?.getAttribute('aria-describedby')).toBeNull();
+    expect(root.querySelector('#payment-note')?.getAttribute('aria-describedby')).toBeNull();
+
+    expect(root.querySelector('#payment-amount')?.getAttribute('aria-describedby')).toBe('payment-amount-hint');
+    expect(text).toContain(
+      'Se passar do devido do mês, o excedente abate atrasos antigos ou vira crédito automaticamente.',
+    );
+
+    expect(root.querySelector('#payment-reference-month')?.getAttribute('aria-describedby')).toBe(
+      'payment-reference-month-hint',
+    );
+    expect(text).toContain(
+      'Mês das sessões que este Pix paga — ajuste se for pagamento atrasado ou adiantado.',
+    );
+
+    await fixture.componentInstance.submit(new Event('submit'));
+    fixture.detectChanges();
+
+    expect(root.querySelector('#payment-amount')?.getAttribute('aria-describedby')).toBe(
+      'payment-amount-hint payment-amount-error',
+    );
+  });
 });

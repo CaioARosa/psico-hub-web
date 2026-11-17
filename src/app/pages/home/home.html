@@ -352,8 +352,12 @@
               <div>
                 <label class="form-label" for="p-msg">Algo que gostaria de compartilhar antes?</label>
                 <textarea id="p-msg" rows="3" class="form-input py-3"
+                  aria-describedby="p-msg-hint"
                   placeholder="Completamente opcional — só se sentir vontade."
                   (input)="patientMessage.set($any($event.target).value)" [value]="patientMessage()"></textarea>
+                <p id="p-msg-hint" class="text-xs mt-1.5" style="color:var(--text-muted);font-weight:300;">
+                  Opcional e sigiloso — não vai para o Google Agenda, apenas ajuda a Lays a acolher você melhor.
+                </p>
               </div>
             </div>
 

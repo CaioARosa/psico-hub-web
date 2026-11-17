@@ -425,4 +425,12 @@ describe('DashboardComponent', () => {
     );
     expect(rootOf(fixture).querySelector('dl')).toBeNull();
   });
+
+  it('exibe explicação da regra de contagem nos alertas de frequência', () => {
+    const fixture = openMonth('2026-11');
+
+    expect(alertsText(fixture)).toContain(
+      'No mês atual e futuros, soma realizadas + agendadas; em meses passados, apenas realizadas.',
+    );
+  });
 });

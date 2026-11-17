@@ -163,6 +163,7 @@ export type SessionTab = 'all' | 'pending' | 'unidentified';
                     </label>
                     <select
                       [id]="'link-patient-' + session.id"
+                      [attr.aria-describedby]="'link-patient-hint-' + session.id"
                       class="w-full min-h-10 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-sm text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
                       [value]="selectedPatients()[session.id] ?? ''"
                       (change)="selectPatient(session.id, $any($event.target).value)"
@@ -183,6 +184,9 @@ export type SessionTab = 'all' | 'pending' | 'unidentified';
                   >
                     Vincular
                   </button>
+                  <p [id]="'link-patient-hint-' + session.id" class="w-full text-xs text-[#556661]">
+                    O título do evento no Agenda não casou com nenhum cadastro. Vincule para liberar a confirmação e calcular o valor.
+                  </p>
                 </div>
               }
 

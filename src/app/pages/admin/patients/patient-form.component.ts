@@ -65,6 +65,7 @@ import type { PatientFormErrors } from '../domain/patient-form';
           <select
             id="patient-type"
             name="type"
+            aria-describedby="patient-type-hint"
             class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
             [value]="type()"
             (change)="type.set($any($event.target).value)"
@@ -72,6 +73,9 @@ import type { PatientFormErrors } from '../domain/patient-form';
             <option value="per_session">Por sessão</option>
             <option value="monthly_package">Pacote mensal</option>
           </select>
+          <p id="patient-type-hint" class="text-xs text-[#556661]">
+            Por sessão soma cada sessão realizada; pacote mensal cobra o valor fechado se houver sessão ativa no mês.
+          </p>
         </div>
 
         <div class="space-y-1.5">
@@ -106,26 +110,35 @@ import type { PatientFormErrors } from '../domain/patient-form';
             autocomplete="off"
             class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
             [attr.aria-invalid]="errors().sessionsPerMonth ? 'true' : null"
-            [attr.aria-describedby]="errors().sessionsPerMonth ? 'patient-sessions-error' : null"
+            [attr.aria-describedby]="errors().sessionsPerMonth ? 'patient-sessions-hint patient-sessions-error' : 'patient-sessions-hint'"
             [value]="sessionsPerMonth()"
             (input)="sessionsPerMonth.set($any($event.target).value)"
           />
+          <p id="patient-sessions-hint" class="text-xs text-[#556661]">
+            Usado para calcular a receita prevista e avisar no Painel quando faltarem ou sobrarem sessões.
+          </p>
           @if (errors().sessionsPerMonth) {
             <p id="patient-sessions-error" class="text-sm text-red-700">{{ errors().sessionsPerMonth }}</p>
           }
         </div>
 
-        <div class="flex items-center gap-3 sm:self-end min-h-11">
-          <input
-            id="patient-charge-no-show"
-            name="chargeNoShow"
-            type="checkbox"
-            role="switch"
-            class="size-5 accent-[#4D6D66]"
-            [checked]="chargeNoShow()"
-            (change)="chargeNoShow.set($any($event.target).checked)"
-          />
-          <label for="patient-charge-no-show" class="text-sm font-medium text-[#1C221F]">Cobrar faltas</label>
+        <div class="space-y-1.5 sm:self-end">
+          <div class="flex items-center gap-3 min-h-11">
+            <input
+              id="patient-charge-no-show"
+              name="chargeNoShow"
+              type="checkbox"
+              role="switch"
+              aria-describedby="patient-charge-no-show-hint"
+              class="size-5 accent-[#4D6D66]"
+              [checked]="chargeNoShow()"
+              (change)="chargeNoShow.set($any($event.target).checked)"
+            />
+            <label for="patient-charge-no-show" class="text-sm font-medium text-[#1C221F]">Cobrar faltas</label>
+          </div>
+          <p id="patient-charge-no-show-hint" class="text-xs text-[#556661]">
+            Se ativo, sessões marcadas como 'Faltou' entram no valor devido (no acordo por sessão).
+          </p>
         </div>
       </div>
 
