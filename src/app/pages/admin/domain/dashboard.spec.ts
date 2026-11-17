@@ -274,8 +274,19 @@ describe('buildDashboard: alertas', () => {
     expect(alert.counted).toBe(3);
   });
 
-  it('paciente ativo sem nenhuma sessão no mês', () => {
-    expect(alertsFor('2026-11', [])).toEqual([
+  it('mês sem nenhuma sessão não gera alerta para ninguém', () => {
+    expect(alertsFor('2026-11', [], [ana, bruno])).toEqual([]);
+    expect(alertsFor('2026-12', [], [ana, bruno])).toEqual([]);
+  });
+
+  it('mês só com sessão sem paciente não gera alerta', () => {
+    const sessions = sessionsOf('done', 2, '2026-11', { patientId: null });
+    expect(alertsFor('2026-11', sessions, [ana, bruno])).toEqual([]);
+  });
+
+  it('com sessão vinculada no mês, o paciente ativo sem nenhuma sessão alerta com contagem 0', () => {
+    const sessions = sessionsOf('done', 4, '2026-11', { patientId: 'bruno' });
+    expect(alertsFor('2026-11', sessions, [ana, bruno])).toEqual([
       { patientId: 'ana', name: 'Ana', contracted: 4, counted: 0, difference: -4 },
     ]);
   });
@@ -286,7 +297,8 @@ describe('buildDashboard: alertas', () => {
       patient('alvaro', 'Álvaro', perSession),
       patient('bruno', 'Bruno', perSession),
     ];
-    expect(alertsFor('2026-11', [], list).map(alert => alert.name)).toEqual([
+    const sessions = list.flatMap(({ id }) => sessionsOf('done', 1, '2026-11', { patientId: id }));
+    expect(alertsFor('2026-11', sessions, list).map(alert => alert.name)).toEqual([
       'Álvaro',
       'Ana',
       'Bruno',

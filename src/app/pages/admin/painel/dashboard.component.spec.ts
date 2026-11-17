@@ -278,6 +278,32 @@ describe('DashboardComponent', () => {
     expect(rootOf(fixture).querySelector('[aria-labelledby="alerts-title"] li')).toBeNull();
   });
 
+  it('mês sem sessões não lista alertas e explica que não há frequência para avaliar', () => {
+    const fixture = openMonth('2026-12');
+
+    expect(alertsText(fixture)).toContain(
+      'Sem sessões vinculadas neste mês para avaliar a frequência.',
+    );
+    expect(textOf(fixture)).not.toContain('Nenhum alerta de frequência neste mês');
+    expect(rootOf(fixture).querySelector('[aria-labelledby="alerts-title"] li')).toBeNull();
+  });
+
+  it('mês só com sessão sem paciente também não avalia frequência', () => {
+    sessionsSignal.set([
+      makeSession({
+        id: 'solta',
+        patientId: null,
+        startsAt: new Date('2026-12-03T13:00:00.000Z'),
+      }),
+    ]);
+    const fixture = openMonth('2026-12');
+
+    expect(alertsText(fixture)).toContain(
+      'Sem sessões vinculadas neste mês para avaliar a frequência.',
+    );
+    expect(rootOf(fixture).querySelector('[aria-labelledby="alerts-title"] li')).toBeNull();
+  });
+
   it('a tabela sr-only repete a série', () => {
     const fixture = openMonth('2026-11');
     const table = rootOf(fixture).querySelector('table.sr-only');

@@ -150,6 +150,8 @@ import { RevenueChartComponent } from './revenue-chart.component';
                 <li>{{ alertText(alert) }}</li>
               }
             </ul>
+          } @else if (!dashboard().hasLinkedSessions) {
+            <p class="text-sm text-[#556661]">Sem sessões vinculadas neste mês para avaliar a frequência.</p>
           } @else {
             <p class="text-sm text-[#556661]">Nenhum alerta de frequência neste mês</p>
           }

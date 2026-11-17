@@ -73,7 +73,7 @@ export function buildDashboard(input: {
     hasLinkedSessions: summary.hasLinkedSessions,
     unlinkedSessions: summary.unlinkedSessions,
     countsScheduled,
-    alerts: alertsFor(patients, monthSessions, countsScheduled),
+    alerts: summary.hasLinkedSessions ? alertsFor(patients, monthSessions, countsScheduled) : [],
     series,
   };
 }
