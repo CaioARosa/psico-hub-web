@@ -46,7 +46,7 @@ Plataforma web profissional e interativa da psicóloga clínica **Lays Coelho (C
 ## Tecnologias Utilizadas
 
 ### Frontend
-- **Framework**: [Angular 21.2+](https://angular.dev/) (Standalone Components, Signals e arquitetura reativa)
+- **Framework**: [Angular 22+](https://angular.dev/) (Standalone Components, Signals e arquitetura reativa)
 - **Estilização**: [Tailwind CSS v4](https://tailwindcss.com/) com `@tailwindcss/postcss`
 - **Componentes & Design Tokens**: [Zard UI](https://zardui.com/) (`components.json`) com tipografia *Instrument Serif* e *Plus Jakarta Sans*
 - **Ícones**: `@ng-icons/lucide` e componentes SVG vetoriais otimizados

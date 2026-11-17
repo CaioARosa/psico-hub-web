@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SafeHtmlPipe } from '@/shared/pipes/safe-html.pipe';
@@ -158,7 +158,8 @@ interface BioLink {
       </footer>
 
     </main>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class LinksComponent {
   readonly currentYear = computed(() => new Date().getFullYear());

@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   signal,
@@ -64,6 +65,7 @@ function createButterflies(): Butterfly[] {
   standalone: true,
   imports: [CommonModule, SafeHtmlPipe],
   templateUrl: './home.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
   private bookingService = inject(BookingService);
