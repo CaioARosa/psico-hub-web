@@ -16,6 +16,7 @@ import type { FrequencyAlert } from '../domain/dashboard';
 import { buildLedger } from '../domain/finance';
 import { currentMonth, isValidMonth, monthLabel } from '../domain/month';
 import { formatCents } from '../domain/money';
+import { unlinkedNote } from '../domain/unlinked-note';
 import { RevenueChartComponent } from './revenue-chart.component';
 
 @Component({
@@ -166,6 +167,7 @@ export class DashboardComponent {
 
   protected readonly formatCents = formatCents;
   protected readonly monthLabel = monthLabel;
+  protected readonly unlinkedNote = unlinkedNote;
 
   readonly month = signal(currentMonth(this.now));
   private readonly monthInput = viewChild<ElementRef<HTMLInputElement>>('monthInput');
@@ -222,12 +224,5 @@ export class DashboardComponent {
     const gap =
       alert.difference < 0 ? `falta ${-alert.difference}` : `sobra ${alert.difference}`;
     return `${alert.name}: contratado ${alert.contracted}, ${unit} ${alert.counted} (${gap})`;
-  }
-
-  /** Sessões sem paciente ficam fora dos valores (spec §3); a nota diz quantas são. */
-  protected unlinkedNote(count: number): string {
-    return count === 1
-      ? '1 sessão sem paciente neste mês. Vincule-a na tela Sessões para entrar no cálculo.'
-      : `${count} sessões sem paciente neste mês. Vincule-as na tela Sessões para entrarem no cálculo.`;
   }
 }

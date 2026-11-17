@@ -17,6 +17,7 @@ import { REMOVED_PATIENT_LABEL, buildLedger, summarizeMonth } from '../domain/fi
 import { currentMonth, isValidMonth } from '../domain/month';
 import { formatCents } from '../domain/money';
 import { pixPrefillQuery } from '../domain/pix-prefill';
+import { unlinkedNote } from '../domain/unlinked-note';
 
 @Component({
   selector: 'app-admin-finance',
@@ -161,6 +162,7 @@ export class FinanceComponent {
   private readonly allSessions = this.sessionsService.watchAll();
 
   protected readonly formatCents = formatCents;
+  protected readonly unlinkedNote = unlinkedNote;
 
   readonly month = signal(currentMonth(new Date()));
   readonly expanded = signal<ReadonlySet<string>>(new Set());
@@ -220,12 +222,5 @@ export class FinanceComponent {
   /** Sem sessão vinculada a paciente no mês o devido é desconhecido, e tudo que deriva dele vira traço (spec §4). Só o recebido é fato. */
   protected valueOrDash(cents: number): string {
     return this.summary().hasLinkedSessions ? formatCents(cents) : '—';
-  }
-
-  /** Sessões sem paciente ficam fora dos valores (spec §3); a nota diz quantas são. */
-  protected unlinkedNote(count: number): string {
-    return count === 1
-      ? '1 sessão sem paciente neste mês. Vincule-a na tela Sessões para entrar no cálculo.'
-      : `${count} sessões sem paciente neste mês. Vincule-as na tela Sessões para entrarem no cálculo.`;
   }
 }
