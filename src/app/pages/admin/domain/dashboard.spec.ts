@@ -172,7 +172,124 @@ describe('buildDashboard: série', () => {
 });
 
 describe('buildDashboard: alertas', () => {
-  it('alerts é lista vazia nesta etapa', () => {
-    expect(dashboardFor('2026-11').alerts).toEqual([]);
+  const ana = patient('ana', 'Ana', perSession);
+  const bruno = patient('bruno', 'Bruno', monthly);
+
+  function sessionsOf(
+    status: SessionStatus,
+    count: number,
+    month = '2026-11',
+    fields: Partial<Session> = {},
+  ): Session[] {
+    return Array.from({ length: count }, (_, index) =>
+      session(
+        `${status}-${month}-${String(fields.patientId)}-${index}`,
+        `${month}-${String(index + 3).padStart(2, '0')}T13:00:00Z`,
+        status,
+        fields,
+      ),
+    );
+  }
+
+  function alertsFor(month: string, sessions: Session[], patientList: Patient[] = [ana]) {
+    return dashboardFor(month, { patients: patientList, sessions, payments: [] }).alerts;
+  }
+
+  it('mês corrente conta realizadas + agendadas e aponta falta', () => {
+    const sessions = [...sessionsOf('done', 2), ...sessionsOf('scheduled', 1)];
+    expect(alertsFor('2026-11', sessions)).toEqual([
+      { patientId: 'ana', name: 'Ana', contracted: 4, counted: 3, difference: -1 },
+    ]);
+  });
+
+  it('aponta sobra', () => {
+    const alerts = alertsFor('2026-11', sessionsOf('done', 5, '2026-11', { patientId: 'bruno' }), [
+      bruno,
+    ]);
+    expect(alerts).toEqual([
+      { patientId: 'bruno', name: 'Bruno', contracted: 4, counted: 5, difference: 1 },
+    ]);
+  });
+
+  it('sem alerta quando bate', () => {
+    const sessions = [...sessionsOf('done', 3), ...sessionsOf('scheduled', 1)];
+    expect(alertsFor('2026-11', sessions)).toEqual([]);
+  });
+
+  it('agendada ausente do Agenda não conta', () => {
+    const sessions = [
+      ...sessionsOf('done', 3),
+      session('missing', '2026-11-20T13:00:00Z', 'scheduled', { missingFromCalendar: true }),
+    ];
+    expect(alertsFor('2026-11', sessions)).toEqual([
+      { patientId: 'ana', name: 'Ana', contracted: 4, counted: 3, difference: -1 },
+    ]);
+  });
+
+  it('faltou e cancelada não contam', () => {
+    const sessions = [
+      ...sessionsOf('done', 2),
+      session('ns', '2026-11-20T13:00:00Z', 'no_show'),
+      session('cn', '2026-11-21T13:00:00Z', 'cancelled'),
+    ];
+    const [alert] = alertsFor('2026-11', sessions);
+    expect(alert.counted).toBe(2);
+    expect(alert.difference).toBe(-2);
+  });
+
+  it('mês passado conta só realizadas', () => {
+    const sessions = [
+      ...sessionsOf('done', 3, '2026-10'),
+      session('sch', '2026-10-20T13:00:00Z', 'scheduled'),
+    ];
+    const [alert] = alertsFor('2026-10', sessions);
+    expect(alert.counted).toBe(3);
+    expect(alert.difference).toBe(-1);
+  });
+
+  it('mês futuro conta realizadas + agendadas', () => {
+    expect(alertsFor('2026-12', sessionsOf('scheduled', 4, '2026-12'))).toEqual([]);
+    const [alert] = alertsFor('2026-12', sessionsOf('scheduled', 3, '2026-12'));
+    expect(alert.counted).toBe(3);
+    expect(alert.difference).toBe(-1);
+  });
+
+  it('inativo não gera alerta', () => {
+    const carla = patient('carla', 'Carla', perSession, false);
+    const sessions = sessionsOf('done', 1, '2026-11', { patientId: 'carla' });
+    expect(alertsFor('2026-11', sessions, [carla])).toEqual([]);
+  });
+
+  it('sessionsPerMonth 0 não gera alerta', () => {
+    const zero = patient('ana', 'Ana', { ...perSession, sessionsPerMonth: 0 });
+    expect(alertsFor('2026-11', sessionsOf('done', 2), [zero])).toEqual([]);
+  });
+
+  it('sessão sem paciente não conta para ninguém', () => {
+    const sessions = [
+      ...sessionsOf('done', 3),
+      ...sessionsOf('done', 1, '2026-11', { patientId: null }),
+    ];
+    const [alert] = alertsFor('2026-11', sessions);
+    expect(alert.counted).toBe(3);
+  });
+
+  it('paciente ativo sem nenhuma sessão no mês', () => {
+    expect(alertsFor('2026-11', [])).toEqual([
+      { patientId: 'ana', name: 'Ana', contracted: 4, counted: 0, difference: -4 },
+    ]);
+  });
+
+  it('ordena por nome em pt-BR', () => {
+    const list = [
+      patient('ana', 'Ana', perSession),
+      patient('alvaro', 'Álvaro', perSession),
+      patient('bruno', 'Bruno', perSession),
+    ];
+    expect(alertsFor('2026-11', [], list).map(alert => alert.name)).toEqual([
+      'Álvaro',
+      'Ana',
+      'Bruno',
+    ]);
   });
 });

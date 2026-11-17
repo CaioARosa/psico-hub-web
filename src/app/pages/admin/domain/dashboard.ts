@@ -51,6 +51,7 @@ export function buildDashboard(input: {
   );
   const done = monthSessions.filter(session => session.status === 'done');
   const summary = summarizeMonth(ledger, month);
+  const countsScheduled = month >= currentMonth(now);
 
   const series: DashboardPoint[] = [];
   for (let offset = SERIES_MONTHS - 1; offset >= 0; offset--) {
@@ -71,10 +72,42 @@ export function buildDashboard(input: {
     hasSessions: summary.hasSessions,
     hasLinkedSessions: summary.hasLinkedSessions,
     unlinkedSessions: summary.unlinkedSessions,
-    countsScheduled: month >= currentMonth(now),
-    alerts: [],
+    countsScheduled,
+    alerts: alertsFor(patients, monthSessions, countsScheduled),
     series,
   };
+}
+
+function alertsFor(
+  patients: Patient[],
+  monthSessions: Session[],
+  countsScheduled: boolean,
+): FrequencyAlert[] {
+  const countedByPatient = new Map<string, number>();
+  for (const { patientId, status, missingFromCalendar } of monthSessions) {
+    const counts =
+      status === 'done' || (countsScheduled && status === 'scheduled' && !missingFromCalendar);
+    if (patientId !== null && counts) {
+      countedByPatient.set(patientId, (countedByPatient.get(patientId) ?? 0) + 1);
+    }
+  }
+
+  const alerts: FrequencyAlert[] = [];
+  for (const { id, name, active, agreement } of patients) {
+    if (!active || agreement.sessionsPerMonth <= 0) continue;
+    const counted = countedByPatient.get(id) ?? 0;
+    if (counted === agreement.sessionsPerMonth) continue;
+    alerts.push({
+      patientId: id,
+      name,
+      contracted: agreement.sessionsPerMonth,
+      counted,
+      difference: counted - agreement.sessionsPerMonth,
+    });
+  }
+  return alerts.sort(
+    (a, b) => a.name.localeCompare(b.name, 'pt-BR') || a.patientId.localeCompare(b.patientId),
+  );
 }
 
 function expectedFor(patients: Patient[]): number {
