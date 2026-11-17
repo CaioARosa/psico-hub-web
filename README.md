@@ -227,7 +227,7 @@ psico-hub-web/
 | `/admin/sessoes` | `SessionsComponent` | Sincronização da agenda do mês, confirmação de sessões e vínculo de pacientes |
 | `/admin/pacientes` | `PatientsComponent` | Cadastro e edição de pacientes e seus acordos financeiros |
 | `/admin/pagamentos` | `PaymentsComponent` | Registro de Pix (paciente, valor, data, mês de referência), histórico em tempo real, edição e exclusão |
-| `/admin/financeiro` | `FinanceComponent` | Resumo do mês: recebido, a receber e em atraso por paciente, com abatimento por crédito e atalho *Registrar Pix* |
+| `/admin/financeiro` | `FinanceComponent` | Resumo do mês: recebido, a receber e em atraso por paciente, com abatimento por crédito, atalho *Registrar Pix* e cobrança via WhatsApp |
 | `/admin/painel` | `DashboardComponent` | Números do mês, previsto × realizado, gráfico dos últimos 6 meses e alertas de frequência |
 | `**` | *(Redirect)* | Redireciona qualquer rota inválida para `/` |
 
@@ -276,6 +276,12 @@ Painel privado de uso exclusivo da psicóloga para gestão operacional do consul
 - **Previsto usa o acordo atual**: meses antigos podem divergir do que valia na época.
 - **Alerta de mês passado**: sem histórico de acordos, também usa as sessões por mês atuais do paciente.
 - **Gráfico com 6 meses fixos**: não há seletor de período.
+
+### O que a Fase 4 entrega
+
+- **Cobrança via WhatsApp (`/admin/financeiro`)**: pacientes com **Em atraso** maior que zero (em meses com sessões vinculadas) ganham o botão **Cobrar no WhatsApp** ao lado de *Registrar Pix*. Ele abre `https://wa.me/<número>` em nova aba (`noopener noreferrer`) com mensagem pronta trazendo o primeiro nome do paciente e o **total devido** (`A receber` do mês + `Em atraso`).
+- **Normalização e validação do telefone**: números brasileiros com 10 ou 11 dígitos recebem `55` na frente; números com 12 ou 13 dígitos que já começam com `55` são mantidos. Se o telefone cadastrado for inválido, a linha exibe `"Telefone inválido para WhatsApp. Corrija em Pacientes."` no lugar do botão; pacientes removidos e meses sem sessões vinculadas (quando os valores viram `"—"`) não exibem botão nem aviso.
+- **Envio manual**: o sistema apenas monta o link; nenhum envio automático ocorre e nada é gravado no Firestore ao clicar.
 
 ### Configuração Inicial no Firebase / GCP (Provisionamento único)
 

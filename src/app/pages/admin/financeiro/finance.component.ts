@@ -14,6 +14,7 @@ import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService } from '../data/sessions.service';
 import { REMOVED_PATIENT_LABEL, buildLedger, summarizeMonth } from '../domain/finance';
+import { whatsappChargeUrl } from '../domain/charge-message';
 import { currentMonth, isValidMonth } from '../domain/month';
 import { formatCents } from '../domain/money';
 import { pixPrefillQuery } from '../domain/pix-prefill';
@@ -118,6 +119,22 @@ import { unlinkedNote } from '../domain/unlinked-note';
                             Registrar Pix
                           </a>
                         }
+                        @if (row.chargeUrl; as url) {
+                          <a
+                            z-button
+                            zType="outline"
+                            zSize="sm"
+                            [href]="url"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Cobrar no WhatsApp
+                          </a>
+                        } @else if (row.invalidPhone) {
+                          <span class="text-xs text-amber-800">
+                            Telefone inválido para WhatsApp. Corrija em Pacientes.
+                          </span>
+                        }
                       </div>
                     </td>
                   </tr>
@@ -184,16 +201,26 @@ export class FinanceComponent {
   );
   readonly summary = computed(() => summarizeMonth(this.ledger(), this.month()));
 
-  readonly patientNames = computed(
-    () => new Map(this.patientsService.patients().map(patient => [patient.id, patient.name] as const)),
+  readonly patientsById = computed(
+    () => new Map(this.patientsService.patients().map(patient => [patient.id, patient] as const)),
   );
-  readonly rows = computed(() =>
-    this.summary().lines.map(line => ({
-      line,
-      name: this.patientNames().get(line.patientId) ?? REMOVED_PATIENT_LABEL,
-      pixQuery: pixPrefillQuery(line),
-    })),
-  );
+  readonly rows = computed(() => {
+    const hasLinkedSessions = this.summary().hasLinkedSessions;
+    return this.summary().lines.map(line => {
+      const patient = this.patientsById().get(line.patientId);
+      const canCharge = hasLinkedSessions && line.overdue > 0 && patient !== undefined;
+      const chargeUrl = canCharge
+        ? whatsappChargeUrl(patient.phone, patient.name, line.toReceive + line.overdue)
+        : null;
+      return {
+        line,
+        name: patient?.name ?? REMOVED_PATIENT_LABEL,
+        pixQuery: pixPrefillQuery(line),
+        chargeUrl,
+        invalidPhone: canCharge && chargeUrl === null,
+      };
+    });
+  });
 
   setMonth(value: string): void {
     if (!isValidMonth(value)) {

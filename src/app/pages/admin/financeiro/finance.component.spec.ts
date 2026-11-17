@@ -6,6 +6,7 @@ import { afterEach, vi } from 'vitest';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService, type AllSessionsWatch } from '../data/sessions.service';
+import { chargeMessage } from '../domain/charge-message';
 import type { Agreement, Patient, Payment, Session } from '../domain/models';
 import { formatCents } from '../domain/money';
 import { FinanceComponent } from './finance.component';
@@ -187,6 +188,17 @@ describe('FinanceComponent', () => {
       a => normalize(a.textContent ?? '') === 'Registrar Pix',
     );
     return link ? new URL(link.getAttribute('href') ?? '', 'http://localhost') : null;
+  }
+
+  function whatsappLinkOf(
+    fixture: ComponentFixture<FinanceComponent>,
+    name: string,
+  ): HTMLAnchorElement | null {
+    return (
+      Array.from(rowOf(fixture, name).querySelectorAll('a')).find(
+        a => normalize(a.textContent ?? '') === 'Cobrar no WhatsApp',
+      ) ?? null
+    );
   }
 
   function buttonWithText(
@@ -483,5 +495,71 @@ describe('FinanceComponent', () => {
       'Não foi possível carregar as sessões.',
     );
     expect(rootOf(fixture).querySelector('table')).toBeNull();
+  });
+
+  it('mostra o botão Cobrar no WhatsApp para paciente em atraso com total devido (a receber + atraso)', () => {
+    const fixture = openMonth('2026-11');
+
+    const link = whatsappLinkOf(fixture, 'Ana Paula');
+    if (!link) throw new Error('Link Cobrar no WhatsApp não encontrado');
+
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(link.getAttribute('href')).toBe(
+      `https://wa.me/5511999999999?text=${encodeURIComponent(chargeMessage('Ana Paula', 30000))}`,
+    );
+  });
+
+  it('não mostra Cobrar no WhatsApp nem aviso quando o paciente não está em atraso', () => {
+    const fixture = openMonth('2026-11');
+    expect(whatsappLinkOf(fixture, 'Bruno Lima')).toBeNull();
+    expect(normalize(rowOf(fixture, 'Bruno Lima').textContent ?? '')).not.toContain(
+      'Telefone inválido para WhatsApp',
+    );
+
+    const octFixture = openMonth('2026-10');
+    expect(whatsappLinkOf(octFixture, 'Ana Paula')).toBeNull();
+    expect(normalize(rowOf(octFixture, 'Ana Paula').textContent ?? '')).not.toContain(
+      'Telefone inválido para WhatsApp',
+    );
+  });
+
+  it('mostra aviso na linha em vez do botão quando paciente em atraso tem telefone inválido', () => {
+    patientsSignal.set([{ ...ana, phone: '123' }, bruno]);
+    const fixture = openMonth('2026-11');
+
+    expect(whatsappLinkOf(fixture, 'Ana Paula')).toBeNull();
+    expect(normalize(rowOf(fixture, 'Ana Paula').textContent ?? '')).toContain(
+      'Telefone inválido para WhatsApp. Corrija em Pacientes.',
+    );
+  });
+
+  it('não mostra botão nem aviso de cobrança em mês sem sessões vinculadas', () => {
+    patientsSignal.set([{ ...ana, phone: '123' }, bruno]);
+    const fixture = openMonth('2026-12');
+
+    expect(whatsappLinkOf(fixture, 'Ana Paula')).toBeNull();
+    expect(whatsappLinkOf(fixture, 'Bruno Lima')).toBeNull();
+    expect(textOf(fixture)).not.toContain('Cobrar no WhatsApp');
+    expect(textOf(fixture)).not.toContain('Telefone inválido para WhatsApp');
+  });
+
+  it('não mostra botão nem aviso para paciente removido em atraso', () => {
+    sessionsSignal.update(list => [
+      ...list,
+      makeSession({
+        id: 'gone-oct',
+        patientId: 'gone',
+        amountApplied: 25000,
+        startsAt: new Date('2026-10-10T13:00:00.000Z'),
+      }),
+    ]);
+    const fixture = openMonth('2026-11');
+
+    expect(rowCells(fixture, 'Paciente removido')[4]).toBe(money(5000));
+    expect(whatsappLinkOf(fixture, 'Paciente removido')).toBeNull();
+    expect(normalize(rowOf(fixture, 'Paciente removido').textContent ?? '')).not.toContain(
+      'Telefone inválido para WhatsApp',
+    );
   });
 });
