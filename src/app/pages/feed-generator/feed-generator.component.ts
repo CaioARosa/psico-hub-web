@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+import { ZardBadgeComponent } from '@/shared/components/badge';
+import { ZardButtonComponent } from '@/shared/components/button';
+
 export interface FeedSlide {
   slideNumber: number;
   totalSlides: number;
@@ -33,16 +36,16 @@ export interface HighlightCover {
 @Component({
   selector: 'app-feed-generator',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ZardButtonComponent, ZardBadgeComponent],
   template: `
     <div class="min-h-screen bg-[#131715] text-[#FDFBF7] py-8 px-4 sm:px-6">
       <!-- Barra superior / Header -->
       <header class="max-w-6xl mx-auto mb-8 border-b border-white/10 pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div class="flex items-center gap-2 mb-2">
-            <span class="px-2.5 py-1 text-[11px] font-semibold tracking-wider uppercase bg-[#4D6D66]/30 text-[#A3B899] rounded-full border border-[#4D6D66]/40">
+            <z-badge zType="secondary" class="px-2.5 py-1 text-[11px] font-semibold tracking-wider uppercase bg-[#4D6D66]/30 text-[#A3B899] border border-[#4D6D66]/40">
               Kit de Lançamento Orgânico
-            </span>
+            </z-badge>
             <span class="text-xs text-white/50">Instagram &#64;lays.psi</span>
           </div>
           <h1 class="text-2xl sm:text-3xl font-display font-light text-white tracking-tight">
@@ -56,31 +59,47 @@ export interface HighlightCover {
         <!-- Seletor de abas -->
         <div class="flex flex-wrap gap-2">
           <button
+            z-button
+            zShape="circle"
+            [zType]="currentTab() === 'post1' ? 'default' : 'outline'"
             type="button"
             (click)="currentTab.set('post1')"
-            [class.active-tab]="currentTab() === 'post1'"
-            class="tab-btn">
+            class="border-white/15 bg-white/5 text-white hover:bg-white/15"
+            [class.!bg-[#4D6D66]]="currentTab() === 'post1'"
+          >
             1. Quem Sou
           </button>
           <button
+            z-button
+            zShape="circle"
+            [zType]="currentTab() === 'post2' ? 'default' : 'outline'"
             type="button"
             (click)="currentTab.set('post2')"
-            [class.active-tab]="currentTab() === 'post2'"
-            class="tab-btn">
+            class="border-white/15 bg-white/5 text-white hover:bg-white/15"
+            [class.!bg-[#4D6D66]]="currentTab() === 'post2'"
+          >
             2. Terapia Online
           </button>
           <button
+            z-button
+            zShape="circle"
+            [zType]="currentTab() === 'post3' ? 'default' : 'outline'"
             type="button"
             (click)="currentTab.set('post3')"
-            [class.active-tab]="currentTab() === 'post3'"
-            class="tab-btn">
+            class="border-white/15 bg-white/5 text-white hover:bg-white/15"
+            [class.!bg-[#4D6D66]]="currentTab() === 'post3'"
+          >
             3. Abordagem Sistêmica
           </button>
           <button
+            z-button
+            zShape="circle"
+            [zType]="currentTab() === 'highlights' ? 'default' : 'outline'"
             type="button"
             (click)="currentTab.set('highlights')"
-            [class.active-tab]="currentTab() === 'highlights'"
-            class="tab-btn">
+            class="border-white/15 bg-white/5 text-white hover:bg-white/15"
+            [class.!bg-[#4D6D66]]="currentTab() === 'highlights'"
+          >
             Capas de Destaques
           </button>
         </div>

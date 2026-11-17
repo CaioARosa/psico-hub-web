@@ -6,6 +6,7 @@ import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardBadgeComponent } from '@/shared/components/badge';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardCardImports } from '@/shared/components/card';
+import { ZardCheckboxComponent } from '@/shared/components/checkbox';
 import { ZardEmptyComponent } from '@/shared/components/empty';
 import { ZardInputComponent } from '@/shared/components/input';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
@@ -30,6 +31,7 @@ export function agreementSummary(agreement: Agreement): string {
     ZardButtonComponent,
     ZardBadgeComponent,
     ZardAlertComponent,
+    ZardCheckboxComponent,
     ZardInputComponent,
     ZardSkeletonComponent,
     ZardEmptyComponent,
@@ -81,16 +83,15 @@ export function agreementSummary(agreement: Agreement): string {
             />
           </div>
         </div>
-        <div class="flex items-center gap-2.5 min-h-11">
-          <input
-            id="show-inactive"
-            name="showInactive"
-            type="checkbox"
-            class="size-4 rounded accent-[#4D6D66] cursor-pointer"
+        <div class="flex items-center min-h-11">
+          <z-checkbox
+            zId="show-inactive"
             [checked]="showInactive()"
-            (change)="showInactive.set($any($event.target).checked)"
-          />
-          <label for="show-inactive" class="text-sm text-muted-foreground cursor-pointer select-none">Mostrar inativos</label>
+            (checkChange)="showInactive.set($event)"
+            class="text-sm text-muted-foreground"
+          >
+            Mostrar inativos
+          </z-checkbox>
         </div>
       </div>
 

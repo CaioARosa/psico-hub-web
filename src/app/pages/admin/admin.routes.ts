@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { provideZardCharts } from '@/shared/components/chart';
 import { authGuard } from './data/auth.guard';
 
 export const ADMIN_ROUTES: Routes = [
@@ -10,6 +11,7 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: '',
     canActivate: [authGuard],
+    providers: [provideZardCharts()],
     loadComponent: () => import('./admin-shell.component').then(m => m.AdminShellComponent),
     children: [
       { path: '', redirectTo: 'sessoes', pathMatch: 'full' },

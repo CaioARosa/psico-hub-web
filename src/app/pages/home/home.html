@@ -26,11 +26,46 @@
       <a href="#contato" class="nav-link">Contato</a>
     </div>
 
-    <a z-button zShape="circle" zSize="lg" href="#agenda" class="px-5">
-      Agendar Sessão
-    </a>
+    <div class="flex items-center gap-2">
+      <a z-button zShape="circle" zSize="lg" href="#agenda" class="px-4 sm:px-5">
+        Agendar Sessão
+      </a>
+      <button
+        z-button
+        zType="ghost"
+        zSize="icon"
+        zShape="circle"
+        type="button"
+        class="md:hidden"
+        aria-label="Abrir menu de navegação"
+        (click)="openMobileMenu()"
+      >
+        <ng-icon name="lucideMenu" class="size-5" />
+      </button>
+    </div>
   </div>
 </nav>
+
+<ng-template #mobileNavTemplate>
+  <nav aria-label="Menu mobile" class="flex flex-col gap-2 py-2">
+    <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('sobre')">
+      Sobre mim
+    </button>
+    <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('servicos')">
+      Serviços
+    </button>
+    <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('duvidas')">
+      Dúvidas frequentes
+    </button>
+    <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('contato')">
+      Contato
+    </button>
+    <z-separator class="my-2" />
+    <button z-button zShape="circle" type="button" class="h-11 w-full" (click)="navigateToSection('agenda')">
+      Agendar Sessão
+    </button>
+  </nav>
+</ng-template>
 
 <!-- =========================================================
      HERO
@@ -274,84 +309,33 @@
               </div>
             }
 
-            <!-- PASSO 2 -->
+            <!-- PASSO 2 (ZardUI Calendar) -->
             @if (bookingStep() === 2) {
               <div class="animate-fade-in grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-                <div class="col-span-1 lg:col-span-7 space-y-4">
-                  <div class="flex items-center justify-between">
-                    <span class="font-display text-lg text-[#1C221F]">{{ monthLabel() }}</span>
-                    <div class="flex gap-1.5">
-                      <button
-                        z-button
-                        zType="outline"
-                        zSize="icon-sm"
-                        zShape="circle"
-                        type="button"
-                        zTooltip="Mês anterior"
-                        (click)="prevMonth()"
-                        aria-label="Mês anterior"
-                      >
-                        <ng-icon name="lucideChevronLeft" class="size-4" />
-                      </button>
-                      <button
-                        z-button
-                        zType="outline"
-                        zSize="icon-sm"
-                        zShape="circle"
-                        type="button"
-                        zTooltip="Próximo mês"
-                        (click)="nextMonth()"
-                        aria-label="Próximo mês"
-                      >
-                        <ng-icon name="lucideChevronRight" class="size-4" />
-                      </button>
-                    </div>
-                  </div>
+                <div class="col-span-1 lg:col-span-7 space-y-3">
+                  <z-calendar
+                    zMode="single"
+                    zLocale="pt-BR"
+                    [value]="selectedDate()"
+                    [minDate]="minBookingDate"
+                    [maxDate]="maxBookingDate"
+                    [zDisabledDates]="disabledSundays()"
+                    (dateChange)="onCalendarDateChange($event)"
+                    class="w-full rounded-2xl border border-[#4C645B]/15 bg-[#FDFBF7] p-3 sm:p-4 [--cell-size:--spacing(9)] sm:[--cell-size:--spacing(10)]"
+                  />
 
-                  <div class="grid grid-cols-7 gap-1 text-center text-xs">
-                    @for (wd of weekDays; track wd) {
-                      <span class="py-2 font-semibold text-[#72807C] tracking-wider text-[0.625rem] uppercase">
-                        {{ wd }}
-                      </span>
-                    }
-                    @for (day of calendarDays(); track day ? day.toISOString() : $index) {
-                      @if (day === null) {
-                        <span class="aspect-square"></span>
-                      } @else {
-                        <button
-                          type="button"
-                          (click)="selectDate(day)"
-                          [disabled]="isPastDate(day) || isSunday(day)"
-                          class="aspect-square rounded-full flex items-center justify-center text-xs sm:text-sm font-medium tabular-nums transition-[background-color,color,transform,border-color] duration-150 active:scale-[0.94]"
-                          [class]="
-                            isSelected(day)
-                              ? 'bg-[#4D6D66] text-white shadow-xs'
-                              : isPastDate(day) || isSunday(day)
-                                ? 'text-[#1C221F]/20 cursor-not-allowed'
-                                : isToday(day)
-                                  ? 'text-[#4D6D66] ring-1 ring-[#4D6D66]/45 hover:bg-[#D4E6E1]/40 cursor-pointer'
-                                  : 'text-[#1C221F] hover:bg-[#F5F2ED] cursor-pointer'
-                          "
-                          [attr.aria-label]="'Dia ' + day.getDate()"
-                        >
-                          <span>{{ day.getDate() }}</span>
-                        </button>
-                      }
-                    }
-                  </div>
-
-                  <div class="flex flex-wrap items-center gap-4 text-xs pt-2 text-[#72807C]">
+                  <div class="flex flex-wrap items-center gap-4 text-xs pt-1 text-[#72807C]">
                     <span class="flex items-center gap-1.5">
                       <span class="w-2.5 h-2.5 rounded-full inline-block bg-[#4D6D66]"></span>
                       Selecionado
                     </span>
                     <span class="flex items-center gap-1.5">
-                      <span class="w-2.5 h-2.5 rounded-full inline-block ring-1 ring-[#4D6D66]/60"></span>
+                      <span class="w-2.5 h-2.5 rounded-full inline-block bg-[#F5F2ED] ring-1 ring-[#4C645B]/25"></span>
                       Hoje
                     </span>
                     <span class="flex items-center gap-1.5">
                       <span class="w-2.5 h-2.5 rounded-full inline-block bg-[#1C221F]/10"></span>
-                      Indisponível
+                      Indisponível (domingos e datas passadas)
                     </span>
                   </div>
                 </div>

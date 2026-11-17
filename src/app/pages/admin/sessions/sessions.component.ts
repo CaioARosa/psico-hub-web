@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCalendar, lucideCheck, lucideRefreshCw } from '@ng-icons/lucide';
@@ -11,6 +12,7 @@ import { ZardInputComponent } from '@/shared/components/input';
 import { ZardNativeSelectDirective } from '@/shared/components/native-select';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
+import { ZardTabsImports } from '@/shared/components/tabs';
 import { CalendarSyncService } from '../data/calendar-sync.service';
 import { PatientsService } from '../data/patients.service';
 import { SAVE_ERROR } from '../data/safe-write';
@@ -21,11 +23,13 @@ import { canConfirm, formatSessionDateTime, groupSessions, statusLabel } from '.
 import { syncSummary } from '../domain/sync-summary';
 
 export type SessionTab = 'all' | 'pending' | 'unidentified';
+const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
 
 @Component({
   selector: 'app-admin-sessions',
   standalone: true,
   imports: [
+    NgTemplateOutlet,
     NgIcon,
     ZardButtonComponent,
     ZardBadgeComponent,
@@ -36,6 +40,7 @@ export type SessionTab = 'all' | 'pending' | 'unidentified';
     ZardEmptyComponent,
     ZardSeparatorComponent,
     ...ZardCardImports,
+    ...ZardTabsImports,
   ],
   viewProviders: [provideIcons({ lucideCalendar, lucideCheck, lucideRefreshCw })],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,184 +95,172 @@ export type SessionTab = 'all' | 'pending' | 'unidentified';
         <z-alert zType="destructive" zRole="alert" [zDescription]="syncError()!" />
       }
 
-      <div
-        role="tablist"
-        aria-label="Filtro de sessões"
-        class="inline-flex flex-wrap gap-1 p-1 rounded-xl bg-muted border border-border/60"
-      >
-        <button
-          role="tab"
-          type="button"
-          [attr.aria-selected]="activeTab() === 'all'"
-          [class]="tabClass('all')"
-          (click)="setTab('all')"
-        >
-          Todas ({{ groups().all.length }})
-        </button>
-        <button
-          role="tab"
-          type="button"
-          [attr.aria-selected]="activeTab() === 'pending'"
-          [class]="tabClass('pending')"
-          (click)="setTab('pending')"
-        >
-          Pendentes de confirmação ({{ groups().pending.length }})
-        </button>
-        <button
-          role="tab"
-          type="button"
-          [attr.aria-selected]="activeTab() === 'unidentified'"
-          [class]="tabClass('unidentified')"
-          (click)="setTab('unidentified')"
-        >
-          Não identificados ({{ groups().unidentified.length }})
-        </button>
-      </div>
+      <z-tab-group zVariant="default" (zTabChange)="onTabChange($event.index)">
+        <z-tab [label]="'Todas (' + groups().all.length + ')'">
+          @if (activeTab() === 'all') {
+            <ng-container [ngTemplateOutlet]="sessionContent" />
+          }
+        </z-tab>
+        <z-tab [label]="'Pendentes de confirmação (' + groups().pending.length + ')'">
+          @if (activeTab() === 'pending') {
+            <ng-container [ngTemplateOutlet]="sessionContent" />
+          }
+        </z-tab>
+        <z-tab [label]="'Não identificados (' + groups().unidentified.length + ')'">
+          @if (activeTab() === 'unidentified') {
+            <ng-container [ngTemplateOutlet]="sessionContent" />
+          }
+        </z-tab>
+      </z-tab-group>
 
-      @if (actionError()) {
-        <z-alert zType="destructive" zRole="alert" [zDescription]="actionError()!" />
-      }
+      <ng-template #sessionContent>
+        <div class="space-y-4 pt-3">
+          @if (actionError()) {
+            <z-alert zType="destructive" zRole="alert" [zDescription]="actionError()!" />
+          }
 
-      @if (watch().error()) {
-        <z-alert zType="destructive" zRole="alert" [zDescription]="watch().error()!" />
-      } @else if (!watch().loaded()) {
-        <div class="space-y-3">
-          <p class="text-sm text-muted-foreground">Carregando sessões...</p>
-          @for (i of [1, 2, 3]; track i) {
-            <z-skeleton class="h-24 w-full rounded-2xl" />
+          @if (watch().error()) {
+            <z-alert zType="destructive" zRole="alert" [zDescription]="watch().error()!" />
+          } @else if (!watch().loaded()) {
+            <div class="space-y-3">
+              <p class="text-sm text-muted-foreground">Carregando sessões...</p>
+              @for (i of [1, 2, 3]; track i) {
+                <z-skeleton class="h-24 w-full rounded-2xl" />
+              }
+            </div>
+          } @else if (visibleSessions().length === 0) {
+            <z-empty zIcon="lucideCalendar" [zDescription]="emptyMessage()" class="bg-card rounded-2xl border border-border py-10" />
+          } @else {
+            <ul class="space-y-3 stagger-list">
+              @for (session of visibleSessions(); track session.id) {
+                <li>
+                  <z-card class="rounded-2xl p-4 space-y-3 shadow-2xs transition-[box-shadow,border-color] duration-200 hover:shadow-sm">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                      <div class="min-w-0 space-y-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <span class="font-medium text-foreground">{{ patientName(session) }}</span>
+                          <z-badge [zType]="badgeType(session.status)" [class]="badgeExtraClass(session.status)">
+                            {{ statusText(session.status) }}
+                          </z-badge>
+                          @if (session.missingFromCalendar) {
+                            <z-badge zType="secondary" class="bg-amber-100 text-amber-800">
+                              Removida do Agenda
+                            </z-badge>
+                          }
+                        </div>
+                        <p class="text-sm text-muted-foreground tabular-nums">{{ formatDateTime(session.startsAt) }}</p>
+                        @if (session.calendarTitle) {
+                          <p class="text-xs text-muted-foreground">{{ session.calendarTitle }}</p>
+                        }
+                      </div>
+
+                      <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Confirmar status da sessão">
+                        <button
+                          z-button
+                          [zType]="session.status === 'done' ? 'default' : 'outline'"
+                          zSize="sm"
+                          type="button"
+                          [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
+                          (click)="changeStatus(session, 'done')"
+                        >
+                          Realizada
+                        </button>
+                        <button
+                          z-button
+                          [zType]="session.status === 'no_show' ? 'default' : 'outline'"
+                          zSize="sm"
+                          type="button"
+                          [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
+                          (click)="changeStatus(session, 'no_show')"
+                        >
+                          Faltou
+                        </button>
+                        <button
+                          z-button
+                          [zType]="session.status === 'cancelled' ? 'default' : 'outline'"
+                          zSize="sm"
+                          type="button"
+                          [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
+                          (click)="changeStatus(session, 'cancelled')"
+                        >
+                          Cancelada
+                        </button>
+                      </div>
+                    </div>
+
+                    @if (!canConfirmSession(session)) {
+                      <z-separator />
+                      <div class="flex flex-wrap items-end gap-2">
+                        <div class="space-y-1 grow max-w-xs">
+                          <label [attr.for]="'link-patient-' + session.id" class="block text-xs font-medium text-foreground">
+                            Vincular paciente ativo
+                          </label>
+                          <select
+                            z-native-select
+                            [id]="'link-patient-' + session.id"
+                            [attr.aria-describedby]="'link-patient-hint-' + session.id"
+                            class="h-10 rounded-xl bg-white"
+                            [value]="selectedPatients()[session.id] ?? ''"
+                            (change)="selectPatient(session.id, $any($event.target).value)"
+                          >
+                            <option value="">Selecione um paciente...</option>
+                            @for (patient of activePatients(); track patient.id) {
+                              <option [value]="patient.id">{{ patient.name }}</option>
+                            }
+                          </select>
+                        </div>
+                        <button
+                          z-button
+                          zSize="sm"
+                          type="button"
+                          class="h-10 rounded-xl px-4"
+                          [zLoading]="busyId() === session.id"
+                          [zDisabled]="!selectedPatients()[session.id] || busyId() === session.id"
+                          (click)="linkSelectedPatient(session)"
+                        >
+                          Vincular
+                        </button>
+                        <p [id]="'link-patient-hint-' + session.id" class="w-full text-xs text-muted-foreground">
+                          O título do evento no Agenda não casou com nenhum cadastro. Vincule para liberar a confirmação e calcular o valor.
+                        </p>
+                      </div>
+                    }
+
+                    @if (session.missingFromCalendar) {
+                      <z-separator />
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs text-muted-foreground">Este evento não está mais no Google Agenda.</span>
+                        <div class="flex flex-wrap items-center gap-2">
+                          <button
+                            z-button
+                            zType="outline"
+                            zSize="sm"
+                            type="button"
+                            [zDisabled]="busyId() === session.id"
+                            (click)="keepSession(session)"
+                          >
+                            Manter
+                          </button>
+                          <button
+                            z-button
+                            zType="destructive"
+                            zSize="sm"
+                            type="button"
+                            [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
+                            (click)="changeStatus(session, 'cancelled')"
+                          >
+                            Cancelar sessão
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </z-card>
+                </li>
+              }
+            </ul>
           }
         </div>
-      } @else if (visibleSessions().length === 0) {
-        <z-empty zIcon="lucideCalendar" [zDescription]="emptyMessage()" class="bg-card rounded-2xl border border-border py-10" />
-      } @else {
-        <ul class="space-y-3 stagger-list">
-          @for (session of visibleSessions(); track session.id) {
-            <li>
-              <z-card class="rounded-2xl p-4 space-y-3 shadow-2xs transition-[box-shadow,border-color] duration-200 hover:shadow-sm">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                  <div class="min-w-0 space-y-1">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <span class="font-medium text-foreground">{{ patientName(session) }}</span>
-                      <z-badge [zType]="badgeType(session.status)" [class]="badgeExtraClass(session.status)">
-                        {{ statusText(session.status) }}
-                      </z-badge>
-                      @if (session.missingFromCalendar) {
-                        <z-badge zType="secondary" class="bg-amber-100 text-amber-800">
-                          Removida do Agenda
-                        </z-badge>
-                      }
-                    </div>
-                    <p class="text-sm text-muted-foreground tabular-nums">{{ formatDateTime(session.startsAt) }}</p>
-                    @if (session.calendarTitle) {
-                      <p class="text-xs text-muted-foreground">{{ session.calendarTitle }}</p>
-                    }
-                  </div>
-
-                  <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Confirmar status da sessão">
-                    <button
-                      z-button
-                      [zType]="session.status === 'done' ? 'default' : 'outline'"
-                      zSize="sm"
-                      type="button"
-                      [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
-                      (click)="changeStatus(session, 'done')"
-                    >
-                      Realizada
-                    </button>
-                    <button
-                      z-button
-                      [zType]="session.status === 'no_show' ? 'default' : 'outline'"
-                      zSize="sm"
-                      type="button"
-                      [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
-                      (click)="changeStatus(session, 'no_show')"
-                    >
-                      Faltou
-                    </button>
-                    <button
-                      z-button
-                      [zType]="session.status === 'cancelled' ? 'default' : 'outline'"
-                      zSize="sm"
-                      type="button"
-                      [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
-                      (click)="changeStatus(session, 'cancelled')"
-                    >
-                      Cancelada
-                    </button>
-                  </div>
-                </div>
-
-                @if (!canConfirmSession(session)) {
-                  <z-separator />
-                  <div class="flex flex-wrap items-end gap-2">
-                    <div class="space-y-1 grow max-w-xs">
-                      <label [attr.for]="'link-patient-' + session.id" class="block text-xs font-medium text-foreground">
-                        Vincular paciente ativo
-                      </label>
-                      <select
-                        z-native-select
-                        [id]="'link-patient-' + session.id"
-                        [attr.aria-describedby]="'link-patient-hint-' + session.id"
-                        class="h-10 rounded-xl bg-white"
-                        [value]="selectedPatients()[session.id] ?? ''"
-                        (change)="selectPatient(session.id, $any($event.target).value)"
-                      >
-                        <option value="">Selecione um paciente...</option>
-                        @for (patient of activePatients(); track patient.id) {
-                          <option [value]="patient.id">{{ patient.name }}</option>
-                        }
-                      </select>
-                    </div>
-                    <button
-                      z-button
-                      zSize="sm"
-                      type="button"
-                      class="h-10 rounded-xl px-4"
-                      [zLoading]="busyId() === session.id"
-                      [zDisabled]="!selectedPatients()[session.id] || busyId() === session.id"
-                      (click)="linkSelectedPatient(session)"
-                    >
-                      Vincular
-                    </button>
-                    <p [id]="'link-patient-hint-' + session.id" class="w-full text-xs text-muted-foreground">
-                      O título do evento no Agenda não casou com nenhum cadastro. Vincule para liberar a confirmação e calcular o valor.
-                    </p>
-                  </div>
-                }
-
-                @if (session.missingFromCalendar) {
-                  <z-separator />
-                  <div class="flex flex-wrap items-center justify-between gap-2">
-                    <span class="text-xs text-muted-foreground">Este evento não está mais no Google Agenda.</span>
-                    <div class="flex flex-wrap items-center gap-2">
-                      <button
-                        z-button
-                        zType="outline"
-                        zSize="sm"
-                        type="button"
-                        [zDisabled]="busyId() === session.id"
-                        (click)="keepSession(session)"
-                      >
-                        Manter
-                      </button>
-                      <button
-                        z-button
-                        zType="destructive"
-                        zSize="sm"
-                        type="button"
-                        [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
-                        (click)="changeStatus(session, 'cancelled')"
-                      >
-                        Cancelar sessão
-                      </button>
-                    </div>
-                  </div>
-                }
-              </z-card>
-            </li>
-          }
-        </ul>
-      }
+      </ng-template>
     </section>
   `,
 })
@@ -311,6 +304,10 @@ export class SessionsComponent {
     this.watch.set(this.sessionsService.watchMonth(value));
   }
 
+  onTabChange(index: number): void {
+    this.setTab(TAB_ORDER[index] ?? 'all');
+  }
+
   setTab(tab: SessionTab): void {
     this.activeTab.set(tab);
     this.actionError.set(null);
@@ -335,13 +332,6 @@ export class SessionsComponent {
 
   protected formatDateTime(date: Date): string {
     return formatSessionDateTime(date);
-  }
-
-  protected tabClass(tab: SessionTab): string {
-    const base = 'px-3 py-1.5 rounded-lg text-sm font-medium transition-[background-color,color,box-shadow] duration-150 cursor-pointer tabular-nums';
-    return this.activeTab() === tab
-      ? `${base} bg-white text-foreground shadow-2xs`
-      : `${base} text-muted-foreground hover:text-foreground`;
   }
 
   protected badgeType(status: SessionStatus): ZardBadgeTypeVariants {

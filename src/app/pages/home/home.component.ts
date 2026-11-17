@@ -7,6 +7,8 @@ import {
   AfterViewInit,
   OnDestroy,
   PLATFORM_ID,
+  TemplateRef,
+  viewChild,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
@@ -16,10 +18,9 @@ import {
   lucideArrowRight,
   lucideCalendar,
   lucideCheck,
-  lucideChevronLeft,
-  lucideChevronRight,
   lucideClock,
   lucideMail,
+  lucideMenu,
   lucideShieldCheck,
   lucideVideo,
 } from '@ng-icons/lucide';
@@ -30,14 +31,15 @@ import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardAvatarComponent } from '@/shared/components/avatar';
 import { ZardBadgeComponent } from '@/shared/components/badge';
 import { ZardButtonComponent } from '@/shared/components/button';
+import { ZardCalendarComponent, type CalendarValue } from '@/shared/components/calendar';
 import { ZardCardImports } from '@/shared/components/card';
 import { ZardEmptyComponent } from '@/shared/components/empty';
 import { ZardInputComponent } from '@/shared/components/input';
 import { ZardProgressComponent } from '@/shared/components/progress';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
+import { ZardSheetRef, ZardSheetService } from '@/shared/components/sheet';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
 import { ZardTextareaComponent } from '@/shared/components/textarea';
-import { ZardTooltipDirective } from '@/shared/components/tooltip';
 import { BookingService, TimeSlot } from '@/shared/core/services/booking.service';
 import { SafeHtmlPipe } from '@/shared/pipes/safe-html.pipe';
 
@@ -109,6 +111,18 @@ function createButterflies(): Butterfly[] {
   return list;
 }
 
+function collectSundays(start: Date, end: Date): Date[] {
+  const sundays: Date[] = [];
+  const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const offset = (7 - cursor.getDay()) % 7;
+  cursor.setDate(cursor.getDate() + offset);
+  while (cursor <= end) {
+    sundays.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 7);
+  }
+  return sundays;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -119,6 +133,7 @@ function createButterflies(): Butterfly[] {
     ZardButtonComponent,
     ZardBadgeComponent,
     ZardAlertComponent,
+    ZardCalendarComponent,
     ZardInputComponent,
     ZardTextareaComponent,
     ZardProgressComponent,
@@ -126,7 +141,6 @@ function createButterflies(): Butterfly[] {
     ZardSeparatorComponent,
     ZardAvatarComponent,
     ZardEmptyComponent,
-    ZardTooltipDirective,
     ...ZardCardImports,
     ...ZardAccordionImports,
   ],
@@ -136,10 +150,9 @@ function createButterflies(): Butterfly[] {
       lucideArrowRight,
       lucideCalendar,
       lucideCheck,
-      lucideChevronLeft,
-      lucideChevronRight,
       lucideClock,
       lucideMail,
+      lucideMenu,
       lucideShieldCheck,
       lucideVideo,
     }),
@@ -151,7 +164,11 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   private bookingService = inject(BookingService);
   private platformId = inject(PLATFORM_ID);
   private route = inject(ActivatedRoute);
+  private sheetService = inject(ZardSheetService);
   private fragmentSub?: Subscription;
+  private mobileSheetRef?: ZardSheetRef<void>;
+
+  readonly mobileNavTemplate = viewChild.required<TemplateRef<void>>('mobileNavTemplate');
 
   private observer!: IntersectionObserver;
   private scrollHandler!: () => void;
@@ -167,6 +184,18 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   readonly butterflies = signal<Butterfly[]>(createButterflies());
 
   // Booking Signals
+  readonly minBookingDate = (() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  })();
+  readonly maxBookingDate = new Date(
+    this.minBookingDate.getFullYear() + 1,
+    this.minBookingDate.getMonth(),
+    this.minBookingDate.getDate(),
+  );
+  readonly disabledSundays = signal<Date[]>(collectSundays(this.minBookingDate, this.maxBookingDate));
+
   readonly bookingStep = signal<number>(1);
   readonly bookingProgress = computed(() => Math.round((this.bookingStep() / 4) * 100));
   readonly selectedService = signal<string>('Terapia Individual');
@@ -179,41 +208,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   readonly slotsLoading = signal<boolean>(false);
   readonly slotsError = signal<string | null>(null);
   readonly bookingLoading = signal<boolean>(false);
-  readonly currentMonth = signal<Date>(new Date());
-  readonly weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   readonly availableTimeSlots = signal<TimeSlot[]>([]);
-
-  readonly calendarDays = computed(() => {
-    const date = this.currentMonth();
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDayIndex = new Date(year, month, 1).getDay();
-    const totalDays = new Date(year, month + 1, 0).getDate();
-
-    const days: (Date | null)[] = [];
-    for (let i = 0; i < firstDayIndex; i++) days.push(null);
-    for (let i = 1; i <= totalDays; i++) days.push(new Date(year, month, i));
-    return days;
-  });
-
-  readonly monthLabel = computed(() => {
-    const months = [
-      'Janeiro',
-      'Fevereiro',
-      'Março',
-      'Abril',
-      'Maio',
-      'Junho',
-      'Julho',
-      'Agosto',
-      'Setembro',
-      'Outubro',
-      'Novembro',
-      'Dezembro',
-    ];
-    const d = this.currentMonth();
-    return `${months[d.getMonth()]} de ${d.getFullYear()}`;
-  });
 
   ngAfterViewInit() {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -256,47 +251,40 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     if (this.observer) this.observer.disconnect();
     if (this.scrollHandler) window.removeEventListener('scroll', this.scrollHandler);
     this.fragmentSub?.unsubscribe();
+    this.mobileSheetRef?.close();
   }
 
-  prevMonth() {
-    const c = this.currentMonth();
-    this.currentMonth.set(new Date(c.getFullYear(), c.getMonth() - 1, 1));
+  openMobileMenu(): void {
+    this.mobileSheetRef = this.sheetService.create({
+      zTitle: 'Navegação',
+      zDescription: 'Lays Coelho · Psicoterapia Sistêmica',
+      zContent: this.mobileNavTemplate(),
+      zSide: 'right',
+      zHideFooter: true,
+      zWidth: '280px',
+    });
   }
 
-  nextMonth() {
-    const c = this.currentMonth();
-    this.currentMonth.set(new Date(c.getFullYear(), c.getMonth() + 1, 1));
+  navigateToSection(id: string): void {
+    this.mobileSheetRef?.close();
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
   }
 
   isPastDate(date: Date | null): boolean {
     if (!date) return true;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date < today;
+    return date < this.minBookingDate;
   }
 
   isSunday(date: Date | null): boolean {
     return !!date && date.getDay() === 0;
   }
 
-  isToday(date: Date | null): boolean {
-    if (!date) return false;
-    const t = new Date();
-    return (
-      date.getDate() === t.getDate() &&
-      date.getMonth() === t.getMonth() &&
-      date.getFullYear() === t.getFullYear()
-    );
-  }
-
-  isSelected(date: Date | null): boolean {
-    const s = this.selectedDate();
-    if (!date || !s) return false;
-    return (
-      date.getDate() === s.getDate() &&
-      date.getMonth() === s.getMonth() &&
-      date.getFullYear() === s.getFullYear()
-    );
+  onCalendarDateChange(value: CalendarValue): void {
+    const date = Array.isArray(value) ? (value[0] ?? null) : value instanceof Date ? value : null;
+    if (!date) return;
+    this.selectDate(date);
   }
 
   selectDate(date: Date | null) {

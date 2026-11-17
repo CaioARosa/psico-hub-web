@@ -1,11 +1,31 @@
 import type { ChartData, ChartOptions } from 'chart.js';
 
+import type { ZardChartConfig, ZardChartDatum } from '@/shared/components/chart';
 import type { DashboardPoint } from '../domain/dashboard';
 import { monthLabel } from '../domain/month';
 import { formatCents } from '../domain/money';
 
 const RECEIVED_COLOR = '#4D6D66';
 const DUE_COLOR = '#D4E6E1';
+
+export interface RevenueChartRow extends ZardChartDatum {
+  month: string;
+  received: number;
+  due: number;
+}
+
+export const revenueZardChartConfig: ZardChartConfig = {
+  received: { label: 'Recebido', color: RECEIVED_COLOR },
+  due: { label: 'Devido', color: '#BFD7D0' },
+};
+
+export function revenueZardChartRows(series: DashboardPoint[]): RevenueChartRow[] {
+  return series.map(point => ({
+    month: monthLabel(point.month),
+    received: point.received / 100,
+    due: point.due / 100,
+  }));
+}
 
 export function revenueChartData(series: DashboardPoint[]): ChartData<'bar'> {
   return {

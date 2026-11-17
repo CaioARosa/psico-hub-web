@@ -28,8 +28,10 @@
     "chart.js": "^4.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "echarts": "^6.1.0",
     "firebase": "^13.3.0",
     "ng2-charts": "^11.0.0",
+    "ngx-echarts": "^22.0.0",
     "rxjs": "~7.8.0",
     "tailwind-merge": "^3.5.0",
     "tslib": "^2.3.0"

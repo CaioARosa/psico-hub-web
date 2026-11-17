@@ -5,6 +5,7 @@ import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardCardImports } from '@/shared/components/card';
 import { ZardInputComponent } from '@/shared/components/input';
 import { ZardNativeSelectDirective } from '@/shared/components/native-select';
+import { ZardSwitchComponent } from '@/shared/components/switch';
 import { PatientsService } from '../data/patients.service';
 import type { AgreementType, Patient } from '../domain/models';
 import { patientToFormValue, toPatientInput } from '../domain/patient-form';
@@ -17,6 +18,7 @@ import type { PatientFormErrors } from '../domain/patient-form';
     ZardButtonComponent,
     ZardInputComponent,
     ZardNativeSelectDirective,
+    ZardSwitchComponent,
     ZardAlertComponent,
     ...ZardCardImports,
   ],
@@ -135,20 +137,14 @@ import type { PatientFormErrors } from '../domain/patient-form';
           </div>
 
           <div class="space-y-1.5 sm:self-end">
-            <div class="flex items-center gap-3 min-h-11">
-              <input
-                id="patient-charge-no-show"
-                name="chargeNoShow"
-                type="checkbox"
-                role="switch"
-                aria-describedby="patient-charge-no-show-hint"
-                class="size-5 accent-[#4D6D66] cursor-pointer"
-                [checked]="chargeNoShow()"
-                (change)="chargeNoShow.set($any($event.target).checked)"
-              />
-              <label for="patient-charge-no-show" class="text-sm font-medium text-foreground cursor-pointer select-none">
+            <div class="flex items-center min-h-11">
+              <z-switch
+                zId="patient-charge-no-show"
+                zAriaDescribedBy="patient-charge-no-show-hint"
+                [(zChecked)]="chargeNoShow"
+              >
                 Cobrar faltas
-              </label>
+              </z-switch>
             </div>
             <p id="patient-charge-no-show-hint" class="text-xs text-muted-foreground">
               Se ativo, sessões marcadas como 'Faltou' entram no valor devido (no acordo por sessão).

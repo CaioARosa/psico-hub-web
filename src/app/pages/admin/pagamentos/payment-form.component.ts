@@ -2,7 +2,9 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, injec
 
 import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardButtonComponent } from '@/shared/components/button';
+import { type CalendarValue } from '@/shared/components/calendar';
 import { ZardCardImports } from '@/shared/components/card';
+import { ZardDatePickerComponent } from '@/shared/components/date-picker';
 import { ZardInputComponent } from '@/shared/components/input';
 import { ZardNativeSelectDirective } from '@/shared/components/native-select';
 import { PatientsService } from '../data/patients.service';
@@ -23,6 +25,26 @@ import type { PaymentFormErrors } from '../domain/payment-form';
 /** Criar Pix pode ter gravado antes do timeout; repetir às cegas duplica o registro. */
 const POSSIBLY_SAVED_ERROR = `${SAVE_ERROR} O Pix pode ter sido salvo; confira o histórico antes de registrar de novo.`;
 
+function parseIsoDate(iso: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const date = new Date(year, month, day, 12, 0, 0, 0);
+  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+    return null;
+  }
+  return date;
+}
+
+function toIsoDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 @Component({
   selector: 'app-payment-form',
   standalone: true,
@@ -30,6 +52,7 @@ const POSSIBLY_SAVED_ERROR = `${SAVE_ERROR} O Pix pode ter sido salvo; confira o
     ZardButtonComponent,
     ZardInputComponent,
     ZardNativeSelectDirective,
+    ZardDatePickerComponent,
     ZardAlertComponent,
     ...ZardCardImports,
   ],
@@ -94,16 +117,15 @@ const POSSIBLY_SAVED_ERROR = `${SAVE_ERROR} O Pix pode ter sido salvo; confira o
 
           <div class="space-y-1.5">
             <label for="payment-paid-at" class="block text-sm font-medium text-foreground">Data do Pix</label>
-            <input
-              z-input
-              id="payment-paid-at"
-              name="paidAt"
-              type="date"
-              class="h-11 rounded-xl bg-white"
-              [attr.aria-invalid]="errors().paidAt ? 'true' : null"
-              [attr.aria-describedby]="errors().paidAt ? 'payment-paid-at-error' : null"
-              [value]="paidAt()"
-              (input)="setPaidAt($any($event.target).value)"
+            <z-date-picker
+              zId="payment-paid-at"
+              zLocale="pt-BR"
+              zFormat="dd/MM/yyyy"
+              zPlaceholder="Selecione a data"
+              zIcon="calendar"
+              [value]="paidAtDate()"
+              (dateChange)="onPaidAtPickerChange($event)"
+              class="w-full"
             />
             @if (errors().paidAt) {
               <p id="payment-paid-at-error" class="text-sm text-red-700">{{ errors().paidAt }}</p>
@@ -180,6 +202,7 @@ export class PaymentFormComponent implements OnInit {
   readonly patientId = signal('');
   readonly amount = signal('');
   readonly paidAt = signal(todayIso(new Date()));
+  readonly paidAtDate = computed(() => parseIsoDate(this.paidAt()));
   readonly referenceMonth = signal(referenceMonthOf(this.paidAt()));
   readonly note = signal('');
 
@@ -224,6 +247,12 @@ export class PaymentFormComponent implements OnInit {
       this.referenceMonth.set(prefill.referenceMonth);
       this.referenceMonthTouched = true;
     }
+  }
+
+  onPaidAtPickerChange(value: CalendarValue): void {
+    const date = Array.isArray(value) ? (value[0] ?? null) : value instanceof Date ? value : null;
+    if (!date) return;
+    this.setPaidAt(toIsoDate(date));
   }
 
   setPaidAt(value: string): void {

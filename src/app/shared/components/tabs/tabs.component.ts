@@ -125,13 +125,13 @@ export class ZardTabGroupComponent {
     return `${this.uniqueId.id()}-tabpanel-${index}`;
   }
 
-  protected readonly zTabChange = output<{
+  readonly zTabChange = output<{
     index: number;
     label: string;
     tab: ZardTabComponent;
   }>();
 
-  protected readonly zDeselect = output<{
+  readonly zDeselect = output<{
     index: number;
     label: string;
     tab: ZardTabComponent;
