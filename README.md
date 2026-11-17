@@ -228,6 +228,7 @@ psico-hub-web/
 | `/admin/pacientes` | `PatientsComponent` | Cadastro e edição de pacientes e seus acordos financeiros |
 | `/admin/pagamentos` | `PaymentsComponent` | Registro de Pix (paciente, valor, data, mês de referência), histórico em tempo real, edição e exclusão |
 | `/admin/financeiro` | `FinanceComponent` | Resumo do mês: recebido, a receber e em atraso por paciente, com abatimento por crédito e atalho *Registrar Pix* |
+| `/admin/painel` | `DashboardComponent` | Números do mês, previsto × realizado, gráfico dos últimos 6 meses e alertas de frequência |
 | `**` | *(Redirect)* | Redireciona qualquer rota inválida para `/` |
 
 ---
@@ -259,6 +260,22 @@ Painel privado de uso exclusivo da psicóloga para gestão operacional do consul
 - **Cobrar faltas**: só é congelado por sessão a partir desta fase. Faltas marcadas antes seguem o acordo atual do paciente.
 - **Pix adiantado**: pode abater um atraso mais antigo que você não esperava. A tela Financeiro mostra a origem do abatimento para evitar surpresas.
 - **Sem auditoria**: editar ou excluir um Pix não deixa histórico.
+
+### O que a Fase 3 entrega
+
+- **Painel (`/admin/painel`)**: primeiro item do menu `/admin` (a rota padrão continua `/admin/sessoes`). Escolha o mês (padrão: mês atual, em UTC-3) e veja como ele está indo. Nenhuma coleção ou campo novo no Firestore: o cálculo é feito no frontend, com os mesmos dados de pacientes, sessões e pagamentos da Fase 2.
+- **Cartões**: *Pacientes atendidos* (pacientes distintos com ao menos uma sessão realizada no mês, inclusive inativos), *Realizadas*, *Faltas*, *Cancelamentos*, *Recebido*, *Devido* e *Previsto (acordos atuais)*.
+- **Recebido e Devido**: vêm do mesmo cálculo do Financeiro, então batem com os totais daquela tela. *Recebido* é a soma dos Pix com mês de referência no mês; *Devido* é o valor das sessões realizadas, pacote incluído.
+- **Previsto (acordos atuais)**: soma, só dos pacientes **ativos**, de `sessões por mês × valor` (por sessão) ou do valor do pacote (pacote mensal). Paciente sem sessões por mês válidas não entra. A seção *Previsto × Realizado* compara esse previsto com o Devido do mês.
+- **Gráfico**: barras agrupadas de *Recebido* × *Devido* dos 6 meses que terminam no mês selecionado (do mais antigo ao mais novo, rótulos como `nov/26`, valores em reais). Meses sem movimento aparecem com barra zero. O `chart.js` e o `ng2-charts` só são carregados com a página do Painel; as páginas públicas não ganham peso. Para leitores de tela, o gráfico tem descrição e uma tabela oculta repete os 6 meses.
+- **Alertas de frequência**: só para pacientes **ativos** com sessões por mês maiores que zero. No mês corrente e em meses futuros, a contagem é *realizadas + agendadas* (sem as ausentes do Agenda); em meses passados, só *realizadas*. Quando a contagem é diferente do contratado, o paciente aparece com a diferença ("falta 1", "sobra 2"). Sem alertas: "Nenhum alerta de frequência neste mês".
+- **Avisos**: em mês sem nenhuma sessão, aparece "Sincronize a agenda deste mês para ver o devido.". Em mês sem sessões vinculadas a paciente, *Devido* e *Realizado* mostram traço ("—"); *Recebido* mantém o valor. Sessões sem paciente ficam fora de todos os números e a tela informa quantas há.
+
+#### Limitações conhecidas (Fase 3)
+
+- **Previsto usa o acordo atual**: meses antigos podem divergir do que valia na época.
+- **Alerta de mês passado**: sem histórico de acordos, também usa as sessões por mês atuais do paciente.
+- **Gráfico com 6 meses fixos**: não há seletor de período.
 
 ### Configuração Inicial no Firebase / GCP (Provisionamento único)
 
