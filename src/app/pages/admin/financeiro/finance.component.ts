@@ -8,8 +8,15 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { provideIcons } from '@ng-icons/core';
+import { lucideInfo } from '@ng-icons/lucide';
 
+import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardButtonComponent } from '@/shared/components/button';
+import { ZardCardImports } from '@/shared/components/card';
+import { ZardInputComponent } from '@/shared/components/input';
+import { ZardSkeletonComponent } from '@/shared/components/skeleton';
+import { ZardTableImports } from '@/shared/components/table';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService } from '../data/sessions.service';
@@ -23,21 +30,34 @@ import { unlinkedNote } from '../domain/unlinked-note';
 @Component({
   selector: 'app-admin-finance',
   standalone: true,
-  imports: [ZardButtonComponent, RouterLink],
+  imports: [
+    RouterLink,
+    ZardButtonComponent,
+    ZardAlertComponent,
+    ZardInputComponent,
+    ZardSkeletonComponent,
+    ...ZardCardImports,
+    ...ZardTableImports,
+  ],
+  viewProviders: [provideIcons({ lucideInfo })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="space-y-5">
+    <section class="space-y-6">
       <header class="flex flex-wrap items-end justify-between gap-3">
-        <h1 class="font-display text-2xl text-[#1C221F] tracking-tight">Financeiro</h1>
+        <div>
+          <h1 class="font-display text-3xl text-foreground tracking-tight">Financeiro</h1>
+          <p class="text-xs text-muted-foreground mt-0.5">Extrato por paciente, abatimentos e cobrança.</p>
+        </div>
 
         <div class="space-y-1.5">
-          <label for="finance-month" class="block text-sm font-medium text-[#1C221F]">Mês</label>
+          <label for="finance-month" class="block text-sm font-medium text-foreground">Mês</label>
           <input
             #monthInput
+            z-input
             id="finance-month"
             name="month"
             type="month"
-            class="min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
+            class="h-11 rounded-xl bg-white w-auto"
             [value]="month()"
             (change)="setMonth($any($event.target).value)"
           />
@@ -45,131 +65,147 @@ import { unlinkedNote } from '../domain/unlinked-note';
       </header>
 
       @if (loadError(); as message) {
-        <p role="alert" class="text-sm text-red-700">{{ message }}</p>
+        <z-alert zType="destructive" zRole="alert" [zDescription]="message" />
       } @else if (!ready()) {
-        <p class="text-sm text-[#556661]">Carregando financeiro...</p>
+        <div class="space-y-4">
+          <p class="text-sm text-muted-foreground">Carregando financeiro...</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            @for (i of [1, 2, 3]; track i) {
+              <z-skeleton class="h-22 w-full rounded-2xl" />
+            }
+          </div>
+          <z-skeleton class="h-56 w-full rounded-2xl" />
+        </div>
       } @else {
         @if (!summary().hasSessions) {
-          <p role="status" class="text-sm rounded-xl bg-amber-100 border border-amber-300 px-3.5 py-2.5 text-amber-900">
-            Sincronize a agenda deste mês para ver o devido.
-          </p>
+          <z-alert
+            zRole="status"
+            zIcon="lucideInfo"
+            class="bg-amber-50 border-amber-300/70 text-amber-950 rounded-xl"
+            zDescription="Sincronize a agenda deste mês para ver o devido."
+          />
         }
         @if (summary().unlinkedSessions > 0) {
-          <p role="status" class="text-sm rounded-xl bg-amber-100 border border-amber-300 px-3.5 py-2.5 text-amber-900">
-            {{ unlinkedNote(summary().unlinkedSessions) }}
-          </p>
+          <z-alert
+            zRole="status"
+            zIcon="lucideInfo"
+            class="bg-amber-50 border-amber-300/70 text-amber-950 rounded-xl"
+            [zDescription]="unlinkedNote(summary().unlinkedSessions)"
+          />
         }
 
-        <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
-            <dt class="text-sm text-[#556661]">Recebido</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ formatCents(summary().received) }}</dd>
+        <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3 stagger-list">
+          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+            <dt class="text-xs font-medium text-muted-foreground">Recebido</dt>
+            <dd class="font-display text-2xl text-primary mt-1 tabular-nums">{{ formatCents(summary().received) }}</dd>
           </div>
-          <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
-            <dt class="text-sm text-[#556661]">A receber</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ valueOrDash(summary().toReceive) }}</dd>
+          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+            <dt class="text-xs font-medium text-muted-foreground">A receber</dt>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ valueOrDash(summary().toReceive) }}</dd>
           </div>
-          <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
-            <dt class="text-sm text-[#556661]">Em atraso</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ valueOrDash(summary().overdue) }}</dd>
+          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+            <dt class="text-xs font-medium text-muted-foreground">Em atraso</dt>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ valueOrDash(summary().overdue) }}</dd>
           </div>
         </dl>
 
         @if (rows().length > 0) {
-          <div class="overflow-x-auto bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm">
-            <table class="w-full min-w-[44rem] text-sm">
-              <thead class="text-[#556661] border-b border-[#4C645B]/15">
-                <tr>
-                  <th scope="col" class="px-4 py-2.5 text-left font-medium">Paciente</th>
-                  <th scope="col" class="px-4 py-2.5 text-right font-medium">Devido</th>
-                  <th scope="col" class="px-4 py-2.5 text-right font-medium">Recebido</th>
-                  <th scope="col" class="px-4 py-2.5 text-right font-medium">Abatido</th>
-                  <th scope="col" class="px-4 py-2.5 text-right font-medium">A receber</th>
-                  <th scope="col" class="px-4 py-2.5 text-right font-medium">Em atraso</th>
-                  <th scope="col" class="px-4 py-2.5 text-right font-medium">Crédito</th>
-                  <th scope="col" class="px-4 py-2.5"><span class="sr-only">Ações</span></th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-[#4C645B]/10 text-[#1C221F]">
-                @for (row of rows(); track row.line.patientId) {
-                  <tr>
-                    <th scope="row" class="px-4 py-2.5 text-left font-medium">{{ row.name }}</th>
-                    <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.due) }}</td>
-                    <td class="px-4 py-2.5 text-right">{{ formatCents(row.line.received) }}</td>
-                    <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.abated) }}</td>
-                    <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.toReceive) }}</td>
-                    <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.overdue) }}</td>
-                    <td class="px-4 py-2.5 text-right">{{ valueOrDash(row.line.credit) }}</td>
-                    <td class="px-4 py-2.5">
-                      <div class="flex flex-wrap items-center justify-end gap-2">
-                        @if (row.line.sources.length > 0) {
-                          <button
-                            z-button
-                            zType="outline"
-                            zSize="sm"
-                            type="button"
-                            [attr.aria-expanded]="isExpanded(row.line.patientId)"
-                            (click)="toggleDetails(row.line.patientId)"
-                          >
-                            Detalhes
-                          </button>
-                        }
-                        @if (row.line.toReceive > 0) {
-                          <a z-button zType="outline" zSize="sm" routerLink="/admin/pagamentos" [queryParams]="row.pixQuery">
-                            Registrar Pix
-                          </a>
-                        }
-                        @if (row.chargeUrl; as url) {
-                          <a
-                            z-button
-                            zType="outline"
-                            zSize="sm"
-                            [href]="url"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Cobrar no WhatsApp
-                          </a>
-                        } @else if (row.invalidPhone) {
-                          <span class="text-xs text-amber-800">
-                            Telefone inválido para WhatsApp. Corrija em Pacientes.
-                          </span>
-                        }
-                      </div>
-                    </td>
+          <z-card class="rounded-2xl p-0 shadow-2xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table z-table class="min-w-[44rem] text-sm">
+                <thead z-table-header class="text-muted-foreground bg-[#FDFBF7]/70">
+                  <tr z-table-row>
+                    <th z-table-head scope="col" class="px-4 py-3 text-left font-medium">Paciente</th>
+                    <th z-table-head scope="col" class="px-4 py-3 text-right font-medium">Devido</th>
+                    <th z-table-head scope="col" class="px-4 py-3 text-right font-medium">Recebido</th>
+                    <th z-table-head scope="col" class="px-4 py-3 text-right font-medium">Abatido</th>
+                    <th z-table-head scope="col" class="px-4 py-3 text-right font-medium">A receber</th>
+                    <th z-table-head scope="col" class="px-4 py-3 text-right font-medium">Em atraso</th>
+                    <th z-table-head scope="col" class="px-4 py-3 text-right font-medium">Crédito</th>
+                    <th z-table-head scope="col" class="px-4 py-3"><span class="sr-only">Ações</span></th>
                   </tr>
-                  @if (isExpanded(row.line.patientId)) {
-                    <tr class="bg-[#FDFBF7]">
-                      <td colspan="8" class="px-4 py-3 text-sm text-[#556661]">
-                        <ul class="space-y-1">
-                          @for (source of row.line.sources; track source.fromMonth) {
-                            <li>{{ formatCents(source.amount) }} abatidos com o crédito de {{ source.fromMonth }}</li>
+                </thead>
+                <tbody z-table-body class="text-foreground tabular-nums">
+                  @for (row of rows(); track row.line.patientId) {
+                    <tr z-table-row>
+                      <th scope="row" class="px-4 py-3 text-left font-medium">{{ row.name }}</th>
+                      <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(row.line.due) }}</td>
+                      <td z-table-cell class="px-4 py-3 text-right">{{ formatCents(row.line.received) }}</td>
+                      <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(row.line.abated) }}</td>
+                      <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(row.line.toReceive) }}</td>
+                      <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(row.line.overdue) }}</td>
+                      <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(row.line.credit) }}</td>
+                      <td z-table-cell class="px-4 py-3">
+                        <div class="flex flex-wrap items-center justify-end gap-2">
+                          @if (row.line.sources.length > 0) {
+                            <button
+                              z-button
+                              zType="outline"
+                              zSize="sm"
+                              type="button"
+                              [attr.aria-expanded]="isExpanded(row.line.patientId)"
+                              (click)="toggleDetails(row.line.patientId)"
+                            >
+                              Detalhes
+                            </button>
                           }
-                        </ul>
+                          @if (row.line.toReceive > 0) {
+                            <a z-button zType="outline" zSize="sm" routerLink="/admin/pagamentos" [queryParams]="row.pixQuery">
+                              Registrar Pix
+                            </a>
+                          }
+                          @if (row.chargeUrl; as url) {
+                            <a
+                              z-button
+                              zType="outline"
+                              zSize="sm"
+                              [href]="url"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Cobrar no WhatsApp
+                            </a>
+                          } @else if (row.invalidPhone) {
+                            <span class="text-xs text-amber-800">
+                              Telefone inválido para WhatsApp. Corrija em Pacientes.
+                            </span>
+                          }
+                        </div>
                       </td>
                     </tr>
+                    @if (isExpanded(row.line.patientId)) {
+                      <tr z-table-row class="bg-[#FDFBF7] animate-fade-in">
+                        <td z-table-cell colspan="8" class="px-4 py-3 text-sm text-muted-foreground">
+                          <ul class="space-y-1">
+                            @for (source of row.line.sources; track source.fromMonth) {
+                              <li>{{ formatCents(source.amount) }} abatidos com o crédito de {{ source.fromMonth }}</li>
+                            }
+                          </ul>
+                        </td>
+                      </tr>
+                    }
                   }
-                }
-              </tbody>
-              <tfoot class="border-t border-[#4C645B]/15 font-medium text-[#1C221F]">
-                <tr>
-                  <th scope="row" class="px-4 py-2.5 text-left">Total</th>
-                  <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.due) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ formatCents(summary().totals.received) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.abated) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.toReceive) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.overdue) }}</td>
-                  <td class="px-4 py-2.5 text-right">{{ valueOrDash(summary().totals.credit) }}</td>
-                  <td class="px-4 py-2.5"></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-          <p class="text-xs text-[#556661]">
+                </tbody>
+                <tfoot z-table-footer class="font-medium text-foreground tabular-nums bg-[#F5F2ED]/60">
+                  <tr z-table-row>
+                    <th scope="row" class="px-4 py-3 text-left">Total</th>
+                    <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(summary().totals.due) }}</td>
+                    <td z-table-cell class="px-4 py-3 text-right">{{ formatCents(summary().totals.received) }}</td>
+                    <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(summary().totals.abated) }}</td>
+                    <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(summary().totals.toReceive) }}</td>
+                    <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(summary().totals.overdue) }}</td>
+                    <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(summary().totals.credit) }}</td>
+                    <td z-table-cell class="px-4 py-3"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </z-card>
+          <p class="text-xs text-muted-foreground">
             Abatido: valor deste mês coberto por crédito de outro mês. Crédito: sobra deste mês após abater atrasos anteriores.
           </p>
         } @else if (summary().unlinkedSessions === 0) {
-          <p class="text-sm text-[#556661]">Nenhum movimento neste mês.</p>
+          <p class="text-sm text-muted-foreground">Nenhum movimento neste mês.</p>
         }
       }
     </section>
@@ -186,7 +222,7 @@ export class FinanceComponent {
 
   readonly month = signal(currentMonth(new Date()));
   readonly expanded = signal<ReadonlySet<string>>(new Set());
-  private readonly monthInput = viewChild<ElementRef<HTMLInputElement>>('monthInput');
+  private readonly monthInput = viewChild('monthInput', { read: ElementRef });
 
   readonly ready = computed(
     () => this.allSessions.loaded() && this.patientsService.loaded() && this.paymentsService.loaded(),

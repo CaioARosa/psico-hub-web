@@ -1,6 +1,10 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, output, signal } from '@angular/core';
 
+import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardButtonComponent } from '@/shared/components/button';
+import { ZardCardImports } from '@/shared/components/card';
+import { ZardInputComponent } from '@/shared/components/input';
+import { ZardNativeSelectDirective } from '@/shared/components/native-select';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SAVE_ERROR } from '../data/safe-write';
@@ -22,127 +26,136 @@ const POSSIBLY_SAVED_ERROR = `${SAVE_ERROR} O Pix pode ter sido salvo; confira o
 @Component({
   selector: 'app-payment-form',
   standalone: true,
-  imports: [ZardButtonComponent],
+  imports: [
+    ZardButtonComponent,
+    ZardInputComponent,
+    ZardNativeSelectDirective,
+    ZardAlertComponent,
+    ...ZardCardImports,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <form
-      class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-5 space-y-4"
-      novalidate
-      (submit)="submit($event)"
-    >
-      <h2 class="font-display text-xl text-[#1C221F] tracking-tight">
-        {{ payment() ? 'Editar Pix' : 'Registrar Pix' }}
-      </h2>
+    <z-card class="rounded-2xl p-5 shadow-xs">
+      <form class="space-y-4" novalidate (submit)="submit($event)">
+        <h2 class="font-display text-xl text-foreground tracking-tight">
+          {{ payment() ? 'Editar Pix' : 'Registrar Pix' }}
+        </h2>
 
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div class="space-y-1.5 sm:col-span-2">
-          <label for="payment-patient" class="text-sm font-medium text-[#1C221F]">Paciente</label>
-          <select
-            id="payment-patient"
-            name="patientId"
-            class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
-            [attr.aria-invalid]="errors().patientId ? 'true' : null"
-            [attr.aria-describedby]="errors().patientId ? 'payment-patient-error' : null"
-            (change)="patientId.set($any($event.target).value)"
-          >
-            <option value="" [selected]="patientId() === ''">Selecione um paciente...</option>
-            @if (orphanSelected()) {
-              <option [value]="patientId()" [selected]="true">{{ removedPatientLabel }}</option>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-1.5 sm:col-span-2">
+            <label for="payment-patient" class="block text-sm font-medium text-foreground">Paciente</label>
+            <select
+              z-native-select
+              id="payment-patient"
+              name="patientId"
+              class="h-11 rounded-xl bg-white"
+              [attr.aria-invalid]="errors().patientId ? 'true' : null"
+              [attr.aria-describedby]="errors().patientId ? 'payment-patient-error' : null"
+              (change)="patientId.set($any($event.target).value)"
+            >
+              <option value="" [selected]="patientId() === ''">Selecione um paciente...</option>
+              @if (orphanSelected()) {
+                <option [value]="patientId()" [selected]="true">{{ removedPatientLabel }}</option>
+              }
+              @for (patient of patientsService.patients(); track patient.id) {
+                <option [value]="patient.id" [selected]="patient.id === patientId()">
+                  {{ patient.name }}{{ patient.active ? '' : ' (inativo)' }}
+                </option>
+              }
+            </select>
+            @if (errors().patientId) {
+              <p id="payment-patient-error" class="text-sm text-red-700">{{ errors().patientId }}</p>
             }
-            @for (patient of patientsService.patients(); track patient.id) {
-              <option [value]="patient.id" [selected]="patient.id === patientId()">
-                {{ patient.name }}{{ patient.active ? '' : ' (inativo)' }}
-              </option>
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="payment-amount" class="block text-sm font-medium text-foreground">Valor</label>
+            <input
+              z-input
+              id="payment-amount"
+              name="amount"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              placeholder="150,00"
+              class="h-11 rounded-xl bg-white"
+              [attr.aria-invalid]="errors().amount ? 'true' : null"
+              [attr.aria-describedby]="errors().amount ? 'payment-amount-hint payment-amount-error' : 'payment-amount-hint'"
+              [value]="amount()"
+              (input)="amount.set($any($event.target).value)"
+            />
+            <p id="payment-amount-hint" class="text-xs text-muted-foreground">
+              Se passar do devido do mês, o excedente abate atrasos antigos ou vira crédito automaticamente.
+            </p>
+            @if (errors().amount) {
+              <p id="payment-amount-error" class="text-sm text-red-700">{{ errors().amount }}</p>
             }
-          </select>
-          @if (errors().patientId) {
-            <p id="payment-patient-error" class="text-sm text-red-700">{{ errors().patientId }}</p>
-          }
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="payment-paid-at" class="block text-sm font-medium text-foreground">Data do Pix</label>
+            <input
+              z-input
+              id="payment-paid-at"
+              name="paidAt"
+              type="date"
+              class="h-11 rounded-xl bg-white"
+              [attr.aria-invalid]="errors().paidAt ? 'true' : null"
+              [attr.aria-describedby]="errors().paidAt ? 'payment-paid-at-error' : null"
+              [value]="paidAt()"
+              (input)="setPaidAt($any($event.target).value)"
+            />
+            @if (errors().paidAt) {
+              <p id="payment-paid-at-error" class="text-sm text-red-700">{{ errors().paidAt }}</p>
+            }
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="payment-reference-month" class="block text-sm font-medium text-foreground">Mês de referência</label>
+            <input
+              z-input
+              id="payment-reference-month"
+              name="referenceMonth"
+              type="month"
+              class="h-11 rounded-xl bg-white"
+              [attr.aria-invalid]="errors().referenceMonth ? 'true' : null"
+              [attr.aria-describedby]="errors().referenceMonth ? 'payment-reference-month-hint payment-reference-month-error' : 'payment-reference-month-hint'"
+              [value]="referenceMonth()"
+              (input)="setReferenceMonth($any($event.target).value)"
+            />
+            <p id="payment-reference-month-hint" class="text-xs text-muted-foreground">
+              Mês das sessões que este Pix paga — ajuste se for pagamento atrasado ou adiantado.
+            </p>
+            @if (errors().referenceMonth) {
+              <p id="payment-reference-month-error" class="text-sm text-red-700">{{ errors().referenceMonth }}</p>
+            }
+          </div>
+
+          <div class="space-y-1.5 sm:col-span-2">
+            <label for="payment-note" class="block text-sm font-medium text-foreground">Observação (opcional)</label>
+            <input
+              z-input
+              id="payment-note"
+              name="note"
+              type="text"
+              autocomplete="off"
+              class="h-11 rounded-xl bg-white"
+              [value]="note()"
+              (input)="note.set($any($event.target).value)"
+            />
+          </div>
         </div>
 
-        <div class="space-y-1.5">
-          <label for="payment-amount" class="text-sm font-medium text-[#1C221F]">Valor</label>
-          <input
-            id="payment-amount"
-            name="amount"
-            type="text"
-            inputmode="decimal"
-            autocomplete="off"
-            placeholder="150,00"
-            class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
-            [attr.aria-invalid]="errors().amount ? 'true' : null"
-            [attr.aria-describedby]="errors().amount ? 'payment-amount-hint payment-amount-error' : 'payment-amount-hint'"
-            [value]="amount()"
-            (input)="amount.set($any($event.target).value)"
-          />
-          <p id="payment-amount-hint" class="text-xs text-[#556661]">
-            Se passar do devido do mês, o excedente abate atrasos antigos ou vira crédito automaticamente.
-          </p>
-          @if (errors().amount) {
-            <p id="payment-amount-error" class="text-sm text-red-700">{{ errors().amount }}</p>
-          }
+        @if (saveError()) {
+          <z-alert zType="destructive" zRole="alert" [zDescription]="saveError()!" />
+        }
+
+        <div class="flex flex-wrap gap-2 justify-end pt-2">
+          <button z-button zType="outline" type="button" (click)="cancelled.emit()">Cancelar</button>
+          <button z-button type="submit" [zLoading]="busy()" [zDisabled]="busy()">Salvar</button>
         </div>
-
-        <div class="space-y-1.5">
-          <label for="payment-paid-at" class="text-sm font-medium text-[#1C221F]">Data do Pix</label>
-          <input
-            id="payment-paid-at"
-            name="paidAt"
-            type="date"
-            class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
-            [attr.aria-invalid]="errors().paidAt ? 'true' : null"
-            [attr.aria-describedby]="errors().paidAt ? 'payment-paid-at-error' : null"
-            [value]="paidAt()"
-            (input)="setPaidAt($any($event.target).value)"
-          />
-          @if (errors().paidAt) {
-            <p id="payment-paid-at-error" class="text-sm text-red-700">{{ errors().paidAt }}</p>
-          }
-        </div>
-
-        <div class="space-y-1.5">
-          <label for="payment-reference-month" class="text-sm font-medium text-[#1C221F]">Mês de referência</label>
-          <input
-            id="payment-reference-month"
-            name="referenceMonth"
-            type="month"
-            class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
-            [attr.aria-invalid]="errors().referenceMonth ? 'true' : null"
-            [attr.aria-describedby]="errors().referenceMonth ? 'payment-reference-month-hint payment-reference-month-error' : 'payment-reference-month-hint'"
-            [value]="referenceMonth()"
-            (input)="setReferenceMonth($any($event.target).value)"
-          />
-          <p id="payment-reference-month-hint" class="text-xs text-[#556661]">
-            Mês das sessões que este Pix paga — ajuste se for pagamento atrasado ou adiantado.
-          </p>
-          @if (errors().referenceMonth) {
-            <p id="payment-reference-month-error" class="text-sm text-red-700">{{ errors().referenceMonth }}</p>
-          }
-        </div>
-
-        <div class="space-y-1.5 sm:col-span-2">
-          <label for="payment-note" class="text-sm font-medium text-[#1C221F]">Observação (opcional)</label>
-          <input
-            id="payment-note"
-            name="note"
-            type="text"
-            autocomplete="off"
-            class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
-            [value]="note()"
-            (input)="note.set($any($event.target).value)"
-          />
-        </div>
-      </div>
-
-      @if (saveError()) {
-        <p role="alert" class="text-sm text-red-700">{{ saveError() }}</p>
-      }
-
-      <div class="flex flex-wrap gap-2 justify-end">
-        <button z-button zType="outline" type="button" (click)="cancelled.emit()">Cancelar</button>
-        <button z-button type="submit" [zLoading]="busy()" [zDisabled]="busy()">Salvar</button>
-      </div>
-    </form>
+      </form>
+    </z-card>
   `,
 })
 export class PaymentFormComponent implements OnInit {

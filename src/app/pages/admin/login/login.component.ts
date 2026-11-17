@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
+import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardButtonComponent } from '@/shared/components/button';
+import { ZardCardImports } from '@/shared/components/card';
+import { ZardInputComponent } from '@/shared/components/input';
 import { AuthService } from '../data/auth.service';
 import { useNoIndex } from '../noindex';
 import { loginErrorMessage } from './login-errors';
@@ -9,53 +12,57 @@ import { loginErrorMessage } from './login-errors';
 @Component({
   selector: 'app-admin-login',
   standalone: true,
-  imports: [ZardButtonComponent],
+  imports: [ZardButtonComponent, ZardInputComponent, ZardAlertComponent, ...ZardCardImports],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <main class="min-h-[100dvh] flex items-center justify-center px-5 py-10" style="background-color: #FDFBF7;">
-      <form
-        class="w-full max-w-sm bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-6 space-y-5"
-        (submit)="submit($event)"
-      >
-        <header class="text-center">
-          <h1 class="font-display text-2xl text-[#1C221F] tracking-tight">Área administrativa</h1>
-          <p class="text-sm text-[#556661] font-light mt-1">Entre para gerenciar o consultório.</p>
-        </header>
+    <main class="min-h-[100dvh] flex items-center justify-center px-5 py-10 bg-background">
+      <z-card class="w-full max-w-sm rounded-2xl p-6 shadow-sm animate-fade-in-up">
+        <form class="space-y-5" (submit)="submit($event)">
+          <header class="text-center space-y-2">
+            <img src="assets/tree-logo.png" alt="" class="w-9 h-9 object-contain mx-auto opacity-85" />
+            <h1 class="font-display text-2xl text-foreground tracking-tight">Área administrativa</h1>
+            <p class="text-sm text-muted-foreground font-light">Entre para gerenciar o consultório.</p>
+          </header>
 
-        <div class="space-y-1.5">
-          <label for="email" class="text-sm font-medium text-[#1C221F]">E-mail</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autocomplete="username"
-            required
-            class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
-            [value]="email()"
-            (input)="email.set($any($event.target).value)"
-          />
-        </div>
+          <div class="space-y-1.5">
+            <label for="email" class="block text-sm font-medium text-foreground">E-mail</label>
+            <input
+              z-input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="username"
+              required
+              class="h-11 rounded-xl bg-white"
+              [value]="email()"
+              (input)="email.set($any($event.target).value)"
+            />
+          </div>
 
-        <div class="space-y-1.5">
-          <label for="password" class="text-sm font-medium text-[#1C221F]">Senha</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autocomplete="current-password"
-            required
-            class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
-            [value]="password()"
-            (input)="password.set($any($event.target).value)"
-          />
-        </div>
+          <div class="space-y-1.5">
+            <label for="password" class="block text-sm font-medium text-foreground">Senha</label>
+            <input
+              z-input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+              class="h-11 rounded-xl bg-white"
+              [value]="password()"
+              (input)="password.set($any($event.target).value)"
+            />
+          </div>
 
-        @if (error()) {
-          <p role="alert" class="text-sm text-red-700">{{ error() }}</p>
-        }
+          @if (error()) {
+            <z-alert zType="destructive" zRole="alert" [zDescription]="error()!" />
+          }
 
-        <button z-button type="submit" zFull [zLoading]="busy()" [zDisabled]="busy()">Entrar</button>
-      </form>
+          <button z-button type="submit" zFull class="h-11 rounded-xl" [zLoading]="busy()" [zDisabled]="busy()">
+            Entrar
+          </button>
+        </form>
+      </z-card>
     </main>
   `,
 })

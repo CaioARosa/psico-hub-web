@@ -1,7 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucidePlus, lucideWallet } from '@ng-icons/lucide';
 
+import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardButtonComponent } from '@/shared/components/button';
+import { ZardCardImports } from '@/shared/components/card';
+import { ZardEmptyComponent } from '@/shared/components/empty';
+import { ZardInputComponent } from '@/shared/components/input';
+import { ZardNativeSelectDirective } from '@/shared/components/native-select';
+import { ZardSkeletonComponent } from '@/shared/components/skeleton';
 import { PatientsService } from '../data/patients.service';
 import { SAVE_ERROR } from '../data/safe-write';
 import { PaymentsService } from '../data/payments.service';
@@ -22,47 +30,74 @@ type FormState =
 @Component({
   selector: 'app-admin-payments',
   standalone: true,
-  imports: [ZardButtonComponent, PaymentFormComponent],
+  imports: [
+    NgIcon,
+    ZardButtonComponent,
+    ZardAlertComponent,
+    ZardInputComponent,
+    ZardNativeSelectDirective,
+    ZardSkeletonComponent,
+    ZardEmptyComponent,
+    PaymentFormComponent,
+    ...ZardCardImports,
+  ],
+  viewProviders: [provideIcons({ lucidePlus, lucideWallet })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="space-y-5">
+    <section class="space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="font-display text-2xl text-[#1C221F] tracking-tight">Pagamentos</h1>
-        <button z-button type="button" [zDisabled]="form().mode === 'create'" (click)="openCreate()">Registrar Pix</button>
+        <div>
+          <h1 class="font-display text-3xl text-foreground tracking-tight">Pagamentos</h1>
+          <p class="text-xs text-muted-foreground mt-0.5">Registre e acompanhe os recebimentos via Pix.</p>
+        </div>
+        <button
+          z-button
+          type="button"
+          class="h-10 rounded-xl px-4"
+          [zDisabled]="form().mode === 'create'"
+          (click)="openCreate()"
+        >
+          <ng-icon name="lucidePlus" class="size-4" />
+          Registrar Pix
+        </button>
       </header>
 
       @if (form(); as current) {
-        @if (current.mode === 'create') {
-          <!-- Pix de link só abre com a lista de pacientes carregada; antes disso o paciente pareceria inexistente. -->
-          @if (patientsService.loaded()) {
-            <app-payment-form [prefill]="current.prefill" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+        <div class="animate-fade-in">
+          @if (current.mode === 'create') {
+            <!-- Pix de link só abre com a lista de pacientes carregada; antes disso o paciente pareceria inexistente. -->
+            @if (patientsService.loaded()) {
+              <app-payment-form [prefill]="current.prefill" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+            }
+          } @else if (current.mode === 'edit') {
+            @for (p of [current.payment]; track p.id) {
+              <app-payment-form [payment]="p" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+            }
           }
-        } @else if (current.mode === 'edit') {
-          @for (p of [current.payment]; track p.id) {
-            <app-payment-form [payment]="p" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
-          }
-        }
+        </div>
       }
 
       <div class="flex flex-wrap items-end gap-4">
         <div class="space-y-1.5">
-          <label for="payment-filter-month" class="block text-sm font-medium text-[#1C221F]">Mês de referência</label>
+          <label for="payment-filter-month" class="block text-sm font-medium text-foreground">Mês de referência</label>
           <input
+            z-input
             id="payment-filter-month"
             name="month"
             type="month"
-            class="min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
+            class="h-11 rounded-xl bg-white w-auto"
             [value]="monthFilter()"
             (change)="setMonthFilter($any($event.target).value)"
           />
         </div>
 
         <div class="space-y-1.5 grow max-w-xs">
-          <label for="payment-filter-patient" class="block text-sm font-medium text-[#1C221F]">Paciente</label>
+          <label for="payment-filter-patient" class="block text-sm font-medium text-foreground">Paciente</label>
           <select
+            z-native-select
             id="payment-filter-patient"
             name="patientId"
-            class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
+            class="h-11 rounded-xl bg-white"
             (change)="patientFilter.set($any($event.target).value)"
           >
             <option value="" [selected]="patientFilter() === ''">Todos os pacientes</option>
@@ -76,44 +111,92 @@ type FormState =
       </div>
 
       @if (actionError()) {
-        <p role="alert" class="text-sm text-red-700">{{ actionError() }}</p>
+        <z-alert zType="destructive" zRole="alert" [zDescription]="actionError()!" />
       }
 
       @if (loadError(); as message) {
-        <p role="alert" class="text-sm text-red-700">{{ message }}</p>
+        <z-alert zType="destructive" zRole="alert" [zDescription]="message" />
       } @else if (!ready()) {
-        <p class="text-sm text-[#556661]">Carregando pagamentos...</p>
+        <div class="space-y-3">
+          <p class="text-sm text-muted-foreground">Carregando pagamentos...</p>
+          @for (i of [1, 2, 3]; track i) {
+            <z-skeleton class="h-22 w-full rounded-2xl" />
+          }
+        </div>
       } @else if (visible().length === 0) {
-        <p class="text-sm text-[#556661]">{{ emptyMessage() }}</p>
+        <z-empty zIcon="lucideWallet" [zDescription]="emptyMessage()" class="bg-card rounded-2xl border border-border py-10" />
       } @else {
-        <ul class="space-y-3">
+        <ul class="space-y-3 stagger-list">
           @for (payment of visible(); track payment.id) {
-            <li class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <p class="font-medium text-[#1C221F]">{{ patientName(payment) }}</p>
-                  <p class="text-sm text-[#1C221F]">{{ formatCents(payment.amount) }}</p>
-                  <p class="text-sm text-[#556661]">
-                    Pago em {{ formatPaidAt(payment.paidAt) }} · referente a {{ formatMonth(payment.referenceMonth) }}
-                  </p>
-                  @if (payment.note) {
-                    <p class="text-sm text-[#556661]">{{ payment.note }}</p>
+            <li>
+              <z-card class="rounded-2xl p-4 shadow-2xs transition-[box-shadow,border-color] duration-200 hover:shadow-sm">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div class="min-w-0 space-y-0.5">
+                    <p class="font-medium text-foreground">{{ patientName(payment) }}</p>
+                    <p class="text-sm font-medium text-primary tabular-nums">{{ formatCents(payment.amount) }}</p>
+                    <p class="text-sm text-muted-foreground tabular-nums">
+                      Pago em {{ formatPaidAt(payment.paidAt) }} · referente a {{ formatMonth(payment.referenceMonth) }}
+                    </p>
+                    @if (payment.note) {
+                      <p class="text-sm text-muted-foreground">{{ payment.note }}</p>
+                    }
+                  </div>
+
+                  @if (confirmingId() === payment.id) {
+                    <div
+                      class="flex flex-wrap items-center gap-2 animate-fade-in"
+                      role="group"
+                      [attr.aria-label]="'Confirmar exclusão do Pix de ' + patientName(payment)"
+                    >
+                      <span class="text-sm text-foreground">Excluir o Pix de {{ formatCents(payment.amount) }}?</span>
+                      <button
+                        z-button
+                        zType="destructive"
+                        zSize="sm"
+                        type="button"
+                        [zLoading]="busyId() === payment.id"
+                        [zDisabled]="busyId() !== null"
+                        (click)="remove(payment)"
+                      >
+                        Confirmar
+                      </button>
+                      <button
+                        z-button
+                        zType="outline"
+                        zSize="sm"
+                        type="button"
+                        [zDisabled]="busyId() === payment.id"
+                        (click)="confirmingId.set(null)"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="flex flex-wrap items-center gap-2">
+                      <button
+                        z-button
+                        zType="outline"
+                        zSize="sm"
+                        type="button"
+                        [zDisabled]="busyId() === payment.id"
+                        (click)="openEdit(payment)"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        z-button
+                        zType="outline"
+                        zSize="sm"
+                        type="button"
+                        [zDisabled]="busyId() === payment.id"
+                        (click)="askRemove(payment)"
+                      >
+                        Excluir
+                      </button>
+                    </div>
                   }
                 </div>
-
-                @if (confirmingId() === payment.id) {
-                  <div class="flex flex-wrap items-center gap-2" role="group" [attr.aria-label]="'Confirmar exclusão do Pix de ' + patientName(payment)">
-                    <span class="text-sm text-[#1C221F]">Excluir o Pix de {{ formatCents(payment.amount) }}?</span>
-                    <button z-button zType="destructive" zSize="sm" type="button" [zLoading]="busyId() === payment.id" [zDisabled]="busyId() !== null" (click)="remove(payment)">Confirmar</button>
-                    <button z-button zType="outline" zSize="sm" type="button" [zDisabled]="busyId() === payment.id" (click)="confirmingId.set(null)">Cancelar</button>
-                  </div>
-                } @else {
-                  <div class="flex flex-wrap items-center gap-2">
-                    <button z-button zType="outline" zSize="sm" type="button" [zDisabled]="busyId() === payment.id" (click)="openEdit(payment)">Editar</button>
-                    <button z-button zType="outline" zSize="sm" type="button" [zDisabled]="busyId() === payment.id" (click)="askRemove(payment)">Excluir</button>
-                  </div>
-                }
-              </div>
+              </z-card>
             </li>
           }
         </ul>

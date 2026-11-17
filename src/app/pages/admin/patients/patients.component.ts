@@ -1,6 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucidePlus, lucideSearch, lucideUsers } from '@ng-icons/lucide';
 
+import { ZardAlertComponent } from '@/shared/components/alert';
+import { ZardBadgeComponent } from '@/shared/components/badge';
 import { ZardButtonComponent } from '@/shared/components/button';
+import { ZardCardImports } from '@/shared/components/card';
+import { ZardEmptyComponent } from '@/shared/components/empty';
+import { ZardInputComponent } from '@/shared/components/input';
+import { ZardSkeletonComponent } from '@/shared/components/skeleton';
 import { PatientsService } from '../data/patients.service';
 import { formatCents } from '../domain/money';
 import type { Agreement, Patient } from '../domain/models';
@@ -17,99 +25,179 @@ export function agreementSummary(agreement: Agreement): string {
 @Component({
   selector: 'app-admin-patients',
   standalone: true,
-  imports: [ZardButtonComponent, PatientFormComponent],
+  imports: [
+    NgIcon,
+    ZardButtonComponent,
+    ZardBadgeComponent,
+    ZardAlertComponent,
+    ZardInputComponent,
+    ZardSkeletonComponent,
+    ZardEmptyComponent,
+    PatientFormComponent,
+    ...ZardCardImports,
+  ],
+  viewProviders: [provideIcons({ lucidePlus, lucideSearch, lucideUsers })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="space-y-5">
+    <section class="space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="font-display text-2xl text-[#1C221F] tracking-tight">Pacientes</h1>
-        <button z-button type="button" [zDisabled]="form().mode === 'create'" (click)="openCreate()">Novo paciente</button>
+        <div>
+          <h1 class="font-display text-3xl text-foreground tracking-tight">Pacientes</h1>
+          <p class="text-xs text-muted-foreground mt-0.5">Cadastro e acordos de atendimento.</p>
+        </div>
+        <button z-button type="button" [zDisabled]="form().mode === 'create'" (click)="openCreate()" class="h-10 rounded-xl px-4">
+          <ng-icon name="lucidePlus" class="size-4" />
+          Novo paciente
+        </button>
       </header>
 
       @if (form(); as current) {
-        @if (current.mode === 'create') {
-          <app-patient-form [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
-        } @else if (current.mode === 'edit') {
-          @for (p of [current.patient]; track p.id) {
-            <app-patient-form [patient]="p" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+        <div class="animate-fade-in">
+          @if (current.mode === 'create') {
+            <app-patient-form [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+          } @else if (current.mode === 'edit') {
+            @for (p of [current.patient]; track p.id) {
+              <app-patient-form [patient]="p" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+            }
           }
-        }
+        </div>
       }
 
       <div class="flex flex-wrap items-end gap-4">
         <div class="space-y-1.5 grow max-w-sm">
-          <label for="patient-search" class="text-sm font-medium text-[#1C221F]">Buscar por nome</label>
-          <input
-            id="patient-search"
-            name="search"
-            type="search"
-            autocomplete="off"
-            class="w-full min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
-            [value]="search()"
-            (input)="search.set($any($event.target).value)"
-          />
+          <label for="patient-search" class="text-sm font-medium text-foreground">Buscar por nome</label>
+          <div class="relative">
+            <ng-icon name="lucideSearch" class="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              z-input
+              id="patient-search"
+              name="search"
+              type="search"
+              autocomplete="off"
+              placeholder="Filtrar paciente..."
+              class="h-11 rounded-xl bg-white pl-9"
+              [value]="search()"
+              (input)="search.set($any($event.target).value)"
+            />
+          </div>
         </div>
-        <div class="flex items-center gap-2 min-h-11">
+        <div class="flex items-center gap-2.5 min-h-11">
           <input
             id="show-inactive"
             name="showInactive"
             type="checkbox"
-            class="size-5 accent-[#4D6D66]"
+            class="size-4 rounded accent-[#4D6D66] cursor-pointer"
             [checked]="showInactive()"
             (change)="showInactive.set($any($event.target).checked)"
           />
-          <label for="show-inactive" class="text-sm text-[#556661]">Mostrar inativos</label>
+          <label for="show-inactive" class="text-sm text-muted-foreground cursor-pointer select-none">Mostrar inativos</label>
         </div>
       </div>
 
       @if (actionError()) {
-        <p role="alert" class="text-sm text-red-700">{{ actionError() }}</p>
+        <z-alert zType="destructive" zRole="alert" [zDescription]="actionError()!" />
       }
 
       @if (service.error()) {
-        <p role="alert" class="text-sm text-red-700">{{ service.error() }}</p>
+        <z-alert zType="destructive" zRole="alert" [zDescription]="service.error()!" />
       } @else if (!service.loaded()) {
-        <p class="text-sm text-[#556661]">Carregando pacientes...</p>
+        <div class="space-y-3">
+          <p class="text-sm text-muted-foreground">Carregando pacientes...</p>
+          @for (i of [1, 2, 3]; track i) {
+            <z-skeleton class="h-22 w-full rounded-2xl" />
+          }
+        </div>
       } @else if (visible().length === 0) {
-        <p class="text-sm text-[#556661]">
-          {{ emptyMessage() }}
-        </p>
+        <z-empty zIcon="lucideUsers" [zDescription]="emptyMessage()" class="bg-card rounded-2xl border border-border py-10" />
       } @else {
-        <ul class="space-y-3">
+        <ul class="space-y-3 stagger-list">
           @for (patient of visible(); track patient.id) {
-            <li class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <p class="font-medium text-[#1C221F]">
-                    {{ patient.name }}
-                    @if (!patient.active) {
-                      <span class="ml-2 text-xs font-normal px-2 py-0.5 rounded-full bg-[#4C645B]/10 text-[#556661]">Inativo</span>
-                    }
-                  </p>
-                  <p class="text-sm text-[#556661]">{{ patient.phone }}</p>
-                  <p class="text-sm text-[#556661]">
-                    {{ summary(patient.agreement) }} · {{ patient.agreement.sessionsPerMonth }}
-                    {{ patient.agreement.sessionsPerMonth === 1 ? 'sessão/mês' : 'sessões/mês' }}
-                  </p>
-                </div>
+            <li>
+              <z-card class="rounded-2xl p-4 shadow-2xs transition-[box-shadow,border-color] duration-200 hover:shadow-sm">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div class="min-w-0 space-y-0.5">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <p class="font-medium text-foreground">{{ patient.name }}</p>
+                      @if (!patient.active) {
+                        <z-badge zType="secondary" class="bg-muted text-muted-foreground">Inativo</z-badge>
+                      }
+                    </div>
+                    <p class="text-sm text-muted-foreground tabular-nums">{{ patient.phone }}</p>
+                    <p class="text-sm text-muted-foreground tabular-nums">
+                      {{ summary(patient.agreement) }} · {{ patient.agreement.sessionsPerMonth }}
+                      {{ patient.agreement.sessionsPerMonth === 1 ? 'sessão/mês' : 'sessões/mês' }}
+                    </p>
+                  </div>
 
-                @if (confirmingId() === patient.id) {
-                  <div class="flex flex-wrap items-center gap-2" role="group" [attr.aria-label]="'Confirmar inativação de ' + patient.name">
-                    <span class="text-sm text-[#1C221F]">Inativar {{ patient.name }}?</span>
-                    <button z-button zType="destructive" zSize="sm" type="button" [zLoading]="busyId() === patient.id" [zDisabled]="busyId() === patient.id" (click)="setActive(patient, false)">Confirmar</button>
-                    <button z-button zType="outline" zSize="sm" type="button" [zDisabled]="busyId() === patient.id" (click)="confirmingId.set(null)">Cancelar</button>
-                  </div>
-                } @else {
-                  <div class="flex flex-wrap items-center gap-2">
-                    <button z-button zType="outline" zSize="sm" type="button" [zDisabled]="busyId() === patient.id" (click)="openEdit(patient)">Editar</button>
-                    @if (patient.active) {
-                      <button z-button zType="outline" zSize="sm" type="button" [zDisabled]="busyId() === patient.id" (click)="askDeactivate(patient)">Inativar</button>
-                    } @else {
-                      <button z-button zType="outline" zSize="sm" type="button" [zLoading]="busyId() === patient.id" [zDisabled]="busyId() === patient.id" (click)="setActive(patient, true)">Reativar</button>
-                    }
-                  </div>
-                }
-              </div>
+                  @if (confirmingId() === patient.id) {
+                    <div
+                      class="flex flex-wrap items-center gap-2 animate-fade-in"
+                      role="group"
+                      [attr.aria-label]="'Confirmar inativação de ' + patient.name"
+                    >
+                      <span class="text-sm text-foreground">Inativar {{ patient.name }}?</span>
+                      <button
+                        z-button
+                        zType="destructive"
+                        zSize="sm"
+                        type="button"
+                        [zLoading]="busyId() === patient.id"
+                        [zDisabled]="busyId() === patient.id"
+                        (click)="setActive(patient, false)"
+                      >
+                        Confirmar
+                      </button>
+                      <button
+                        z-button
+                        zType="outline"
+                        zSize="sm"
+                        type="button"
+                        [zDisabled]="busyId() === patient.id"
+                        (click)="confirmingId.set(null)"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="flex flex-wrap items-center gap-2">
+                      <button
+                        z-button
+                        zType="outline"
+                        zSize="sm"
+                        type="button"
+                        [zDisabled]="busyId() === patient.id"
+                        (click)="openEdit(patient)"
+                      >
+                        Editar
+                      </button>
+                      @if (patient.active) {
+                        <button
+                          z-button
+                          zType="outline"
+                          zSize="sm"
+                          type="button"
+                          [zDisabled]="busyId() === patient.id"
+                          (click)="askDeactivate(patient)"
+                        >
+                          Inativar
+                        </button>
+                      } @else {
+                        <button
+                          z-button
+                          zType="outline"
+                          zSize="sm"
+                          type="button"
+                          [zLoading]="busyId() === patient.id"
+                          [zDisabled]="busyId() === patient.id"
+                          (click)="setActive(patient, true)"
+                        >
+                          Reativar
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              </z-card>
             </li>
           }
         </ul>
@@ -138,7 +226,9 @@ export class PatientsComponent {
 
   readonly emptyMessage = computed(() => {
     if (this.search().trim() !== '') return 'Nenhum paciente encontrado para essa busca.';
-    return this.showInactive() ? 'Nenhum paciente cadastrado.' : 'Nenhum paciente ativo. Use "Novo paciente" para cadastrar.';
+    return this.showInactive()
+      ? 'Nenhum paciente cadastrado.'
+      : 'Nenhum paciente ativo. Use "Novo paciente" para cadastrar.';
   });
 
   protected summary(agreement: Agreement): string {
@@ -176,7 +266,11 @@ export class PatientsComponent {
       await this.service.setActive(patient.id, active);
       this.confirmingId.set(null);
     } catch (err) {
-      this.actionError.set(err instanceof Error ? err.message : 'Não foi possível confirmar o salvamento. Verifique sua conexão e tente novamente.');
+      this.actionError.set(
+        err instanceof Error
+          ? err.message
+          : 'Não foi possível confirmar o salvamento. Verifique sua conexão e tente novamente.',
+      );
     } finally {
       this.busyId.set(null);
     }

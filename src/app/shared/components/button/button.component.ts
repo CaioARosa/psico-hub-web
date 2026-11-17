@@ -38,9 +38,12 @@ import {
   encapsulation: ViewEncapsulation.None,
   viewProviders: [provideIcons({ lucideLoaderCircle })],
   host: {
+    'data-slot': 'button',
     '[class]': 'classes()',
-    '[attr.data-icon-only]': 'iconOnly() || null',
     '[attr.data-disabled]': 'isNotInsideOfButtonOrLink() && zDisabled() || null',
+    '[attr.data-icon-only]': 'iconOnly() || null',
+    '[attr.data-size]': 'zSize()',
+    '[attr.data-variant]': 'zType()',
     '[attr.aria-disabled]': 'isNotInsideOfButtonOrLink() && zDisabled() || null',
     '[attr.disabled]': 'isNotInsideOfButtonOrLink() && zDisabled() ? "" : null',
     '[attr.role]': 'isNotInsideOfButtonOrLink() ? "button" : null',

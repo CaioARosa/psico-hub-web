@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,7 +8,15 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { provideIcons } from '@ng-icons/core';
+import { lucideInfo } from '@ng-icons/lucide';
 
+import { ZardAlertComponent } from '@/shared/components/alert';
+import { ZardBadgeComponent } from '@/shared/components/badge';
+import { ZardCardImports } from '@/shared/components/card';
+import { ZardInputComponent } from '@/shared/components/input';
+import { ZardProgressComponent } from '@/shared/components/progress';
+import { ZardSkeletonComponent } from '@/shared/components/skeleton';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService } from '../data/sessions.service';
@@ -22,21 +31,35 @@ import { RevenueChartComponent } from './revenue-chart.component';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [RevenueChartComponent],
+  imports: [
+    DecimalPipe,
+    RevenueChartComponent,
+    ZardAlertComponent,
+    ZardBadgeComponent,
+    ZardInputComponent,
+    ZardProgressComponent,
+    ZardSkeletonComponent,
+    ...ZardCardImports,
+  ],
+  viewProviders: [provideIcons({ lucideInfo })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="space-y-5">
+    <section class="space-y-6">
       <header class="flex flex-wrap items-end justify-between gap-3">
-        <h1 class="font-display text-2xl text-[#1C221F] tracking-tight">Painel</h1>
+        <div>
+          <h1 class="font-display text-3xl text-foreground tracking-tight">Painel</h1>
+          <p class="text-xs text-muted-foreground mt-0.5">Visão clínica e financeira do mês selecionado.</p>
+        </div>
 
         <div class="space-y-1.5">
-          <label for="dashboard-month" class="block text-sm font-medium text-[#1C221F]">Mês</label>
+          <label for="dashboard-month" class="block text-sm font-medium text-foreground">Mês</label>
           <input
             #monthInput
+            z-input
             id="dashboard-month"
             name="month"
             type="month"
-            class="min-h-11 px-3 rounded-xl border border-[#4C645B]/20 bg-white text-[#1C221F] focus:outline-none focus:border-[#4D6D66]"
+            class="h-11 rounded-xl bg-white w-auto"
             [value]="month()"
             (change)="setMonth($any($event.target).value)"
           />
@@ -44,120 +67,144 @@ import { RevenueChartComponent } from './revenue-chart.component';
       </header>
 
       @if (loadError(); as message) {
-        <p role="alert" class="text-sm text-red-700">{{ message }}</p>
+        <z-alert zType="destructive" zRole="alert" [zDescription]="message" />
       } @else if (!ready()) {
-        <p class="text-sm text-[#556661]">Carregando painel...</p>
+        <div class="space-y-4">
+          <p class="text-sm text-muted-foreground">Carregando painel...</p>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+              <z-skeleton class="h-22 w-full rounded-2xl" />
+            }
+            <z-skeleton class="h-22 w-full rounded-2xl col-span-2" />
+          </div>
+          <z-skeleton class="h-64 w-full rounded-2xl" />
+        </div>
       } @else {
         @if (!dashboard().hasSessions) {
-          <p role="status" class="text-sm rounded-xl bg-amber-100 border border-amber-300 px-3.5 py-2.5 text-amber-900">
-            Sincronize a agenda deste mês para ver o devido.
-          </p>
+          <z-alert
+            zRole="status"
+            zIcon="lucideInfo"
+            class="bg-amber-50 border-amber-300/70 text-amber-950 rounded-xl"
+            zDescription="Sincronize a agenda deste mês para ver o devido."
+          />
         }
         @if (dashboard().unlinkedSessions > 0) {
-          <p role="status" class="text-sm rounded-xl bg-amber-100 border border-amber-300 px-3.5 py-2.5 text-amber-900">
-            {{ unlinkedNote(dashboard().unlinkedSessions) }}
-          </p>
+          <z-alert
+            zRole="status"
+            zIcon="lucideInfo"
+            class="bg-amber-50 border-amber-300/70 text-amber-950 rounded-xl"
+            [zDescription]="unlinkedNote(dashboard().unlinkedSessions)"
+          />
         }
 
-        <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
-            <dt class="text-sm text-[#556661]">Pacientes atendidos</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ dashboard().patientsAttended }}</dd>
+        <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 stagger-list">
+          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+            <dt class="text-xs font-medium text-muted-foreground">Pacientes atendidos</dt>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ dashboard().patientsAttended }}</dd>
           </div>
-          <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
-            <dt class="text-sm text-[#556661]">Realizadas</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ dashboard().done }}</dd>
+          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+            <dt class="text-xs font-medium text-muted-foreground">Realizadas</dt>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ dashboard().done }}</dd>
           </div>
-          <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
-            <dt class="text-sm text-[#556661]">Faltas</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ dashboard().noShow }}</dd>
+          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+            <dt class="text-xs font-medium text-muted-foreground">Faltas</dt>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ dashboard().noShow }}</dd>
           </div>
-          <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
-            <dt class="text-sm text-[#556661]">Cancelamentos</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ dashboard().cancelled }}</dd>
+          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+            <dt class="text-xs font-medium text-muted-foreground">Cancelamentos</dt>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ dashboard().cancelled }}</dd>
           </div>
-          <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
-            <dt class="text-sm text-[#556661]">Recebido</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ formatCents(dashboard().received) }}</dd>
+          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+            <dt class="text-xs font-medium text-muted-foreground">Recebido</dt>
+            <dd class="font-display text-2xl text-primary mt-1 tabular-nums">{{ formatCents(dashboard().received) }}</dd>
           </div>
-          <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4">
-            <dt class="text-sm text-[#556661]">Devido</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ dueOrDash() }}</dd>
+          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+            <dt class="text-xs font-medium text-muted-foreground">Devido</dt>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ dueOrDash() }}</dd>
           </div>
-          <div class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4 col-span-2">
-            <dt class="text-sm text-[#556661]">Previsto (acordos atuais)</dt>
-            <dd class="font-display text-2xl text-[#1C221F] mt-1">{{ formatCents(dashboard().expected) }}</dd>
+          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 col-span-2 transition-shadow hover:shadow-sm">
+            <dt class="text-xs font-medium text-muted-foreground">Previsto (acordos atuais)</dt>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ formatCents(dashboard().expected) }}</dd>
           </div>
         </dl>
 
-        <section
-          aria-labelledby="forecast-title"
-          class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4 space-y-3"
-        >
-          <h2 id="forecast-title" class="text-base font-medium text-[#1C221F]">Previsto × Realizado</h2>
-          <dl class="flex flex-wrap gap-x-8 gap-y-2">
-            <div>
-              <dt class="text-sm text-[#556661]">Realizado</dt>
-              <dd class="font-display text-xl text-[#1C221F]">{{ dueOrDash() }}</dd>
+        <section aria-labelledby="forecast-title">
+          <z-card class="rounded-2xl p-5 space-y-3 shadow-2xs">
+            <div class="flex items-center justify-between gap-2">
+              <h2 id="forecast-title" class="text-base font-medium text-foreground">Previsto × Realizado</h2>
+              @if (forecastPercent() !== null) {
+                <z-badge zType="secondary" class="tabular-nums bg-[#D4E6E1]/60 text-[#1C221F]">
+                  {{ forecastPercent() | number: '1.0-0' }}%
+                </z-badge>
+              }
             </div>
-            <div>
-              <dt class="text-sm text-[#556661]">Previsto</dt>
-              <dd class="font-display text-xl text-[#1C221F]">{{ formatCents(dashboard().expected) }}</dd>
-            </div>
-          </dl>
-          @if (forecastPercent() !== null) {
-            <div aria-hidden="true" class="h-2.5 w-full rounded-full bg-[#D4E6E1]/60 overflow-hidden">
-              <div class="h-full rounded-full bg-[#4D6D66]" [style.width.%]="forecastPercent()"></div>
-            </div>
-          }
+            <dl class="flex flex-wrap gap-x-8 gap-y-2">
+              <div>
+                <dt class="text-xs text-muted-foreground">Realizado</dt>
+                <dd class="font-display text-xl text-foreground tabular-nums">{{ dueOrDash() }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted-foreground">Previsto</dt>
+                <dd class="font-display text-xl text-foreground tabular-nums">{{ formatCents(dashboard().expected) }}</dd>
+              </div>
+            </dl>
+            @if (forecastPercent() !== null) {
+              <z-progress [value]="forecastPercent()!" aria-hidden="true" class="h-2.5 bg-[#D4E6E1]/50" />
+            }
+          </z-card>
         </section>
 
-        <section
-          aria-labelledby="chart-title"
-          class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4 space-y-3"
-        >
-          <h2 id="chart-title" class="text-base font-medium text-[#1C221F]">Recebido e devido por mês</h2>
-          <app-revenue-chart [series]="dashboard().series" />
-          <table class="sr-only">
-            <caption>Recebido e devido nos últimos 6 meses</caption>
-            <thead>
-              <tr>
-                <th scope="col">Mês</th>
-                <th scope="col">Recebido</th>
-                <th scope="col">Devido</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (point of dashboard().series; track point.month) {
+        <section aria-labelledby="chart-title">
+          <z-card class="rounded-2xl p-5 space-y-3 shadow-2xs">
+            <h2 id="chart-title" class="text-base font-medium text-foreground">Recebido e devido por mês</h2>
+            <app-revenue-chart [series]="dashboard().series" />
+            <table class="sr-only">
+              <caption>Recebido e devido nos últimos 6 meses</caption>
+              <thead>
                 <tr>
-                  <th scope="row">{{ monthLabel(point.month) }}</th>
-                  <td>{{ formatCents(point.received) }}</td>
-                  <td>{{ formatCents(point.due) }}</td>
+                  <th scope="col">Mês</th>
+                  <th scope="col">Recebido</th>
+                  <th scope="col">Devido</th>
                 </tr>
-              }
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                @for (point of dashboard().series; track point.month) {
+                  <tr>
+                    <th scope="row">{{ monthLabel(point.month) }}</th>
+                    <td>{{ formatCents(point.received) }}</td>
+                    <td>{{ formatCents(point.due) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </z-card>
         </section>
 
-        <section
-          aria-labelledby="alerts-title"
-          class="bg-white rounded-2xl border border-[#4C645B]/15 shadow-sm p-4 space-y-3"
-        >
-          <h2 id="alerts-title" class="text-base font-medium text-[#1C221F]">Alertas de frequência</h2>
-          <p class="text-xs text-[#556661]">
-            No mês atual e futuros, soma realizadas + agendadas; em meses passados, apenas realizadas.
-          </p>
-          @if (dashboard().alerts.length > 0) {
-            <ul class="space-y-1 text-sm text-[#1C221F]">
-              @for (alert of dashboard().alerts; track alert.patientId) {
-                <li>{{ alertText(alert) }}</li>
+        <section aria-labelledby="alerts-title">
+          <z-card class="rounded-2xl p-5 space-y-3 shadow-2xs">
+            <div class="flex items-center justify-between gap-2">
+              <h2 id="alerts-title" class="text-base font-medium text-foreground">Alertas de frequência</h2>
+              @if (dashboard().alerts.length > 0) {
+                <z-badge zType="secondary" class="tabular-nums">{{ dashboard().alerts.length }}</z-badge>
               }
-            </ul>
-          } @else if (!dashboard().hasLinkedSessions) {
-            <p class="text-sm text-[#556661]">Sem sessões vinculadas neste mês para avaliar a frequência.</p>
-          } @else {
-            <p class="text-sm text-[#556661]">Nenhum alerta de frequência neste mês</p>
-          }
+            </div>
+            <p class="text-xs text-muted-foreground">
+              No mês atual e futuros, soma realizadas + agendadas; em meses passados, apenas realizadas.
+            </p>
+            @if (dashboard().alerts.length > 0) {
+              <ul class="space-y-1.5 text-sm text-foreground">
+                @for (alert of dashboard().alerts; track alert.patientId) {
+                  <li class="py-1.5 px-3 rounded-lg bg-[#FDFBF7] border border-border/70 tabular-nums">
+                    {{ alertText(alert) }}
+                  </li>
+                }
+              </ul>
+            } @else if (!dashboard().hasLinkedSessions) {
+              <p class="text-sm text-muted-foreground">Sem sessões vinculadas neste mês para avaliar a frequência.</p>
+            } @else {
+              <p class="text-sm text-muted-foreground">Nenhum alerta de frequência neste mês</p>
+            }
+          </z-card>
         </section>
       }
     </section>
@@ -175,7 +222,7 @@ export class DashboardComponent {
   protected readonly unlinkedNote = unlinkedNote;
 
   readonly month = signal(currentMonth(this.now));
-  private readonly monthInput = viewChild<ElementRef<HTMLInputElement>>('monthInput');
+  private readonly monthInput = viewChild('monthInput', { read: ElementRef });
 
   readonly ready = computed(
     () => this.allSessions.loaded() && this.patientsService.loaded() && this.paymentsService.loaded(),
