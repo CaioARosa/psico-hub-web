@@ -16,6 +16,11 @@ import { useNoIndex } from './noindex';
         <div class="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between gap-4">
           <nav aria-label="Administração" class="flex items-center gap-1">
             <a
+              routerLink="/admin/painel"
+              routerLinkActive="bg-[#D4E6E1]/60 text-[#1C221F]"
+              class="px-3 py-1.5 rounded-lg text-sm font-medium text-[#556661] hover:bg-[#D4E6E1]/30"
+            >Painel</a>
+            <a
               routerLink="/admin/pacientes"
               routerLinkActive="bg-[#D4E6E1]/60 text-[#1C221F]"
               class="px-3 py-1.5 rounded-lg text-sm font-medium text-[#556661] hover:bg-[#D4E6E1]/30"

@@ -14,6 +14,10 @@ export const ADMIN_ROUTES: Routes = [
     children: [
       { path: '', redirectTo: 'sessoes', pathMatch: 'full' },
       {
+        path: 'painel',
+        loadComponent: () => import('./painel/dashboard.component').then(m => m.DashboardComponent),
+      },
+      {
         path: 'pacientes',
         loadComponent: () => import('./patients/patients.component').then(m => m.PatientsComponent),
       },
