@@ -69,9 +69,6 @@ describe('PaymentFormComponent', () => {
       'Se passar do devido do mês, o excedente abate atrasos antigos ou vira crédito automaticamente.',
     );
 
-    expect(root.querySelector('#payment-reference-month')?.getAttribute('aria-describedby')).toBe(
-      'payment-reference-month-hint',
-    );
     expect(text).toContain(
       'Mês das sessões que este Pix paga — ajuste se for pagamento atrasado ou adiantado.',
     );

@@ -92,6 +92,16 @@ describe('PaymentsComponent', () => {
     return fixture.debugElement.query(By.directive(PaymentFormComponent)).componentInstance;
   }
 
+  function selectValue(fixture: ComponentFixture<PaymentsComponent>, id: string): unknown {
+    return fixture.debugElement.query(By.css(`#${id}`)).componentInstance.zValue();
+  }
+
+  function openedOptions(fixture: ComponentFixture<PaymentsComponent>, selector: string): string[] {
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(`${selector} [role="combobox"]`)?.click();
+    fixture.detectChanges();
+    return Array.from(document.querySelectorAll('[role="option"]')).map(o => o.textContent?.trim() ?? '');
+  }
+
   function buttonWithText(fixture: ComponentFixture<PaymentsComponent>, text: string): HTMLButtonElement {
     const button = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(
       b => b.textContent?.trim() === text,
@@ -108,9 +118,7 @@ describe('PaymentsComponent', () => {
     expect(content).toContain('Ana Paula');
     expect(content).toContain('Paciente removido');
 
-    const options = Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('#payment-filter-patient option'),
-    ).map(o => o.textContent?.trim());
+    const options = openedOptions(fixture, '#payment-filter-patient');
     expect(options).toContain('Carlos Inativo (inativo)');
   });
 
@@ -121,8 +129,7 @@ describe('PaymentsComponent', () => {
     fixture.componentInstance.openEdit(pixGone);
     fixture.detectChanges();
 
-    const select = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>('#payment-patient');
-    expect(select?.value).toBe('gone');
+    expect(selectValue(fixture, 'payment-patient')).toBe('gone');
 
     await paymentForm(fixture).submit(new Event('submit'));
     expect(updateCalls).toEqual([
@@ -170,8 +177,8 @@ describe('PaymentsComponent', () => {
 
     const root = fixture.nativeElement as HTMLElement;
     expect(root.querySelector<HTMLInputElement>('#payment-amount')?.value).toBe('150,00');
-    expect(root.querySelector<HTMLInputElement>('#payment-reference-month')?.value).toBe('2026-11');
-    expect(root.querySelector<HTMLSelectElement>('#payment-patient')?.value).toBe('p1');
+    expect(paymentForm(fixture).referenceMonth()).toBe('2026-11');
+    expect(selectValue(fixture, 'payment-patient')).toBe('p1');
   });
 
   it('não aplica o Pix de link de um paciente que não existe', async () => {
@@ -181,7 +188,7 @@ describe('PaymentsComponent', () => {
 
     const root = fixture.nativeElement as HTMLElement;
     expect(root.querySelector<HTMLInputElement>('#payment-amount')?.value).toBe('');
-    expect(root.querySelector<HTMLSelectElement>('#payment-patient')?.value).toBe('');
+    expect(selectValue(fixture, 'payment-patient')).toBe('');
 
     await paymentForm(fixture).submit(new Event('submit'));
     fixture.detectChanges();
@@ -199,7 +206,7 @@ describe('PaymentsComponent', () => {
     patientsLoaded.set(true);
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
-    expect(root.querySelector<HTMLSelectElement>('#payment-patient')?.value).toBe('p1');
+    expect(selectValue(fixture, 'payment-patient')).toBe('p1');
     expect(root.querySelector<HTMLInputElement>('#payment-amount')?.value).toBe('150,00');
   });
 

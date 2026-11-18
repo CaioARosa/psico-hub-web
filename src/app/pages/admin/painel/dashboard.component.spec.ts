@@ -407,26 +407,20 @@ describe('DashboardComponent', () => {
     );
   });
 
-  it('mês inválido no seletor volta ao mês da tela', () => {
+  it('mês inválido não troca a tela', () => {
     const fixture = openMonth('2026-11');
-    const input = rootOf(fixture).querySelector<HTMLInputElement>('#dashboard-month');
-    if (!input) throw new Error('Seletor de mês não encontrado');
 
-    input.value = '';
-    input.dispatchEvent(new Event('change'));
+    fixture.componentInstance.setMonth('');
     fixture.detectChanges();
 
-    expect(input.value).toBe('2026-11');
+    expect(fixture.componentInstance.month()).toBe('2026-11');
     expect(cardValue(fixture, 'Recebido')).toBe(money(15000));
   });
 
   it('trocar o mês recalcula', () => {
     const fixture = openMonth('2026-11');
-    const input = rootOf(fixture).querySelector<HTMLInputElement>('#dashboard-month');
-    if (!input) throw new Error('Seletor de mês não encontrado');
 
-    input.value = '2026-10';
-    input.dispatchEvent(new Event('change'));
+    fixture.componentInstance.setMonth('2026-10');
     fixture.detectChanges();
 
     expect(cardValue(fixture, 'Realizadas')).toBe('0');
@@ -438,9 +432,7 @@ describe('DashboardComponent', () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
 
-    expect(rootOf(fixture).querySelector<HTMLInputElement>('#dashboard-month')?.value).toBe(
-      '2026-11',
-    );
+    expect(fixture.componentInstance.month()).toBe('2026-11');
   });
 
   it('mostra carregando enquanto o listener de sessões não respondeu', () => {

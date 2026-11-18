@@ -1,11 +1,9 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   computed,
   inject,
   signal,
-  viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { provideIcons } from '@ng-icons/core';
@@ -14,9 +12,9 @@ import { lucideInfo } from '@ng-icons/lucide';
 import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardCardImports } from '@/shared/components/card';
-import { ZardInputComponent } from '@/shared/components/input';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
 import { ZardTableImports } from '@/shared/components/table';
+import { MonthPickerComponent } from '../month-picker.component';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService } from '../data/sessions.service';
@@ -34,7 +32,7 @@ import { unlinkedNote } from '../domain/unlinked-note';
     RouterLink,
     ZardButtonComponent,
     ZardAlertComponent,
-    ZardInputComponent,
+    MonthPickerComponent,
     ZardSkeletonComponent,
     ...ZardCardImports,
     ...ZardTableImports,
@@ -51,16 +49,7 @@ import { unlinkedNote } from '../domain/unlinked-note';
 
         <div class="space-y-1.5">
           <label for="finance-month" class="block text-sm font-medium text-foreground">Mês</label>
-          <input
-            #monthInput
-            z-input
-            id="finance-month"
-            name="month"
-            type="month"
-            class="h-11 rounded-xl bg-white w-auto"
-            [value]="month()"
-            (change)="setMonth($any($event.target).value)"
-          />
+          <app-month-picker zId="finance-month" [month]="month()" (monthChange)="setMonth($event)" />
         </div>
       </header>
 
@@ -222,7 +211,6 @@ export class FinanceComponent {
 
   readonly month = signal(currentMonth(new Date()));
   readonly expanded = signal<ReadonlySet<string>>(new Set());
-  private readonly monthInput = viewChild('monthInput', { read: ElementRef });
 
   readonly ready = computed(
     () => this.allSessions.loaded() && this.patientsService.loaded() && this.paymentsService.loaded(),
@@ -262,11 +250,7 @@ export class FinanceComponent {
   });
 
   setMonth(value: string): void {
-    if (!isValidMonth(value)) {
-      const input = this.monthInput();
-      if (input) input.nativeElement.value = this.month();
-      return;
-    }
+    if (!isValidMonth(value)) return;
     if (value === this.month()) return;
     this.month.set(value);
     this.expanded.set(new Set());

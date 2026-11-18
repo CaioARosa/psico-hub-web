@@ -6,7 +6,7 @@ import { type CalendarValue } from '@/shared/components/calendar';
 import { ZardCardImports } from '@/shared/components/card';
 import { ZardDatePickerComponent } from '@/shared/components/date-picker';
 import { ZardInputComponent } from '@/shared/components/input';
-import { ZardNativeSelectDirective } from '@/shared/components/native-select';
+import { ZardSelectImports } from '@/shared/components/select';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SAVE_ERROR } from '../data/safe-write';
@@ -21,6 +21,7 @@ import {
   toPaymentInput,
 } from '../domain/payment-form';
 import type { PaymentFormErrors } from '../domain/payment-form';
+import { MonthPickerComponent } from '../month-picker.component';
 
 /** Criar Pix pode ter gravado antes do timeout; repetir às cegas duplica o registro. */
 const POSSIBLY_SAVED_ERROR = `${SAVE_ERROR} O Pix pode ter sido salvo; confira o histórico antes de registrar de novo.`;
@@ -51,7 +52,8 @@ function toIsoDate(date: Date): string {
   imports: [
     ZardButtonComponent,
     ZardInputComponent,
-    ZardNativeSelectDirective,
+    ...ZardSelectImports,
+    MonthPickerComponent,
     ZardDatePickerComponent,
     ZardAlertComponent,
     ...ZardCardImports,
@@ -67,25 +69,24 @@ function toIsoDate(date: Date): string {
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="space-y-1.5 sm:col-span-2">
             <label for="payment-patient" class="block text-sm font-medium text-foreground">Paciente</label>
-            <select
-              z-native-select
+            <z-select
               id="payment-patient"
-              name="patientId"
-              class="h-11 rounded-xl bg-white"
-              [attr.aria-invalid]="errors().patientId ? 'true' : null"
-              [attr.aria-describedby]="errors().patientId ? 'payment-patient-error' : null"
-              (change)="patientId.set($any($event.target).value)"
+              zLabel="Paciente"
+              zPlaceholder="Selecione um paciente..."
+              class="w-full"
+              [zInvalid]="!!errors().patientId"
+              [zValue]="patientId()"
+              (zSelectionChange)="patientId.set($any($event))"
             >
-              <option value="" [selected]="patientId() === ''">Selecione um paciente...</option>
               @if (orphanSelected()) {
-                <option [value]="patientId()" [selected]="true">{{ removedPatientLabel }}</option>
+                <z-select-item [zValue]="patientId()">{{ removedPatientLabel }}</z-select-item>
               }
               @for (patient of patientsService.patients(); track patient.id) {
-                <option [value]="patient.id" [selected]="patient.id === patientId()">
+                <z-select-item [zValue]="patient.id">
                   {{ patient.name }}{{ patient.active ? '' : ' (inativo)' }}
-                </option>
+                </z-select-item>
               }
-            </select>
+            </z-select>
             @if (errors().patientId) {
               <p id="payment-patient-error" class="text-sm text-red-700">{{ errors().patientId }}</p>
             }
@@ -134,16 +135,10 @@ function toIsoDate(date: Date): string {
 
           <div class="space-y-1.5">
             <label for="payment-reference-month" class="block text-sm font-medium text-foreground">Mês de referência</label>
-            <input
-              z-input
-              id="payment-reference-month"
-              name="referenceMonth"
-              type="month"
-              class="h-11 rounded-xl bg-white"
-              [attr.aria-invalid]="errors().referenceMonth ? 'true' : null"
-              [attr.aria-describedby]="errors().referenceMonth ? 'payment-reference-month-hint payment-reference-month-error' : 'payment-reference-month-hint'"
-              [value]="referenceMonth()"
-              (input)="setReferenceMonth($any($event.target).value)"
+            <app-month-picker
+              zId="payment-reference-month"
+              [month]="referenceMonth()"
+              (monthChange)="setReferenceMonth($event)"
             />
             <p id="payment-reference-month-hint" class="text-xs text-muted-foreground">
               Mês das sessões que este Pix paga — ajuste se for pagamento atrasado ou adiantado.

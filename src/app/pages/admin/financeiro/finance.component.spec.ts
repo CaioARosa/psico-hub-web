@@ -418,26 +418,20 @@ describe('FinanceComponent', () => {
     expect(totalCells(fixture)).toEqual(['—', money(50000), '—', '—', '—', '—']);
   });
 
-  it('mês inválido no seletor volta ao mês da tela e não troca a tabela', () => {
+  it('mês inválido não troca a tabela', () => {
     const fixture = openMonth('2026-11');
-    const input = rootOf(fixture).querySelector<HTMLInputElement>('#finance-month');
-    if (!input) throw new Error('Seletor de mês não encontrado');
 
-    input.value = '';
-    input.dispatchEvent(new Event('change'));
+    fixture.componentInstance.setMonth('');
     fixture.detectChanges();
 
-    expect(input.value).toBe('2026-11');
+    expect(fixture.componentInstance.month()).toBe('2026-11');
     expect(cardValue(fixture, 'Recebido')).toBe(money(35000));
   });
 
   it('trocar o mês recalcula a tabela e os cartões', () => {
     const fixture = openMonth('2026-11');
-    const input = rootOf(fixture).querySelector<HTMLInputElement>('#finance-month');
-    if (!input) throw new Error('Seletor de mês não encontrado');
 
-    input.value = '2026-10';
-    input.dispatchEvent(new Event('change'));
+    fixture.componentInstance.setMonth('2026-10');
     fixture.detectChanges();
 
     expect(rowCells(fixture, 'Ana Paula')).toEqual([
@@ -472,9 +466,7 @@ describe('FinanceComponent', () => {
     const fixture = TestBed.createComponent(FinanceComponent);
     fixture.detectChanges();
 
-    expect(
-      rootOf(fixture).querySelector<HTMLInputElement>('#finance-month')?.value,
-    ).toBe('2026-11');
+    expect(fixture.componentInstance.month()).toBe('2026-11');
   });
 
   it('mostra carregando enquanto o listener de sessões não respondeu', () => {

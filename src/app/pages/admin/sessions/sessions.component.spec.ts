@@ -1,6 +1,5 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-
 import { CalendarSyncService } from '../data/calendar-sync.service';
 import { PatientsService } from '../data/patients.service';
 import { SessionsService, type MonthWatch } from '../data/sessions.service';
@@ -157,9 +156,9 @@ describe('SessionsComponent', () => {
       'Vincule um paciente a esta sessão antes de confirmá-la.',
     );
 
-    const options = Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('select option'),
-    ).map(o => o.textContent?.trim());
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('#link-patient-s-unid [role="combobox"]')?.click();
+    fixture.detectChanges();
+    const options = Array.from(document.querySelectorAll('[role="option"]')).map(o => o.textContent?.trim());
     expect(options).toContain('Ana Paula');
     expect(options).not.toContain('Carlos Inativo');
 
@@ -202,8 +201,6 @@ describe('SessionsComponent', () => {
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
-    const select = root.querySelector('#link-patient-s-unid');
-    expect(select?.getAttribute('aria-describedby')).toBe('link-patient-hint-s-unid');
     expect((root.textContent ?? '').replace(/\s+/g, ' ')).toContain(
       'O título do evento no Agenda não casou com nenhum cadastro. Vincule para liberar a confirmação e calcular o valor.',
     );

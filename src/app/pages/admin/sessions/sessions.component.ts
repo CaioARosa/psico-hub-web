@@ -8,8 +8,7 @@ import { ZardBadgeComponent, type ZardBadgeTypeVariants } from '@/shared/compone
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardCardImports } from '@/shared/components/card';
 import { ZardEmptyComponent } from '@/shared/components/empty';
-import { ZardInputComponent } from '@/shared/components/input';
-import { ZardNativeSelectDirective } from '@/shared/components/native-select';
+import { ZardSelectImports } from '@/shared/components/select';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
 import { ZardTabsImports } from '@/shared/components/tabs';
@@ -21,6 +20,7 @@ import type { Session, SessionStatus } from '../domain/models';
 import { currentMonth, isValidMonth } from '../domain/month';
 import { canConfirm, formatSessionDateTime, groupSessions, statusLabel } from '../domain/sessions-view';
 import { syncSummary } from '../domain/sync-summary';
+import { MonthPickerComponent } from '../month-picker.component';
 
 export type SessionTab = 'all' | 'pending' | 'unidentified';
 const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
@@ -34,8 +34,8 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
     ZardButtonComponent,
     ZardBadgeComponent,
     ZardAlertComponent,
-    ZardInputComponent,
-    ZardNativeSelectDirective,
+    MonthPickerComponent,
+    ...ZardSelectImports,
     ZardSkeletonComponent,
     ZardEmptyComponent,
     ZardSeparatorComponent,
@@ -55,15 +55,7 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
         <div class="flex flex-wrap items-end gap-3">
           <div class="space-y-1.5">
             <label for="session-month" class="block text-sm font-medium text-foreground">Mês</label>
-            <input
-              z-input
-              id="session-month"
-              name="month"
-              type="month"
-              class="h-11 rounded-xl bg-white w-auto"
-              [value]="month()"
-              (change)="setMonth($any($event.target).value)"
-            />
+            <app-month-picker zId="session-month" [month]="month()" (monthChange)="setMonth($event)" />
           </div>
 
           <button
@@ -195,19 +187,18 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
                           <label [attr.for]="'link-patient-' + session.id" class="block text-xs font-medium text-foreground">
                             Vincular paciente ativo
                           </label>
-                          <select
-                            z-native-select
+                          <z-select
                             [id]="'link-patient-' + session.id"
-                            [attr.aria-describedby]="'link-patient-hint-' + session.id"
-                            class="h-10 rounded-xl bg-white"
-                            [value]="selectedPatients()[session.id] ?? ''"
-                            (change)="selectPatient(session.id, $any($event.target).value)"
+                            [zLabel]="'Vincular paciente ativo'"
+                            zPlaceholder="Selecione um paciente..."
+                            class="w-full"
+                            [zValue]="selectedPatients()[session.id] ?? ''"
+                            (zSelectionChange)="selectPatient(session.id, $any($event))"
                           >
-                            <option value="">Selecione um paciente...</option>
                             @for (patient of activePatients(); track patient.id) {
-                              <option [value]="patient.id">{{ patient.name }}</option>
+                              <z-select-item [zValue]="patient.id">{{ patient.name }}</z-select-item>
                             }
-                          </select>
+                          </z-select>
                         </div>
                         <button
                           z-button

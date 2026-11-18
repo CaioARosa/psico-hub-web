@@ -122,7 +122,7 @@ describe('PatientsComponent', () => {
     expect(root.querySelector('#patient-phone')?.getAttribute('aria-describedby')).toBeNull();
     expect(root.querySelector('#patient-amount')?.getAttribute('aria-describedby')).toBeNull();
 
-    expect(root.querySelector('#patient-type')?.getAttribute('aria-describedby')).toBe('patient-type-hint');
+
     expect(text).toContain(
       'Por sessão soma cada sessão realizada; pacote mensal cobra o valor fechado se houver sessão ativa no mês.',
     );

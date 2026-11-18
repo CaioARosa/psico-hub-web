@@ -2,11 +2,9 @@ import { DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   computed,
   inject,
   signal,
-  viewChild,
 } from '@angular/core';
 import { provideIcons } from '@ng-icons/core';
 import { lucideInfo } from '@ng-icons/lucide';
@@ -15,7 +13,6 @@ import { RouterLink } from '@angular/router';
 import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardBadgeComponent } from '@/shared/components/badge';
 import { ZardCardImports } from '@/shared/components/card';
-import { ZardInputComponent } from '@/shared/components/input';
 import { ZardProgressComponent } from '@/shared/components/progress';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
 import { CalendarSyncsService } from '../data/calendar-syncs.service';
@@ -29,6 +26,7 @@ import { currentMonth, isValidMonth, monthLabel } from '../domain/month';
 import { formatCents } from '../domain/money';
 import { syncFreshness, syncFreshnessNote } from '../domain/sync-freshness';
 import { unlinkedNote } from '../domain/unlinked-note';
+import { MonthPickerComponent } from '../month-picker.component';
 import { RevenueChartComponent } from './revenue-chart.component';
 
 @Component({
@@ -40,7 +38,7 @@ import { RevenueChartComponent } from './revenue-chart.component';
     RouterLink,
     ZardAlertComponent,
     ZardBadgeComponent,
-    ZardInputComponent,
+    MonthPickerComponent,
     ZardProgressComponent,
     ZardSkeletonComponent,
     ...ZardCardImports,
@@ -57,16 +55,7 @@ import { RevenueChartComponent } from './revenue-chart.component';
 
         <div class="space-y-1.5">
           <label for="dashboard-month" class="block text-sm font-medium text-foreground">Mês</label>
-          <input
-            #monthInput
-            z-input
-            id="dashboard-month"
-            name="month"
-            type="month"
-            class="h-11 rounded-xl bg-white w-auto"
-            [value]="month()"
-            (change)="setMonth($any($event.target).value)"
-          />
+          <app-month-picker zId="dashboard-month" [month]="month()" (monthChange)="setMonth($event)" />
         </div>
       </header>
 
@@ -237,7 +226,6 @@ export class DashboardComponent {
   protected readonly unlinkedNote = unlinkedNote;
 
   readonly month = signal(currentMonth(this.now));
-  private readonly monthInput = viewChild('monthInput', { read: ElementRef });
 
   readonly ready = computed(
     () => this.allSessions.loaded() && this.patientsService.loaded() && this.paymentsService.loaded(),
@@ -282,11 +270,7 @@ export class DashboardComponent {
   });
 
   setMonth(value: string): void {
-    if (!isValidMonth(value)) {
-      const input = this.monthInput();
-      if (input) input.nativeElement.value = this.month();
-      return;
-    }
+    if (!isValidMonth(value)) return;
     if (value === this.month()) return;
     this.month.set(value);
   }

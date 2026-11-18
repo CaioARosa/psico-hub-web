@@ -7,8 +7,7 @@ import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardCardImports } from '@/shared/components/card';
 import { ZardEmptyComponent } from '@/shared/components/empty';
-import { ZardInputComponent } from '@/shared/components/input';
-import { ZardNativeSelectDirective } from '@/shared/components/native-select';
+import { ZardSelectImports } from '@/shared/components/select';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
 import { PatientsService } from '../data/patients.service';
 import { SAVE_ERROR } from '../data/safe-write';
@@ -20,6 +19,7 @@ import type { Payment } from '../domain/models';
 import { parsePixPrefill } from '../domain/pix-prefill';
 import type { PixPrefill } from '../domain/pix-prefill';
 import { filterPayments, formatMonth, formatPaidAt } from '../domain/payments-view';
+import { MonthPickerComponent } from '../month-picker.component';
 import { PaymentFormComponent } from './payment-form.component';
 
 type FormState =
@@ -34,10 +34,10 @@ type FormState =
     NgIcon,
     ZardButtonComponent,
     ZardAlertComponent,
-    ZardInputComponent,
-    ZardNativeSelectDirective,
+    ...ZardSelectImports,
     ZardSkeletonComponent,
     ZardEmptyComponent,
+    MonthPickerComponent,
     PaymentFormComponent,
     ...ZardCardImports,
   ],
@@ -80,33 +80,33 @@ type FormState =
       <div class="flex flex-wrap items-end gap-4">
         <div class="space-y-1.5">
           <label for="payment-filter-month" class="block text-sm font-medium text-foreground">Mês de referência</label>
-          <input
-            z-input
-            id="payment-filter-month"
-            name="month"
-            type="month"
-            class="h-11 rounded-xl bg-white w-auto"
-            [value]="monthFilter()"
-            (change)="setMonthFilter($any($event.target).value)"
-          />
+          <div class="flex items-center gap-2">
+            <app-month-picker
+              zId="payment-filter-month"
+              zPlaceholder="Todos os meses"
+              [month]="monthFilter()"
+              (monthChange)="setMonthFilter($event)"
+            />
+            @if (monthFilter() !== '') {
+              <button z-button zType="ghost" zSize="sm" type="button" (click)="setMonthFilter('')">Limpar</button>
+            }
+          </div>
         </div>
 
         <div class="space-y-1.5 grow max-w-xs">
-          <label for="payment-filter-patient" class="block text-sm font-medium text-foreground">Paciente</label>
-          <select
-            z-native-select
+          <span class="block text-sm font-medium text-foreground">Paciente</span>
+          <z-select
             id="payment-filter-patient"
-            name="patientId"
-            class="h-11 rounded-xl bg-white"
-            (change)="patientFilter.set($any($event.target).value)"
+            zLabel="Paciente"
+            zPlaceholder="Todos os pacientes"
+            class="w-full"
+            [zValue]="patientFilter()"
+            (zSelectionChange)="patientFilter.set($any($event))"
           >
-            <option value="" [selected]="patientFilter() === ''">Todos os pacientes</option>
             @for (patient of patientsService.patients(); track patient.id) {
-              <option [value]="patient.id" [selected]="patient.id === patientFilter()">
-                {{ patient.name }}{{ patient.active ? '' : ' (inativo)' }}
-              </option>
+              <z-select-item [zValue]="patient.id">{{ patient.name }}{{ patient.active ? '' : ' (inativo)' }}</z-select-item>
             }
-          </select>
+          </z-select>
         </div>
       </div>
 

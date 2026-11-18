@@ -4,7 +4,7 @@ import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardCardImports } from '@/shared/components/card';
 import { ZardInputComponent } from '@/shared/components/input';
-import { ZardNativeSelectDirective } from '@/shared/components/native-select';
+import { ZardSelectImports } from '@/shared/components/select';
 import { ZardSwitchComponent } from '@/shared/components/switch';
 import { PatientsService } from '../data/patients.service';
 import type { AgreementType, Patient } from '../domain/models';
@@ -17,7 +17,7 @@ import type { PatientFormErrors } from '../domain/patient-form';
   imports: [
     ZardButtonComponent,
     ZardInputComponent,
-    ZardNativeSelectDirective,
+    ...ZardSelectImports,
     ZardSwitchComponent,
     ZardAlertComponent,
     ...ZardCardImports,
@@ -73,18 +73,16 @@ import type { PatientFormErrors } from '../domain/patient-form';
 
           <div class="space-y-1.5">
             <label for="patient-type" class="block text-sm font-medium text-foreground">Tipo de acordo</label>
-            <select
-              z-native-select
+            <z-select
               id="patient-type"
-              name="type"
-              aria-describedby="patient-type-hint"
-              class="h-11 rounded-xl bg-white"
-              [value]="type()"
-              (change)="type.set($any($event.target).value)"
+              zLabel="Tipo de acordo"
+              class="w-full"
+              [zValue]="type()"
+              (zSelectionChange)="type.set($any($event))"
             >
-              <option value="per_session">Por sessão</option>
-              <option value="monthly_package">Pacote mensal</option>
-            </select>
+              <z-select-item zValue="per_session">Por sessão</z-select-item>
+              <z-select-item zValue="monthly_package">Pacote mensal</z-select-item>
+            </z-select>
             <p id="patient-type-hint" class="text-xs text-muted-foreground">
               Por sessão soma cada sessão realizada; pacote mensal cobra o valor fechado se houver sessão ativa no mês.
             </p>
