@@ -39,6 +39,11 @@ Data: 2026-11-17 · Método: `multi-agent-brainstorming`, aplicado **depois** da
 | U2 | Telefone de quem paga | **Rejeitada por ora** | Já está no backlog como T7 (modalidade e pagador) |
 | G1–G3, U1 | — | Sem objeção | — |
 
+## 3.1 Resolução (2026-11-17)
+
+- **R1 feita** (`e3292af`): `chart.js` e `ng2-charts` removidos com as duas funções mortas; spec e README atualizados.
+- **R2 feita:** o backend grava `calendarSyncs/{mês}` após cada sincronização; `domain/sync-freshness.ts` classifica a sincronização (passado / sem registro / recente / antiga a partir de 3 dias) e o painel mostra a hora ou um aviso com atalho para Sessões. Suposição: 3 dias é o limite em que sessões novas começam a ser marcadas sem sincronizar; ajustar `STALE_AFTER_DAYS` se não for o hábito da Lays.
+
 ## 4. Disposição
 
 **APPROVED com ajustes:** o design e a implementação da Fase 3 estão aceitos. Faltam duas tarefas pequenas:

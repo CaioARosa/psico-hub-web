@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { provideIcons } from '@ng-icons/core';
 import { lucideInfo } from '@ng-icons/lucide';
+import { RouterLink } from '@angular/router';
 
 import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardBadgeComponent } from '@/shared/components/badge';
@@ -17,6 +18,7 @@ import { ZardCardImports } from '@/shared/components/card';
 import { ZardInputComponent } from '@/shared/components/input';
 import { ZardProgressComponent } from '@/shared/components/progress';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
+import { CalendarSyncsService } from '../data/calendar-syncs.service';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService } from '../data/sessions.service';
@@ -25,6 +27,7 @@ import type { FrequencyAlert } from '../domain/dashboard';
 import { buildLedger } from '../domain/finance';
 import { currentMonth, isValidMonth, monthLabel } from '../domain/month';
 import { formatCents } from '../domain/money';
+import { syncFreshness, syncFreshnessNote } from '../domain/sync-freshness';
 import { unlinkedNote } from '../domain/unlinked-note';
 import { RevenueChartComponent } from './revenue-chart.component';
 
@@ -34,6 +37,7 @@ import { RevenueChartComponent } from './revenue-chart.component';
   imports: [
     DecimalPipe,
     RevenueChartComponent,
+    RouterLink,
     ZardAlertComponent,
     ZardBadgeComponent,
     ZardInputComponent,
@@ -191,6 +195,16 @@ import { RevenueChartComponent } from './revenue-chart.component';
             <p class="text-xs text-muted-foreground">
               No mês atual e futuros, soma realizadas + agendadas; em meses passados, apenas realizadas.
             </p>
+            @if (syncNote(); as note) {
+              @if (note.warn) {
+                <div role="status" class="text-sm rounded-xl bg-amber-50 border border-amber-300/70 text-amber-950 px-3.5 py-2.5 space-y-1">
+                  <p>{{ note.text }}</p>
+                  <a routerLink="/admin/sessoes" class="font-medium underline underline-offset-2">Ir para Sessões</a>
+                </div>
+              } @else {
+                <p class="text-xs text-muted-foreground">{{ note.text }}</p>
+              }
+            }
             @if (dashboard().alerts.length > 0) {
               <ul class="space-y-1.5 text-sm text-foreground">
                 @for (alert of dashboard().alerts; track alert.patientId) {
@@ -214,6 +228,7 @@ export class DashboardComponent {
   private readonly sessionsService = inject(SessionsService);
   private readonly patientsService = inject(PatientsService);
   private readonly paymentsService = inject(PaymentsService);
+  private readonly calendarSyncs = inject(CalendarSyncsService);
   private readonly allSessions = this.sessionsService.watchAll();
   private readonly now = new Date();
 
@@ -246,6 +261,17 @@ export class DashboardComponent {
       month: this.month(),
       now: this.now,
     }),
+  );
+
+  /** Aviso sobre a última sincronização: sem ela, agendadas recentes faltam na contagem e geram "falta" falsa. */
+  protected readonly syncNote = computed(() =>
+    syncFreshnessNote(
+      syncFreshness({
+        month: this.month(),
+        now: this.now,
+        lastSyncedAt: this.calendarSyncs.watchMonth(this.month()).lastSyncedAt(),
+      }),
+    ),
   );
 
   /** Só visual: proporção do realizado sobre o previsto, limitada a 100%; sem barra quando o devido é traço ou o previsto é zero. */

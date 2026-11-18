@@ -85,7 +85,7 @@ function planSessionSync({ events, patients, existingSessions, window }) {
   return { upserts, summary };
 }
 
-async function syncMonth({ month, calendar, calendarId, repo }) {
+async function syncMonth({ month, calendar, calendarId, repo, now = new Date() }) {
   const window = monthWindow(month);
   const response = await calendar.events.list({
     calendarId,
@@ -102,6 +102,8 @@ async function syncMonth({ month, calendar, calendarId, repo }) {
   ]);
   const { upserts, summary } = planSessionSync({ events, patients, existingSessions, window });
   await repo.applyUpserts(upserts);
+  // Só depois das sessões gravadas: o painel usa esta hora para saber até quando as agendadas são confiáveis.
+  await repo.recordSync(month, now);
   return summary;
 }
 

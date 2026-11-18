@@ -77,6 +77,10 @@ function createFirestoreRepo(db) {
         await batch.commit();
       }
     },
+
+    async recordSync(month, syncedAt) {
+      await db.collection('calendarSyncs').doc(month).set({ month, syncedAt });
+    },
   };
 }
 

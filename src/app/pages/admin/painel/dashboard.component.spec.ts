@@ -4,6 +4,7 @@ import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { afterEach, vi } from 'vitest';
 
+import { CalendarSyncsService, type SyncWatch } from '../data/calendar-syncs.service';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService, type AllSessionsWatch } from '../data/sessions.service';
@@ -111,6 +112,7 @@ describe('DashboardComponent', () => {
   let sessionsError = signal<string | null>(null);
   let patientsSignal = signal<Patient[]>([]);
   let paymentsSignal = signal<Payment[]>([]);
+  let lastSyncedAt = signal<Date | null>(null);
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -121,6 +123,11 @@ describe('DashboardComponent', () => {
     sessionsError = signal<string | null>(null);
     patientsSignal = signal<Patient[]>([ana, bruno]);
     paymentsSignal = signal(scenarioPayments());
+    lastSyncedAt = signal<Date | null>(new Date('2026-11-17T12:00:00Z'));
+
+    const fakeSyncs: Pick<CalendarSyncsService, 'watchMonth'> = {
+      watchMonth: (month: string): SyncWatch => ({ month, lastSyncedAt: lastSyncedAt.asReadonly() }),
+    };
 
     const fakeSessions: Pick<SessionsService, 'watchAll'> = {
       watchAll: (): AllSessionsWatch => ({
@@ -149,6 +156,7 @@ describe('DashboardComponent', () => {
         { provide: SessionsService, useValue: fakeSessions },
         { provide: PatientsService, useValue: fakePatients },
         { provide: PaymentsService, useValue: fakePayments },
+        { provide: CalendarSyncsService, useValue: fakeSyncs },
       ],
     });
     TestBed.overrideComponent(DashboardComponent, {
@@ -193,6 +201,35 @@ describe('DashboardComponent', () => {
   function alertsText(fixture: ComponentFixture<DashboardComponent>): string {
     return normalize(rootOf(fixture).querySelector('[aria-labelledby="alerts-title"]')?.textContent ?? '');
   }
+
+  it('mês atual sincronizado há pouco mostra a hora da sincronização, sem destaque', () => {
+    const fixture = openMonth('2026-11');
+
+    expect(alertsText(fixture)).toContain('Agendadas contadas até a sincronização de 17/11/2026');
+    expect(alertsText(fixture)).not.toContain('Ir para Sessões');
+  });
+
+  it('mês atual com sincronização antiga avisa e leva para Sessões', () => {
+    lastSyncedAt.set(new Date('2026-11-10T12:00:00Z'));
+    const fixture = openMonth('2026-11');
+
+    expect(alertsText(fixture)).toContain('sincronizada há 7 dias');
+    expect(alertsText(fixture)).toContain('Ir para Sessões');
+  });
+
+  it('mês atual sem registro de sincronização pede para sincronizar', () => {
+    lastSyncedAt.set(null);
+    const fixture = openMonth('2026-11');
+
+    expect(alertsText(fixture)).toContain('Não há registro de sincronização deste mês');
+  });
+
+  it('mês passado não mostra aviso de sincronização', () => {
+    lastSyncedAt.set(null);
+    const fixture = openMonth('2026-10');
+
+    expect(alertsText(fixture)).not.toContain('sincroniza');
+  });
 
   it('mostra os cartões com os valores exatos', () => {
     const fixture = openMonth('2026-11');

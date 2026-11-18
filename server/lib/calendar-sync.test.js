@@ -268,7 +268,7 @@ test('rodar duas vezes seguidas com as sessões resultantes não gera novos crea
 });
 
 const makeFakes = ({ events = [], sessions = [], calendarError = null } = {}) => {
-  const calls = { list: [], applied: [], sessionsRange: [] };
+  const calls = { list: [], applied: [], sessionsRange: [], recorded: [] };
   const calendar = {
     events: {
       list: async (params) => {
@@ -286,6 +286,9 @@ const makeFakes = ({ events = [], sessions = [], calendarError = null } = {}) =>
     },
     applyUpserts: async (upserts) => {
       calls.applied.push(upserts);
+    },
+    recordSync: async (month, syncedAt) => {
+      calls.recorded.push({ month, syncedAt, afterApply: calls.applied.length });
     },
   };
   return { calls, calendar, repo };
@@ -333,6 +336,25 @@ test('syncMonth propaga erro do Agenda sem chamar applyUpserts', async () => {
     message: 'Agenda fora do ar',
   });
   assert.equal(calls.applied.length, 0);
+  assert.equal(calls.recorded.length, 0);
+});
+
+test('syncMonth registra a hora da sincronização do mês depois de aplicar os upserts', async () => {
+  const { calls, calendar, repo } = makeFakes();
+  const now = new Date('2026-11-17T21:30:00-03:00');
+  await syncMonth({ month: '2026-11', calendar, calendarId: 'cal-id', repo, now });
+  assert.deepEqual(calls.recorded, [{ month: '2026-11', syncedAt: now, afterApply: 1 }]);
+});
+
+test('syncMonth não registra sincronização quando gravar as sessões falha', async () => {
+  const { calls, calendar, repo } = makeFakes();
+  repo.applyUpserts = async () => {
+    throw new Error('Firestore fora do ar');
+  };
+  await assert.rejects(syncMonth({ month: '2026-11', calendar, calendarId: 'cal-id', repo }), {
+    message: 'Firestore fora do ar',
+  });
+  assert.equal(calls.recorded.length, 0);
 });
 
 test('syncMonth rejeita mês inválido sem chamar o Agenda', async () => {

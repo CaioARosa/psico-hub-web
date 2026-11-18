@@ -62,9 +62,14 @@ function fakeDb(initialDocs = {}) {
   const docs = new Map(Object.entries(initialDocs));
   const commits = [];
   const getAllCalls = [];
+  const sets = [];
   const db = {
     collection: (name) => ({
-      doc: (id) => ({ path: `${name}/${id}`, id }),
+      doc: (id) => ({
+        path: `${name}/${id}`,
+        id,
+        set: async (data) => sets.push({ path: `${name}/${id}`, data }),
+      }),
     }),
     getAll: async (...refs) => {
       getAllCalls.push(refs.length);
@@ -81,8 +86,15 @@ function fakeDb(initialDocs = {}) {
       };
     },
   };
-  return { db, commits, getAllCalls };
+  return { db, commits, getAllCalls, sets };
 }
+
+test('recordSync grava calendarSyncs/{mês} com o mês e a hora', async () => {
+  const { db, sets } = fakeDb();
+  const syncedAt = new Date('2026-11-18T00:30:00Z');
+  await createFirestoreRepo(db).recordSync('2026-11', syncedAt);
+  assert.deepEqual(sets, [{ path: 'calendarSyncs/2026-11', data: { month: '2026-11', syncedAt } }]);
+});
 
 test('applyUpserts: lê docs de criação com getAll, pula terminais, cria ausentes, mescla scheduled', async () => {
   const { db, commits } = fakeDb({
