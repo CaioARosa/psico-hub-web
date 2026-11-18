@@ -3,6 +3,7 @@ import type { DashboardPoint } from '../domain/dashboard';
 import { monthLabel } from '../domain/month';
 
 const RECEIVED_COLOR = '#4D6D66';
+const DUE_COLOR = '#D4E6E1';
 
 export interface RevenueChartRow extends ZardChartDatum {
   month: string;
