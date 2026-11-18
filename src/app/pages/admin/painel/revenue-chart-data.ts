@@ -12,7 +12,7 @@ export interface RevenueChartRow extends ZardChartDatum {
 
 export const revenueZardChartConfig: ZardChartConfig = {
   received: { label: 'Recebido', color: RECEIVED_COLOR },
-  due: { label: 'Devido', color: '#BFD7D0' },
+  due: { label: 'Devido', color: DUE_COLOR },
 };
 
 export function revenueZardChartRows(series: DashboardPoint[]): RevenueChartRow[] {
