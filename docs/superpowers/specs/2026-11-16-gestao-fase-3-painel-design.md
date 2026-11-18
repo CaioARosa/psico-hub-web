@@ -10,7 +10,7 @@ Dar à Lays uma tela única (`/admin/painel`) que mostra como o mês está indo:
 
 ### Decisões acordadas
 - **Receita mostra os dois números:** *Recebido* (Pix com `referenceMonth` no mês) e *Devido* (valor das sessões realizadas, pacote incluído). Ambos vêm de `summarizeMonth`, então batem com a tela Financeiro.
-- **Gráfico com biblioteca:** `chart.js` + `ng2-charts`, carregados só no `PainelComponent` (já sob demanda).
+- **Gráfico com biblioteca:** `chart.js` + `ng2-charts`, carregados só no `PainelComponent` (já sob demanda). **Atualização 2026-11-17:** substituído pelo componente de gráfico da ZardUI (ECharts via `ngx-echarts`, commit `16eff9b`); `chart.js` e `ng2-charts` foram removidos. O ECharts continua carregado só no painel.
 - **Angular 22:** o projeto é atualizado do 21 para o 22 antes do painel (etapa 0), porque o `ng2-charts@11` exige Angular ≥22.
 - **Alerta de frequência:** no mês corrente compara `done + scheduled` com o contratado; em meses passados compara só `done`.
 - **Cálculo no frontend**, como na Fase 2. Sem agregação no servidor e sem campo novo no Firestore.
