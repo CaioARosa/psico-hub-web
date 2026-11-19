@@ -1,7 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCalendar, lucideCheck, lucideRefreshCw } from '@ng-icons/lucide';
+import { lucideCalendar, lucideCheck, lucideRefreshCw, lucideX } from '@ng-icons/lucide';
 
 import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardBadgeComponent, type ZardBadgeTypeVariants } from '@/shared/components/badge';
@@ -21,6 +21,7 @@ import { currentMonth, isValidMonth } from '../domain/month';
 import { canConfirm, formatSessionDateTime, groupSessions, statusLabel } from '../domain/sessions-view';
 import { syncSummary } from '../domain/sync-summary';
 import { MonthPickerComponent } from '../month-picker.component';
+import { canAnimateMotion } from '../motion/reduced-motion';
 
 export type SessionTab = 'all' | 'pending' | 'unidentified';
 const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
@@ -42,8 +43,35 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
     ...ZardCardImports,
     ...ZardTabsImports,
   ],
-  viewProviders: [provideIcons({ lucideCalendar, lucideCheck, lucideRefreshCw })],
+  viewProviders: [provideIcons({ lucideCalendar, lucideCheck, lucideRefreshCw, lucideX })],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [
+    `
+      .admin-session-card { position: relative; overflow: hidden; }
+      .admin-session-card::before {
+        content: '';
+        position: absolute;
+        inset-block: 0;
+        left: 0;
+        width: 3px;
+        background-color: rgb(76 100 91 / 0.18);
+        transition: background-color 0.28s var(--admin-ease);
+      }
+      .admin-session-card[data-status='done']::before { background-color: #4d6d66; }
+      .admin-session-card[data-status='no_show']::before { background-color: #d97706; }
+      .admin-session-card[data-status='cancelled']::before { background-color: #a8a29e; }
+      .admin-badge-smooth { transition: background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease; }
+      @keyframes session-flash {
+        0% { box-shadow: 0 0 0 0 rgb(77 109 102 / 0.28); border-color: rgb(77 109 102 / 0.55); }
+        100% { box-shadow: 0 0 0 8px rgb(77 109 102 / 0); }
+      }
+      .admin-flash { animation: session-flash 0.75s var(--admin-ease); }
+      .admin-spin-hover ng-icon { display: inline-flex; transition: transform 0.28s var(--admin-spring); }
+      @media (hover: hover) {
+        .admin-spin-hover:hover:not(:disabled) ng-icon { transform: rotate(45deg); }
+      }
+    `,
+  ],
   template: `
     <section class="space-y-6">
       <header class="flex flex-wrap items-end justify-between gap-3">
@@ -61,7 +89,7 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
           <button
             z-button
             type="button"
-            class="h-11 rounded-xl px-4"
+            class="admin-spin-hover h-11 rounded-xl px-4"
             [zLoading]="syncing()"
             [zDisabled]="syncing()"
             (click)="syncCalendar()"
@@ -75,12 +103,22 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
       </header>
 
       @if (syncMessage()) {
-        <z-alert
-          zRole="status"
-          zIcon="lucideCheck"
-          class="bg-[#D4E6E1]/45 border-[#4D6D66]/25 text-foreground rounded-xl animate-fade-in"
-          [zDescription]="syncMessage()!"
-        />
+        <div class="relative">
+          <z-alert
+            zRole="status"
+            zIcon="lucideCheck"
+            class="bg-[#D4E6E1]/45 border-[#4D6D66]/25 text-foreground rounded-xl pr-10"
+            [zDescription]="syncMessage()!"
+          />
+          <button
+            type="button"
+            aria-label="Fechar aviso"
+            (click)="syncMessage.set(null)"
+            class="absolute right-2.5 top-2.5 p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-[#4D6D66]/10 transition-colors"
+          >
+            <ng-icon name="lucideX" class="size-3.5" />
+          </button>
+        </div>
       }
 
       @if (syncError()) {
@@ -106,7 +144,7 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
       </z-tab-group>
 
       <ng-template #sessionContent>
-        <div class="space-y-4 pt-3">
+        <div class="admin-pane space-y-4 pt-3">
           @if (actionError()) {
             <z-alert zType="destructive" zRole="alert" [zDescription]="actionError()!" />
           }
@@ -121,12 +159,17 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
               }
             </div>
           } @else if (visibleSessions().length === 0) {
-            <z-empty zIcon="lucideCalendar" [zDescription]="emptyMessage()" class="bg-card rounded-2xl border border-border py-10" />
+            <z-empty zIcon="lucideCalendar" [zDescription]="emptyMessage()" class="admin-pane bg-card rounded-2xl border border-border py-10" />
           } @else {
             <ul class="space-y-3 stagger-list">
               @for (session of visibleSessions(); track session.id) {
                 <li>
-                  <z-card class="rounded-2xl p-4 space-y-3 shadow-2xs transition-[box-shadow,border-color] duration-200 hover:shadow-sm">
+                  <z-card
+                    class="admin-lift admin-session-card rounded-2xl p-4 pl-5 space-y-3 shadow-2xs"
+                    [attr.data-status]="session.status"
+                    [class.admin-busy]="busyId() === session.id"
+                    [class.admin-flash]="justUpdatedId() === session.id"
+                  >
                     <div class="flex flex-wrap items-start justify-between gap-3">
                       <div class="min-w-0 space-y-1">
                         <div class="flex flex-wrap items-center gap-2">
@@ -269,8 +312,14 @@ export class SessionsComponent {
   readonly syncError = signal<string | null>(null);
 
   readonly busyId = signal<string | null>(null);
+  readonly justUpdatedId = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
   readonly selectedPatients = signal<Record<string, string | undefined>>({});
+  private flashTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.clearFlashTimer());
+  }
 
   readonly groups = computed(() => groupSessions(this.watch().sessions(), new Date()));
   readonly visibleSessions = computed(() => this.groups()[this.activeTab()]);
@@ -333,10 +382,27 @@ export class SessionsComponent {
   }
 
   protected badgeExtraClass(status: SessionStatus): string {
-    if (status === 'done') return 'bg-[#D4E6E1] text-[#1C221F]';
-    if (status === 'no_show') return 'bg-amber-100 text-amber-800';
-    if (status === 'cancelled') return 'bg-stone-100 text-stone-700';
-    return 'bg-[#4C645B]/10 text-[#556661]';
+    if (status === 'done') return 'admin-badge-smooth bg-[#D4E6E1] text-[#1C221F]';
+    if (status === 'no_show') return 'admin-badge-smooth bg-amber-100 text-amber-800';
+    if (status === 'cancelled') return 'admin-badge-smooth bg-stone-100 text-stone-700';
+    return 'admin-badge-smooth bg-[#4C645B]/10 text-[#556661]';
+  }
+
+  private flashSession(id: string): void {
+    if (!canAnimateMotion()) return;
+    this.clearFlashTimer();
+    this.justUpdatedId.set(id);
+    this.flashTimer = setTimeout(() => {
+      this.flashTimer = null;
+      this.justUpdatedId.set(null);
+    }, 800);
+  }
+
+  private clearFlashTimer(): void {
+    if (this.flashTimer !== null) {
+      clearTimeout(this.flashTimer);
+      this.flashTimer = null;
+    }
   }
 
   async syncCalendar(): Promise<void> {
@@ -366,6 +432,7 @@ export class SessionsComponent {
     this.busyId.set(session.id);
     try {
       await this.sessionsService.setStatus(session.id, status);
+      this.flashSession(session.id);
     } catch (err) {
       this.actionError.set(err instanceof Error ? err.message : SAVE_ERROR);
     } finally {
@@ -382,6 +449,7 @@ export class SessionsComponent {
     this.busyId.set(session.id);
     try {
       await this.sessionsService.linkPatient(session.id, patient);
+      this.flashSession(session.id);
     } catch (err) {
       this.actionError.set(err instanceof Error ? err.message : SAVE_ERROR);
     } finally {
@@ -395,6 +463,7 @@ export class SessionsComponent {
     this.busyId.set(session.id);
     try {
       await this.sessionsService.clearMissing(session.id);
+      this.flashSession(session.id);
     } catch (err) {
       this.actionError.set(err instanceof Error ? err.message : SAVE_ERROR);
     } finally {

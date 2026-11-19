@@ -46,7 +46,7 @@ import type { PatientFormErrors } from '../domain/patient-form';
               (input)="name.set($any($event.target).value)"
             />
             @if (errors().name) {
-              <p id="patient-name-error" class="text-sm text-red-700">{{ errors().name }}</p>
+              <p id="patient-name-error" class="admin-field-error text-sm text-red-700">{{ errors().name }}</p>
             }
           </div>
 
@@ -67,7 +67,7 @@ import type { PatientFormErrors } from '../domain/patient-form';
               (input)="phone.set($any($event.target).value)"
             />
             @if (errors().phone) {
-              <p id="patient-phone-error" class="text-sm text-red-700">{{ errors().phone }}</p>
+              <p id="patient-phone-error" class="admin-field-error text-sm text-red-700">{{ errors().phone }}</p>
             }
           </div>
 
@@ -107,7 +107,7 @@ import type { PatientFormErrors } from '../domain/patient-form';
               (input)="amount.set($any($event.target).value)"
             />
             @if (errors().amount) {
-              <p id="patient-amount-error" class="text-sm text-red-700">{{ errors().amount }}</p>
+              <p id="patient-amount-error" class="admin-field-error text-sm text-red-700">{{ errors().amount }}</p>
             }
           </div>
 
@@ -130,7 +130,7 @@ import type { PatientFormErrors } from '../domain/patient-form';
               Usado para calcular a receita prevista e avisar no Painel quando faltarem ou sobrarem sessões.
             </p>
             @if (errors().sessionsPerMonth) {
-              <p id="patient-sessions-error" class="text-sm text-red-700">{{ errors().sessionsPerMonth }}</p>
+              <p id="patient-sessions-error" class="admin-field-error text-sm text-red-700">{{ errors().sessionsPerMonth }}</p>
             }
           </div>
 

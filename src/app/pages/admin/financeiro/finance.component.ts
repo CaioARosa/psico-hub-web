@@ -6,8 +6,8 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { provideIcons } from '@ng-icons/core';
-import { lucideInfo } from '@ng-icons/lucide';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideChevronDown, lucideExternalLink, lucideInfo } from '@ng-icons/lucide';
 
 import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardButtonComponent } from '@/shared/components/button';
@@ -15,6 +15,8 @@ import { ZardCardImports } from '@/shared/components/card';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
 import { ZardTableImports } from '@/shared/components/table';
 import { MonthPickerComponent } from '../month-picker.component';
+import { CountUpDirective } from '../motion/count-up.directive';
+import { SpotlightDirective } from '../motion/spotlight.directive';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService } from '../data/sessions.service';
@@ -30,6 +32,9 @@ import { unlinkedNote } from '../domain/unlinked-note';
   standalone: true,
   imports: [
     RouterLink,
+    NgIcon,
+    CountUpDirective,
+    SpotlightDirective,
     ZardButtonComponent,
     ZardAlertComponent,
     MonthPickerComponent,
@@ -37,8 +42,35 @@ import { unlinkedNote } from '../domain/unlinked-note';
     ...ZardCardImports,
     ...ZardTableImports,
   ],
-  viewProviders: [provideIcons({ lucideInfo })],
+  viewProviders: [provideIcons({ lucideInfo, lucideChevronDown, lucideExternalLink })],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [
+    `
+      @keyframes fin-rise {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: none; }
+      }
+      .admin-rows > tr:not(.admin-detail-row) {
+        animation: fin-rise 0.3s var(--admin-ease) backwards;
+        transition: background-color 0.2s ease;
+      }
+      .admin-rows > tr:not(.admin-detail-row):nth-child(2) { animation-delay: 28ms; }
+      .admin-rows > tr:not(.admin-detail-row):nth-child(3) { animation-delay: 56ms; }
+      .admin-rows > tr:not(.admin-detail-row):nth-child(4) { animation-delay: 84ms; }
+      .admin-rows > tr:not(.admin-detail-row):nth-child(5) { animation-delay: 112ms; }
+      .admin-rows > tr:not(.admin-detail-row):nth-child(n + 6) { animation-delay: 140ms; }
+      .admin-detail-row { animation: fin-rise 0.24s var(--admin-ease) backwards; }
+      .admin-chevron,
+      .admin-ext-hover ng-icon {
+        display: inline-flex;
+        transition: transform 0.28s var(--admin-spring);
+      }
+      [aria-expanded='true'] .admin-chevron { transform: rotate(180deg); }
+      @media (hover: hover) {
+        .admin-ext-hover:hover ng-icon { transform: translate(1.5px, -1.5px); }
+      }
+    `,
+  ],
   template: `
     <section class="space-y-6">
       <header class="flex flex-wrap items-end justify-between gap-3">
@@ -84,17 +116,23 @@ import { unlinkedNote } from '../domain/unlinked-note';
         }
 
         <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3 stagger-list">
-          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+          <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4">
             <dt class="text-xs font-medium text-muted-foreground">Recebido</dt>
-            <dd class="font-display text-2xl text-primary mt-1 tabular-nums">{{ formatCents(summary().received) }}</dd>
+            <dd class="font-display text-2xl text-primary mt-1 tabular-nums" [appCountUp]="summary().received" [countFormat]="formatCents"></dd>
           </div>
-          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+          <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4">
             <dt class="text-xs font-medium text-muted-foreground">A receber</dt>
-            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ valueOrDash(summary().toReceive) }}</dd>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="toReceiveCents()" [countFormat]="formatCents"></dd>
           </div>
-          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+          <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4">
             <dt class="text-xs font-medium text-muted-foreground">Em atraso</dt>
-            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ valueOrDash(summary().overdue) }}</dd>
+            <dd
+              class="font-display text-2xl mt-1 tabular-nums"
+              [class.text-destructive]="(overdueCents() ?? 0) > 0"
+              [class.text-foreground]="(overdueCents() ?? 0) === 0"
+              [appCountUp]="overdueCents()"
+              [countFormat]="formatCents"
+            ></dd>
           </div>
         </dl>
 
@@ -114,16 +152,30 @@ import { unlinkedNote } from '../domain/unlinked-note';
                     <th z-table-head scope="col" class="px-4 py-3"><span class="sr-only">Ações</span></th>
                   </tr>
                 </thead>
-                <tbody z-table-body class="text-foreground tabular-nums">
+                <tbody z-table-body class="admin-rows text-foreground tabular-nums">
                   @for (row of rows(); track row.line.patientId) {
-                    <tr z-table-row>
+                    <tr z-table-row class="hover:bg-[#FDFBF7]/80">
                       <th scope="row" class="px-4 py-3 text-left font-medium">{{ row.name }}</th>
                       <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(row.line.due) }}</td>
                       <td z-table-cell class="px-4 py-3 text-right">{{ formatCents(row.line.received) }}</td>
                       <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(row.line.abated) }}</td>
                       <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(row.line.toReceive) }}</td>
-                      <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(row.line.overdue) }}</td>
-                      <td z-table-cell class="px-4 py-3 text-right">{{ valueOrDash(row.line.credit) }}</td>
+                      <td
+                        z-table-cell
+                        class="px-4 py-3 text-right"
+                        [class.text-destructive]="summary().hasLinkedSessions && row.line.overdue > 0"
+                        [class.font-medium]="summary().hasLinkedSessions && row.line.overdue > 0"
+                      >
+                        {{ valueOrDash(row.line.overdue) }}
+                      </td>
+                      <td
+                        z-table-cell
+                        class="px-4 py-3 text-right"
+                        [class.text-primary]="summary().hasLinkedSessions && row.line.credit > 0"
+                        [class.font-medium]="summary().hasLinkedSessions && row.line.credit > 0"
+                      >
+                        {{ valueOrDash(row.line.credit) }}
+                      </td>
                       <td z-table-cell class="px-4 py-3">
                         <div class="flex flex-wrap items-center justify-end gap-2">
                           @if (row.line.sources.length > 0) {
@@ -136,6 +188,7 @@ import { unlinkedNote } from '../domain/unlinked-note';
                               (click)="toggleDetails(row.line.patientId)"
                             >
                               Detalhes
+                              <ng-icon name="lucideChevronDown" class="admin-chevron size-3.5" />
                             </button>
                           }
                           @if (row.line.toReceive > 0) {
@@ -148,11 +201,13 @@ import { unlinkedNote } from '../domain/unlinked-note';
                               z-button
                               zType="outline"
                               zSize="sm"
+                              class="admin-ext-hover border-[#4D6D66]/30 hover:border-[#4D6D66]/60"
                               [href]="url"
                               target="_blank"
                               rel="noopener noreferrer"
                             >
                               Cobrar no WhatsApp
+                              <ng-icon name="lucideExternalLink" class="size-3.5" />
                             </a>
                           } @else if (row.invalidPhone) {
                             <span class="text-xs text-amber-800">
@@ -163,7 +218,7 @@ import { unlinkedNote } from '../domain/unlinked-note';
                       </td>
                     </tr>
                     @if (isExpanded(row.line.patientId)) {
-                      <tr z-table-row class="bg-[#FDFBF7] animate-fade-in">
+                      <tr z-table-row class="admin-detail-row bg-[#FDFBF7]">
                         <td z-table-cell colspan="8" class="px-4 py-3 text-sm text-muted-foreground">
                           <ul class="space-y-1">
                             @for (source of row.line.sources; track source.fromMonth) {
@@ -227,6 +282,13 @@ export class FinanceComponent {
     }),
   );
   readonly summary = computed(() => summarizeMonth(this.ledger(), this.month()));
+
+  protected readonly toReceiveCents = computed(() =>
+    this.summary().hasLinkedSessions ? this.summary().toReceive : null,
+  );
+  protected readonly overdueCents = computed(() =>
+    this.summary().hasLinkedSessions ? this.summary().overdue : null,
+  );
 
   readonly patientsById = computed(
     () => new Map(this.patientsService.patients().map(patient => [patient.id, patient] as const)),

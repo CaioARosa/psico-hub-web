@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucidePlus, lucideWallet } from '@ng-icons/lucide';
@@ -20,6 +29,8 @@ import { parsePixPrefill } from '../domain/pix-prefill';
 import type { PixPrefill } from '../domain/pix-prefill';
 import { filterPayments, formatMonth, formatPaidAt } from '../domain/payments-view';
 import { MonthPickerComponent } from '../month-picker.component';
+import { CountUpDirective } from '../motion/count-up.directive';
+import { prefersReducedMotion } from '../motion/reduced-motion';
 import { PaymentFormComponent } from './payment-form.component';
 
 type FormState =
@@ -32,6 +43,7 @@ type FormState =
   standalone: true,
   imports: [
     NgIcon,
+    CountUpDirective,
     ZardButtonComponent,
     ZardAlertComponent,
     ...ZardSelectImports,
@@ -53,7 +65,7 @@ type FormState =
         <button
           z-button
           type="button"
-          class="h-10 rounded-xl px-4"
+          class="admin-plus-hover h-10 rounded-xl px-4"
           [zDisabled]="form().mode === 'create'"
           (click)="openCreate()"
         >
@@ -63,51 +75,67 @@ type FormState =
       </header>
 
       @if (form(); as current) {
-        <div class="animate-fade-in">
-          @if (current.mode === 'create') {
-            <!-- Pix de link só abre com a lista de pacientes carregada; antes disso o paciente pareceria inexistente. -->
-            @if (patientsService.loaded()) {
-              <app-payment-form [prefill]="current.prefill" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+        @if (current.mode !== 'closed') {
+          <div #formHost class="admin-form-in">
+            @if (current.mode === 'create') {
+              <!-- Pix de link só abre com a lista de pacientes carregada; antes disso o paciente pareceria inexistente. -->
+              @if (patientsService.loaded()) {
+                <app-payment-form [prefill]="current.prefill" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+              }
+            } @else if (current.mode === 'edit') {
+              @for (p of [current.payment]; track p.id) {
+                <app-payment-form [payment]="p" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+              }
             }
-          } @else if (current.mode === 'edit') {
-            @for (p of [current.payment]; track p.id) {
-              <app-payment-form [payment]="p" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
-            }
-          }
-        </div>
+          </div>
+        }
       }
 
-      <div class="flex flex-wrap items-end gap-4">
-        <div class="space-y-1.5">
-          <label for="payment-filter-month" class="block text-sm font-medium text-foreground">Mês de referência</label>
-          <div class="flex items-center gap-2">
-            <app-month-picker
-              zId="payment-filter-month"
-              zPlaceholder="Todos os meses"
-              [month]="monthFilter()"
-              (monthChange)="setMonthFilter($event)"
-            />
-            @if (monthFilter() !== '') {
-              <button z-button zType="ghost" zSize="sm" type="button" (click)="setMonthFilter('')">Limpar</button>
-            }
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="flex flex-wrap items-end gap-4 grow">
+          <div class="space-y-1.5">
+            <label for="payment-filter-month" class="block text-sm font-medium text-foreground">Mês de referência</label>
+            <div class="flex items-center gap-2">
+              <app-month-picker
+                zId="payment-filter-month"
+                zPlaceholder="Todos os meses"
+                [month]="monthFilter()"
+                (monthChange)="setMonthFilter($event)"
+              />
+              @if (monthFilter() !== '') {
+                <button z-button zType="ghost" zSize="sm" type="button" (click)="setMonthFilter('')">Limpar</button>
+              }
+            </div>
+          </div>
+
+          <div class="space-y-1.5 grow max-w-xs">
+            <span class="block text-sm font-medium text-foreground">Paciente</span>
+            <div class="flex items-center gap-2">
+              <z-select
+                id="payment-filter-patient"
+                zLabel="Paciente"
+                zPlaceholder="Todos os pacientes"
+                class="w-full"
+                [zValue]="patientFilter()"
+                (zSelectionChange)="patientFilter.set($any($event))"
+              >
+                @for (patient of patientsService.patients(); track patient.id) {
+                  <z-select-item [zValue]="patient.id">{{ patient.name }}{{ patient.active ? '' : ' (inativo)' }}</z-select-item>
+                }
+              </z-select>
+              @if (patientFilter() !== '') {
+                <button z-button zType="ghost" zSize="sm" type="button" (click)="patientFilter.set('')">Limpar</button>
+              }
+            </div>
           </div>
         </div>
 
-        <div class="space-y-1.5 grow max-w-xs">
-          <span class="block text-sm font-medium text-foreground">Paciente</span>
-          <z-select
-            id="payment-filter-patient"
-            zLabel="Paciente"
-            zPlaceholder="Todos os pacientes"
-            class="w-full"
-            [zValue]="patientFilter()"
-            (zSelectionChange)="patientFilter.set($any($event))"
-          >
-            @for (patient of patientsService.patients(); track patient.id) {
-              <z-select-item [zValue]="patient.id">{{ patient.name }}{{ patient.active ? '' : ' (inativo)' }}</z-select-item>
-            }
-          </z-select>
-        </div>
+        @if (ready() && !loadError() && visible().length > 0) {
+          <p class="text-xs text-muted-foreground tabular-nums min-h-10 flex items-center gap-1.5">
+            <span>{{ visible().length }} {{ visible().length === 1 ? 'registro' : 'registros' }} ·</span>
+            <span class="font-medium text-primary" [appCountUp]="visibleTotal()" [countFormat]="formatCents"></span>
+          </p>
+        }
       </div>
 
       @if (actionError()) {
@@ -124,12 +152,15 @@ type FormState =
           }
         </div>
       } @else if (visible().length === 0) {
-        <z-empty zIcon="lucideWallet" [zDescription]="emptyMessage()" class="bg-card rounded-2xl border border-border py-10" />
+        <z-empty zIcon="lucideWallet" [zDescription]="emptyMessage()" class="admin-pane bg-card rounded-2xl border border-border py-10" />
       } @else {
         <ul class="space-y-3 stagger-list">
           @for (payment of visible(); track payment.id) {
             <li>
-              <z-card class="rounded-2xl p-4 shadow-2xs transition-[box-shadow,border-color] duration-200 hover:shadow-sm">
+              <z-card
+                class="admin-lift rounded-2xl p-4 shadow-2xs"
+                [class.admin-busy]="busyId() === payment.id"
+              >
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div class="min-w-0 space-y-0.5">
                     <p class="font-medium text-foreground">{{ patientName(payment) }}</p>
@@ -144,7 +175,7 @@ type FormState =
 
                   @if (confirmingId() === payment.id) {
                     <div
-                      class="flex flex-wrap items-center gap-2 animate-fade-in"
+                      class="admin-pane flex flex-wrap items-center gap-2"
                       role="group"
                       [attr.aria-label]="'Confirmar exclusão do Pix de ' + patientName(payment)"
                     >
@@ -208,6 +239,8 @@ export class PaymentsComponent {
   protected readonly service = inject(PaymentsService);
   protected readonly patientsService = inject(PatientsService);
   private readonly route = inject(ActivatedRoute);
+  private readonly formHost = viewChild<ElementRef<HTMLElement>>('formHost');
+  private scrollFrame = 0;
 
   protected readonly formatCents = formatCents;
   protected readonly formatPaidAt = formatPaidAt;
@@ -221,6 +254,10 @@ export class PaymentsComponent {
   readonly actionError = signal<string | null>(null);
   protected readonly reportFailure = (message: string) => this.actionError.set(message);
 
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.cancelScroll());
+  }
+
   readonly ready = computed(() => this.service.loaded() && this.patientsService.loaded());
   readonly loadError = computed(() => this.service.error() ?? this.patientsService.error());
 
@@ -229,6 +266,9 @@ export class PaymentsComponent {
       month: this.monthFilter(),
       patientId: this.patientFilter(),
     }),
+  );
+  protected readonly visibleTotal = computed(() =>
+    this.visible().reduce((sum, payment) => sum + payment.amount, 0),
   );
 
   readonly patientNames = computed(
@@ -253,11 +293,35 @@ export class PaymentsComponent {
   openCreate(): void {
     this.confirmingId.set(null);
     this.form.set({ mode: 'create', prefill: null });
+    this.scrollFormIntoView();
   }
 
   openEdit(payment: Payment): void {
     this.confirmingId.set(null);
     this.form.set({ mode: 'edit', payment });
+    this.scrollFormIntoView();
+  }
+
+  private scrollFormIntoView(): void {
+    this.cancelScroll();
+    if (typeof requestAnimationFrame !== 'function') return;
+    this.scrollFrame = requestAnimationFrame(() => {
+      this.scrollFrame = 0;
+      const el = this.formHost()?.nativeElement;
+      if (el && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({
+          behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+          block: 'nearest',
+        });
+      }
+    });
+  }
+
+  private cancelScroll(): void {
+    if (this.scrollFrame && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(this.scrollFrame);
+    }
+    this.scrollFrame = 0;
   }
 
   onSaved(): void {

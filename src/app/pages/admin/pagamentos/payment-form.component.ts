@@ -88,7 +88,7 @@ function toIsoDate(date: Date): string {
               }
             </z-select>
             @if (errors().patientId) {
-              <p id="payment-patient-error" class="text-sm text-red-700">{{ errors().patientId }}</p>
+              <p id="payment-patient-error" class="admin-field-error text-sm text-red-700">{{ errors().patientId }}</p>
             }
           </div>
 
@@ -112,7 +112,7 @@ function toIsoDate(date: Date): string {
               Se passar do devido do mês, o excedente abate atrasos antigos ou vira crédito automaticamente.
             </p>
             @if (errors().amount) {
-              <p id="payment-amount-error" class="text-sm text-red-700">{{ errors().amount }}</p>
+              <p id="payment-amount-error" class="admin-field-error text-sm text-red-700">{{ errors().amount }}</p>
             }
           </div>
 
@@ -129,7 +129,7 @@ function toIsoDate(date: Date): string {
               class="w-full"
             />
             @if (errors().paidAt) {
-              <p id="payment-paid-at-error" class="text-sm text-red-700">{{ errors().paidAt }}</p>
+              <p id="payment-paid-at-error" class="admin-field-error text-sm text-red-700">{{ errors().paidAt }}</p>
             }
           </div>
 
@@ -144,7 +144,7 @@ function toIsoDate(date: Date): string {
               Mês das sessões que este Pix paga — ajuste se for pagamento atrasado ou adiantado.
             </p>
             @if (errors().referenceMonth) {
-              <p id="payment-reference-month-error" class="text-sm text-red-700">{{ errors().referenceMonth }}</p>
+              <p id="payment-reference-month-error" class="admin-field-error text-sm text-red-700">{{ errors().referenceMonth }}</p>
             }
           </div>
 

@@ -1,6 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucidePlus, lucideSearch, lucideUsers } from '@ng-icons/lucide';
+import { lucidePlus, lucideSearch, lucideUsers, lucideX } from '@ng-icons/lucide';
 
 import { ZardAlertComponent } from '@/shared/components/alert';
 import { ZardBadgeComponent } from '@/shared/components/badge';
@@ -14,6 +23,7 @@ import { PatientsService } from '../data/patients.service';
 import { formatCents } from '../domain/money';
 import type { Agreement, Patient } from '../domain/models';
 import { matchesSearch } from '../domain/text';
+import { prefersReducedMotion } from '../motion/reduced-motion';
 import { PatientFormComponent } from './patient-form.component';
 
 type FormState = { mode: 'closed' } | { mode: 'create' } | { mode: 'edit'; patient: Patient };
@@ -38,7 +48,7 @@ export function agreementSummary(agreement: Agreement): string {
     PatientFormComponent,
     ...ZardCardImports,
   ],
-  viewProviders: [provideIcons({ lucidePlus, lucideSearch, lucideUsers })],
+  viewProviders: [provideIcons({ lucidePlus, lucideSearch, lucideUsers, lucideX })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="space-y-6">
@@ -47,52 +57,78 @@ export function agreementSummary(agreement: Agreement): string {
           <h1 class="font-display text-3xl text-foreground tracking-tight">Pacientes</h1>
           <p class="text-xs text-muted-foreground mt-0.5">Cadastro e acordos de atendimento.</p>
         </div>
-        <button z-button type="button" [zDisabled]="form().mode === 'create'" (click)="openCreate()" class="h-10 rounded-xl px-4">
+        <button
+          z-button
+          type="button"
+          [zDisabled]="form().mode === 'create'"
+          (click)="openCreate()"
+          class="admin-plus-hover h-10 rounded-xl px-4"
+        >
           <ng-icon name="lucidePlus" class="size-4" />
           Novo paciente
         </button>
       </header>
 
       @if (form(); as current) {
-        <div class="animate-fade-in">
-          @if (current.mode === 'create') {
-            <app-patient-form [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
-          } @else if (current.mode === 'edit') {
-            @for (p of [current.patient]; track p.id) {
-              <app-patient-form [patient]="p" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+        @if (current.mode !== 'closed') {
+          <div #formHost class="admin-form-in">
+            @if (current.mode === 'create') {
+              <app-patient-form [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+            } @else if (current.mode === 'edit') {
+              @for (p of [current.patient]; track p.id) {
+                <app-patient-form [patient]="p" [onFailed]="reportFailure" (saved)="onSaved()" (cancelled)="closeForm()" />
+              }
             }
-          }
-        </div>
+          </div>
+        }
       }
 
-      <div class="flex flex-wrap items-end gap-4">
-        <div class="space-y-1.5 grow max-w-sm">
-          <label for="patient-search" class="text-sm font-medium text-foreground">Buscar por nome</label>
-          <div class="relative">
-            <ng-icon name="lucideSearch" class="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              z-input
-              id="patient-search"
-              name="search"
-              type="search"
-              autocomplete="off"
-              placeholder="Filtrar paciente..."
-              class="h-11 rounded-xl bg-white pl-9"
-              [value]="search()"
-              (input)="search.set($any($event.target).value)"
-            />
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="flex flex-wrap items-end gap-4 grow">
+          <div class="space-y-1.5 grow max-w-sm">
+            <label for="patient-search" class="text-sm font-medium text-foreground">Buscar por nome</label>
+            <div class="relative">
+              <ng-icon name="lucideSearch" class="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                z-input
+                id="patient-search"
+                name="search"
+                type="search"
+                autocomplete="off"
+                placeholder="Filtrar paciente..."
+                class="h-11 rounded-xl bg-white pl-9 pr-9"
+                [value]="search()"
+                (input)="search.set($any($event.target).value)"
+              />
+              @if (search() !== '') {
+                <button
+                  type="button"
+                  aria-label="Limpar busca"
+                  (click)="search.set('')"
+                  class="admin-pop absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <ng-icon name="lucideX" class="size-3.5" />
+                </button>
+              }
+            </div>
+          </div>
+          <div class="flex items-center min-h-11">
+            <z-checkbox
+              zId="show-inactive"
+              [checked]="showInactive()"
+              (checkChange)="showInactive.set($event)"
+              class="text-sm text-muted-foreground"
+            >
+              Mostrar inativos
+            </z-checkbox>
           </div>
         </div>
-        <div class="flex items-center min-h-11">
-          <z-checkbox
-            zId="show-inactive"
-            [checked]="showInactive()"
-            (checkChange)="showInactive.set($event)"
-            class="text-sm text-muted-foreground"
-          >
-            Mostrar inativos
-          </z-checkbox>
-        </div>
+
+        @if (service.loaded() && !service.error()) {
+          <p class="text-xs text-muted-foreground tabular-nums min-h-11 flex items-center">
+            {{ visible().length }} {{ visible().length === 1 ? 'paciente' : 'pacientes' }}
+          </p>
+        }
       </div>
 
       @if (actionError()) {
@@ -109,12 +145,15 @@ export function agreementSummary(agreement: Agreement): string {
           }
         </div>
       } @else if (visible().length === 0) {
-        <z-empty zIcon="lucideUsers" [zDescription]="emptyMessage()" class="bg-card rounded-2xl border border-border py-10" />
+        <z-empty zIcon="lucideUsers" [zDescription]="emptyMessage()" class="admin-pane bg-card rounded-2xl border border-border py-10" />
       } @else {
         <ul class="space-y-3 stagger-list">
           @for (patient of visible(); track patient.id) {
             <li>
-              <z-card class="rounded-2xl p-4 shadow-2xs transition-[box-shadow,border-color] duration-200 hover:shadow-sm">
+              <z-card
+                class="admin-lift rounded-2xl p-4 shadow-2xs"
+                [class.admin-busy]="busyId() === patient.id"
+              >
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div class="min-w-0 space-y-0.5">
                     <div class="flex flex-wrap items-center gap-2">
@@ -132,7 +171,7 @@ export function agreementSummary(agreement: Agreement): string {
 
                   @if (confirmingId() === patient.id) {
                     <div
-                      class="flex flex-wrap items-center gap-2 animate-fade-in"
+                      class="admin-pane flex flex-wrap items-center gap-2"
                       role="group"
                       [attr.aria-label]="'Confirmar inativação de ' + patient.name"
                     >
@@ -208,6 +247,8 @@ export function agreementSummary(agreement: Agreement): string {
 })
 export class PatientsComponent {
   protected readonly service = inject(PatientsService);
+  private readonly formHost = viewChild<ElementRef<HTMLElement>>('formHost');
+  private scrollFrame = 0;
 
   readonly search = signal('');
   readonly showInactive = signal(false);
@@ -216,6 +257,10 @@ export class PatientsComponent {
   readonly busyId = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
   protected readonly reportFailure = (message: string) => this.actionError.set(message);
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.cancelScroll());
+  }
 
   readonly visible = computed(() => {
     const query = this.search();
@@ -238,11 +283,35 @@ export class PatientsComponent {
 
   openCreate(): void {
     this.form.set({ mode: 'create' });
+    this.scrollFormIntoView();
   }
 
   openEdit(patient: Patient): void {
     this.confirmingId.set(null);
     this.form.set({ mode: 'edit', patient });
+    this.scrollFormIntoView();
+  }
+
+  private scrollFormIntoView(): void {
+    this.cancelScroll();
+    if (typeof requestAnimationFrame !== 'function') return;
+    this.scrollFrame = requestAnimationFrame(() => {
+      this.scrollFrame = 0;
+      const el = this.formHost()?.nativeElement;
+      if (el && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({
+          behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+          block: 'nearest',
+        });
+      }
+    });
+  }
+
+  private cancelScroll(): void {
+    if (this.scrollFrame && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(this.scrollFrame);
+    }
+    this.scrollFrame = 0;
   }
 
   onSaved(): void {

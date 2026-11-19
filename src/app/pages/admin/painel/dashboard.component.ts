@@ -1,13 +1,14 @@
-import { DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
-import { provideIcons } from '@ng-icons/core';
-import { lucideInfo } from '@ng-icons/lucide';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideArrowRight, lucideInfo } from '@ng-icons/lucide';
 import { RouterLink } from '@angular/router';
 
 import { ZardAlertComponent } from '@/shared/components/alert';
@@ -27,15 +28,20 @@ import { formatCents } from '../domain/money';
 import { syncFreshness, syncFreshnessNote } from '../domain/sync-freshness';
 import { unlinkedNote } from '../domain/unlinked-note';
 import { MonthPickerComponent } from '../month-picker.component';
+import { CountUpDirective } from '../motion/count-up.directive';
+import { canAnimateMotion } from '../motion/reduced-motion';
+import { SpotlightDirective } from '../motion/spotlight.directive';
 import { RevenueChartComponent } from './revenue-chart.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
   imports: [
-    DecimalPipe,
+    NgIcon,
     RevenueChartComponent,
     RouterLink,
+    CountUpDirective,
+    SpotlightDirective,
     ZardAlertComponent,
     ZardBadgeComponent,
     MonthPickerComponent,
@@ -43,8 +49,21 @@ import { RevenueChartComponent } from './revenue-chart.component';
     ZardSkeletonComponent,
     ...ZardCardImports,
   ],
-  viewProviders: [provideIcons({ lucideInfo })],
+  viewProviders: [provideIcons({ lucideInfo, lucideArrowRight })],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [
+    `
+      @keyframes dash-pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.45; transform: scale(0.85); }
+      }
+      .admin-status-dot { animation: dash-pulse-dot 2s ease-in-out infinite; }
+      .admin-arrow-hover ng-icon { display: inline-flex; transition: transform 0.28s var(--admin-spring); }
+      @media (hover: hover) {
+        .admin-arrow-hover:hover ng-icon { transform: translateX(3px); }
+      }
+    `,
+  ],
   template: `
     <section class="space-y-6">
       <header class="flex flex-wrap items-end justify-between gap-3">
@@ -91,33 +110,33 @@ import { RevenueChartComponent } from './revenue-chart.component';
         }
 
         <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 stagger-list">
-          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+          <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4">
             <dt class="text-xs font-medium text-muted-foreground">Pacientes atendidos</dt>
-            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ dashboard().patientsAttended }}</dd>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="dashboard().patientsAttended" [countFormat]="formatCount"></dd>
           </div>
-          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+          <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4">
             <dt class="text-xs font-medium text-muted-foreground">Realizadas</dt>
-            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ dashboard().done }}</dd>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="dashboard().done" [countFormat]="formatCount"></dd>
           </div>
-          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+          <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4">
             <dt class="text-xs font-medium text-muted-foreground">Faltas</dt>
-            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ dashboard().noShow }}</dd>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="dashboard().noShow" [countFormat]="formatCount"></dd>
           </div>
-          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+          <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4">
             <dt class="text-xs font-medium text-muted-foreground">Cancelamentos</dt>
-            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ dashboard().cancelled }}</dd>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="dashboard().cancelled" [countFormat]="formatCount"></dd>
           </div>
-          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+          <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4">
             <dt class="text-xs font-medium text-muted-foreground">Recebido</dt>
-            <dd class="font-display text-2xl text-primary mt-1 tabular-nums">{{ formatCents(dashboard().received) }}</dd>
+            <dd class="font-display text-2xl text-primary mt-1 tabular-nums" [appCountUp]="dashboard().received" [countFormat]="formatCents"></dd>
           </div>
-          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 transition-shadow hover:shadow-sm">
+          <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4">
             <dt class="text-xs font-medium text-muted-foreground">Devido</dt>
-            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ dueOrDash() }}</dd>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="dueCents()" [countFormat]="formatCents"></dd>
           </div>
-          <div class="bg-card rounded-2xl border border-border shadow-2xs p-4 col-span-2 transition-shadow hover:shadow-sm">
+          <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4 col-span-2">
             <dt class="text-xs font-medium text-muted-foreground">Previsto (acordos atuais)</dt>
-            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums">{{ formatCents(dashboard().expected) }}</dd>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="dashboard().expected" [countFormat]="formatCents"></dd>
           </div>
         </dl>
 
@@ -127,22 +146,22 @@ import { RevenueChartComponent } from './revenue-chart.component';
               <h2 id="forecast-title" class="text-base font-medium text-foreground">Previsto × Realizado</h2>
               @if (forecastPercent() !== null) {
                 <z-badge zType="secondary" class="tabular-nums bg-[#D4E6E1]/60 text-[#1C221F]">
-                  {{ forecastPercent() | number: '1.0-0' }}%
+                  <span [appCountUp]="forecastPercent()" [countFormat]="formatPercent"></span>
                 </z-badge>
               }
             </div>
             <dl class="flex flex-wrap gap-x-8 gap-y-2">
               <div>
                 <dt class="text-xs text-muted-foreground">Realizado</dt>
-                <dd class="font-display text-xl text-foreground tabular-nums">{{ dueOrDash() }}</dd>
+                <dd class="font-display text-xl text-foreground tabular-nums" [appCountUp]="dueCents()" [countFormat]="formatCents"></dd>
               </div>
               <div>
                 <dt class="text-xs text-muted-foreground">Previsto</dt>
-                <dd class="font-display text-xl text-foreground tabular-nums">{{ formatCents(dashboard().expected) }}</dd>
+                <dd class="font-display text-xl text-foreground tabular-nums" [appCountUp]="dashboard().expected" [countFormat]="formatCents"></dd>
               </div>
             </dl>
             @if (forecastPercent() !== null) {
-              <z-progress [value]="forecastPercent()!" aria-hidden="true" class="h-2.5 bg-[#D4E6E1]/50" />
+              <z-progress [value]="forecastShown()" aria-hidden="true" class="h-2.5 bg-[#D4E6E1]/50" />
             }
           </z-card>
         </section>
@@ -178,7 +197,7 @@ import { RevenueChartComponent } from './revenue-chart.component';
             <div class="flex items-center justify-between gap-2">
               <h2 id="alerts-title" class="text-base font-medium text-foreground">Alertas de frequência</h2>
               @if (dashboard().alerts.length > 0) {
-                <z-badge zType="secondary" class="tabular-nums">{{ dashboard().alerts.length }}</z-badge>
+                <z-badge zType="secondary" class="admin-pop tabular-nums">{{ dashboard().alerts.length }}</z-badge>
               }
             </div>
             <p class="text-xs text-muted-foreground">
@@ -186,18 +205,24 @@ import { RevenueChartComponent } from './revenue-chart.component';
             </p>
             @if (syncNote(); as note) {
               @if (note.warn) {
-                <div role="status" class="text-sm rounded-xl bg-amber-50 border border-amber-300/70 text-amber-950 px-3.5 py-2.5 space-y-1">
-                  <p>{{ note.text }}</p>
-                  <a routerLink="/admin/sessoes" class="font-medium underline underline-offset-2">Ir para Sessões</a>
+                <div role="status" class="admin-pane text-sm rounded-xl bg-amber-50 border border-amber-300/70 text-amber-950 px-3.5 py-2.5 space-y-1.5">
+                  <p class="flex items-center gap-2">
+                    <span class="admin-status-dot inline-block size-2 rounded-full bg-amber-600 shrink-0" aria-hidden="true"></span>
+                    <span>{{ note.text }}</span>
+                  </p>
+                  <a routerLink="/admin/sessoes" class="admin-arrow-hover inline-flex items-center gap-1 font-medium underline underline-offset-2">
+                    Ir para Sessões
+                    <ng-icon name="lucideArrowRight" class="size-3.5" />
+                  </a>
                 </div>
               } @else {
                 <p class="text-xs text-muted-foreground">{{ note.text }}</p>
               }
             }
             @if (dashboard().alerts.length > 0) {
-              <ul class="space-y-1.5 text-sm text-foreground">
+              <ul class="space-y-1.5 text-sm text-foreground stagger-list">
                 @for (alert of dashboard().alerts; track alert.patientId) {
-                  <li class="py-1.5 px-3 rounded-lg bg-[#FDFBF7] border border-border/70 tabular-nums">
+                  <li class="py-1.5 px-3 rounded-lg bg-[#FDFBF7] border border-border/70 hover:border-[#4D6D66]/35 hover:bg-[#F5F2ED]/60 transition-colors tabular-nums">
                     {{ alertText(alert) }}
                   </li>
                 }
@@ -220,12 +245,16 @@ export class DashboardComponent {
   private readonly calendarSyncs = inject(CalendarSyncsService);
   private readonly allSessions = this.sessionsService.watchAll();
   private readonly now = new Date();
+  private progressFrame = 0;
 
   protected readonly formatCents = formatCents;
+  protected readonly formatCount = (value: number): string => String(value);
+  protected readonly formatPercent = (value: number): string => `${Math.round(value)}%`;
   protected readonly monthLabel = monthLabel;
   protected readonly unlinkedNote = unlinkedNote;
 
   readonly month = signal(currentMonth(this.now));
+  protected readonly forecastShown = signal(0);
 
   readonly ready = computed(
     () => this.allSessions.loaded() && this.patientsService.loaded() && this.paymentsService.loaded(),
@@ -251,6 +280,12 @@ export class DashboardComponent {
     }),
   );
 
+  /** Sem sessão vinculada a paciente no mês o devido é desconhecido e vira traço (spec §4). */
+  protected readonly dueCents = computed(() => {
+    const { hasLinkedSessions, due } = this.dashboard();
+    return hasLinkedSessions ? due : null;
+  });
+
   /** Aviso sobre a última sincronização: sem ela, agendadas recentes faltam na contagem e geram "falta" falsa. */
   protected readonly syncNote = computed(() =>
     syncFreshnessNote(
@@ -269,16 +304,39 @@ export class DashboardComponent {
     return Math.min(100, (due / expected) * 100);
   });
 
+  constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      if (this.progressFrame && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(this.progressFrame);
+      }
+      this.progressFrame = 0;
+    });
+
+    effect(() => {
+      const target = this.forecastPercent();
+      if (this.progressFrame && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(this.progressFrame);
+        this.progressFrame = 0;
+      }
+      if (target === null) {
+        this.forecastShown.set(0);
+        return;
+      }
+      if (!canAnimateMotion() || this.forecastShown() > 0) {
+        this.forecastShown.set(target);
+        return;
+      }
+      this.progressFrame = requestAnimationFrame(() => {
+        this.progressFrame = 0;
+        this.forecastShown.set(target);
+      });
+    });
+  }
+
   setMonth(value: string): void {
     if (!isValidMonth(value)) return;
     if (value === this.month()) return;
     this.month.set(value);
-  }
-
-  /** Sem sessão vinculada a paciente no mês o devido é desconhecido e vira traço (spec §4). */
-  protected dueOrDash(): string {
-    const { hasLinkedSessions, due } = this.dashboard();
-    return hasLinkedSessions ? formatCents(due) : '—';
   }
 
   protected alertText(alert: FrequencyAlert): string {
