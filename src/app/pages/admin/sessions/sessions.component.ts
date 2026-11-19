@@ -275,16 +275,29 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
                           >
                             Manter
                           </button>
-                          <button
-                            z-button
-                            zType="destructive"
-                            zSize="sm"
-                            type="button"
-                            [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
-                            (click)="changeStatus(session, 'cancelled')"
-                          >
-                            Cancelar sessão
-                          </button>
+                          @if (canConfirmSession(session)) {
+                            <button
+                              z-button
+                              zType="destructive"
+                              zSize="sm"
+                              type="button"
+                              [zDisabled]="busyId() === session.id"
+                              (click)="changeStatus(session, 'cancelled')"
+                            >
+                              Cancelar sessão
+                            </button>
+                          } @else {
+                            <button
+                              z-button
+                              zType="destructive"
+                              zSize="sm"
+                              type="button"
+                              [zDisabled]="busyId() === session.id"
+                              (click)="removeUnlinkedSession(session)"
+                            >
+                              Remover
+                            </button>
+                          }
                         </div>
                       </div>
                     }
@@ -458,12 +471,22 @@ export class SessionsComponent {
   }
 
   async keepSession(session: Session): Promise<void> {
-    if (this.busyId() !== null) return;
-    this.actionError.set(null);
-    this.busyId.set(session.id);
-    try {
+    await this.runSessionAction(session.id, async () => {
       await this.sessionsService.clearMissing(session.id);
       this.flashSession(session.id);
+    });
+  }
+
+  async removeUnlinkedSession(session: Session): Promise<void> {
+    await this.runSessionAction(session.id, () => this.sessionsService.removeUnlinked(session.id));
+  }
+
+  private async runSessionAction(id: string, action: () => Promise<void>): Promise<void> {
+    if (this.busyId() !== null) return;
+    this.actionError.set(null);
+    this.busyId.set(id);
+    try {
+      await action();
     } catch (err) {
       this.actionError.set(err instanceof Error ? err.message : SAVE_ERROR);
     } finally {

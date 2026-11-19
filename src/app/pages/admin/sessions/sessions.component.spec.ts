@@ -50,6 +50,7 @@ describe('SessionsComponent', () => {
   let setStatusCalls: Array<{ id: string; status: string }> = [];
   let linkPatientCalls: Array<{ id: string; patient: Patient }> = [];
   let clearMissingCalls: string[] = [];
+  let removeUnlinkedCalls: string[] = [];
   let syncImpl: (month: string) => Promise<{ created: number; updated: number; unidentified: number; missing: number }>;
 
   beforeEach(() => {
@@ -61,11 +62,12 @@ describe('SessionsComponent', () => {
     setStatusCalls = [];
     linkPatientCalls = [];
     clearMissingCalls = [];
+    removeUnlinkedCalls = [];
     syncImpl = async () => ({ created: 3, updated: 1, unidentified: 1, missing: 0 });
 
     const fakeSessionsService: Pick<
       SessionsService,
-      'watchMonth' | 'sessionsOfMonth' | 'setStatus' | 'linkPatient' | 'clearMissing'
+      'watchMonth' | 'sessionsOfMonth' | 'setStatus' | 'linkPatient' | 'clearMissing' | 'removeUnlinked'
     > = {
       watchMonth: (month: string): MonthWatch => {
         watchMonthCalls.push(month);
@@ -89,6 +91,9 @@ describe('SessionsComponent', () => {
       },
       clearMissing: async id => {
         clearMissingCalls.push(id);
+      },
+      removeUnlinked: async id => {
+        removeUnlinkedCalls.push(id);
       },
     };
 
@@ -204,5 +209,31 @@ describe('SessionsComponent', () => {
     expect((root.textContent ?? '').replace(/\s+/g, ' ')).toContain(
       'O título do evento no Agenda não casou com nenhum cadastro. Vincule para liberar a confirmação e calcular o valor.',
     );
+  });
+
+  it('sessão Removida do Agenda sem paciente permite Remover em vez de Cancelar sessão', async () => {
+    const unlinkedMissing = makeSession({
+      id: 's-unid-miss',
+      patientId: null,
+      calendarTitle: 'Brás Engenharia',
+      missingFromCalendar: true,
+    });
+    sessionsSignal.set([unlinkedMissing]);
+
+    const fixture = TestBed.createComponent(SessionsComponent);
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const buttons = Array.from(root.querySelectorAll('button'));
+    const removeButton = buttons.find(b => b.textContent?.trim() === 'Remover');
+    const cancelSessionButton = buttons.find(b => b.textContent?.trim() === 'Cancelar sessão');
+
+    expect(cancelSessionButton).toBeUndefined();
+    expect(removeButton).toBeDefined();
+    expect(removeButton?.disabled).toBe(false);
+
+    removeButton?.click();
+    await fixture.whenStable();
+    expect(removeUnlinkedCalls).toEqual(['s-unid-miss']);
   });
 });

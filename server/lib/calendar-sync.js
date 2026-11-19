@@ -1,6 +1,8 @@
 const { findPatientForEvent, amountForNewSession, packageAmountForNewSession } = require('./patient-matching');
 
 const UTC_OFFSET_HOURS = 3;
+// Compromissos com mais de 2h na agenda são bloqueios/eventos pessoais, não sessões de pacientes.
+const MAX_SESSION_DURATION_MS = 2 * 60 * 60 * 1000;
 
 function monthWindow(month) {
   const match = /^(\d{4})-(\d{2})$/.exec(String(month ?? ''));
@@ -15,11 +17,19 @@ function monthWindow(month) {
   };
 }
 
+function exceedsMaxDuration(event, startsAt) {
+  if (!event.end?.dateTime) return false;
+  const endsAt = new Date(event.end.dateTime);
+  if (Number.isNaN(endsAt.getTime())) return false;
+  return endsAt.getTime() - startsAt.getTime() > MAX_SESSION_DURATION_MS;
+}
+
 function toTimedEvent(event, window) {
   if (!event || event.status === 'cancelled' || !event.start?.dateTime) return null;
   const startsAt = new Date(event.start.dateTime);
   if (Number.isNaN(startsAt.getTime())) return null;
   if (startsAt < window.start || startsAt >= window.end) return null;
+  if (exceedsMaxDuration(event, startsAt)) return null;
   return { id: event.id, title: event.summary ?? '', startsAt };
 }
 
@@ -29,6 +39,7 @@ function planSessionSync({ events, patients, existingSessions, window }) {
   const patientsById = new Map(patients.map((p) => [p.id, p]));
   const seenEventIds = new Set();
   const upserts = [];
+  const deletes = [];
   const summary = { created: 0, updated: 0, unidentified: 0, missing: 0 };
 
   for (const event of timedEvents) {
@@ -76,13 +87,17 @@ function planSessionSync({ events, patients, existingSessions, window }) {
   }
 
   for (const session of existingSessions) {
-    if (session.status === 'scheduled' && !seenEventIds.has(session.id)) {
-      upserts.push({ id: session.id, data: { missingFromCalendar: true } });
-      summary.missing += 1;
+    if (session.status !== 'scheduled' || seenEventIds.has(session.id)) continue;
+    // Sessões ainda sem paciente não podem ser canceladas na UI nem representam paciente real; remove ao sumir/passar de 2h.
+    if (session.patientId === null) {
+      deletes.push(session.id);
+      continue;
     }
+    upserts.push({ id: session.id, data: { missingFromCalendar: true } });
+    summary.missing += 1;
   }
 
-  return { upserts, summary };
+  return { upserts, deletes, summary };
 }
 
 async function syncMonth({ month, calendar, calendarId, repo, now = new Date() }) {
@@ -100,8 +115,11 @@ async function syncMonth({ month, calendar, calendarId, repo, now = new Date() }
     repo.listPatients(),
     repo.listSessionsBetween(window.start, window.end),
   ]);
-  const { upserts, summary } = planSessionSync({ events, patients, existingSessions, window });
+  const { upserts, deletes, summary } = planSessionSync({ events, patients, existingSessions, window });
   await repo.applyUpserts(upserts);
+  if (deletes.length > 0) {
+    await repo.applyDeletes(deletes);
+  }
   // Só depois das sessões gravadas: o painel usa esta hora para saber até quando as agendadas são confiáveis.
   await repo.recordSync(month, now);
   return summary;

@@ -35,6 +35,14 @@ function chunk(items, size) {
   return chunks;
 }
 
+async function commitInBatches(db, items, apply) {
+  for (const group of chunk(items, BATCH_LIMIT)) {
+    const batch = db.batch();
+    for (const item of group) apply(batch, item);
+    await batch.commit();
+  }
+}
+
 function createFirestoreRepo(db) {
   const sessions = () => db.collection('sessions');
 
@@ -68,14 +76,16 @@ function createFirestoreRepo(db) {
         writes.push({ ref: refs.get(upsert.id), data: result.data, merge: result.merge });
       }
 
-      for (const group of chunk(writes, BATCH_LIMIT)) {
-        const batch = db.batch();
-        for (const { ref, data, merge } of group) {
-          if (merge) batch.set(ref, data, { merge: true });
-          else batch.set(ref, data);
-        }
-        await batch.commit();
-      }
+      await commitInBatches(db, writes, (batch, { ref, data, merge }) => {
+        if (merge) batch.set(ref, data, { merge: true });
+        else batch.set(ref, data);
+      });
+    },
+
+    async applyDeletes(ids) {
+      await commitInBatches(db, ids, (batch, id) => {
+        batch.delete(sessions().doc(id));
+      });
     },
 
     async recordSync(month, syncedAt) {

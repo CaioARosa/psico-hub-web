@@ -1,5 +1,5 @@
 import { DestroyRef, Injectable, Signal, inject, signal } from '@angular/core';
-import { collection, doc, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
 
 import { pricingForAgreement } from '../domain/money';
 import { monthWindow } from '../domain/month';
@@ -148,6 +148,14 @@ export class SessionsService {
 
   async clearMissing(id: string): Promise<void> {
     await runWrite(() => updateDoc(doc(this.db, 'sessions', id), { missingFromCalendar: false }));
+  }
+
+  /** Remove sessão sem paciente que não está mais no Agenda. */
+  async removeUnlinked(id: string): Promise<void> {
+    const session = this.known(id);
+    if (!session) throw new Error(NOT_FOUND_ERROR);
+    if (canConfirm(session)) throw new Error('Sessão vinculada a paciente não pode ser removida.');
+    await runWrite(() => deleteDoc(doc(this.db, 'sessions', id)));
   }
 
   private known(id: string): Session | undefined {

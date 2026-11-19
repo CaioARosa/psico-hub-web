@@ -122,6 +122,46 @@ test('ignora evento cancelado', () => {
   assert.deepEqual(result.upserts, []);
 });
 
+test('ignora compromisso com mais de 2h mesmo com nome de paciente no título', () => {
+  const result = plan({
+    events: [
+      event('e1', 'Reunião Maria Souza', '2026-11-10T13:00:00-03:00', {
+        end: { dateTime: '2026-11-10T15:01:00-03:00' },
+      }),
+    ],
+    patients: [patient('p1', 'Maria Souza')],
+  });
+  assert.deepEqual(result.upserts, []);
+  assert.deepEqual(result.summary, { created: 0, updated: 0, unidentified: 0, missing: 0 });
+});
+
+test('ignora compromisso sem paciente com mais de 2h sem contar em unidentified', () => {
+  const result = plan({
+    events: [
+      event('e1', 'Congresso de Psicologia', '2026-11-10T08:00:00-03:00', {
+        end: { dateTime: '2026-11-10T12:00:00-03:00' },
+      }),
+    ],
+    patients: [patient('p1', 'Maria Souza')],
+  });
+  assert.deepEqual(result.upserts, []);
+  assert.deepEqual(result.summary, { created: 0, updated: 0, unidentified: 0, missing: 0 });
+});
+
+test('mantém compromisso com exatamente 2h', () => {
+  const result = plan({
+    events: [
+      event('e1', 'Consulta [Casal] - Maria Souza', '2026-11-10T13:00:00-03:00', {
+        end: { dateTime: '2026-11-10T15:00:00-03:00' },
+      }),
+    ],
+    patients: [patient('p1', 'Maria Souza')],
+  });
+  assert.equal(result.upserts.length, 1);
+  assert.equal(result.upserts[0].data.patientId, 'p1');
+  assert.deepEqual(result.summary, { created: 1, updated: 0, unidentified: 0, missing: 0 });
+});
+
 test('evento em 2026-12-01T01:00:00Z entra em novembro', () => {
   const result = plan({
     events: [event('e1', 'Consulta - Maria Souza', '2026-12-01T01:00:00Z')],
@@ -250,6 +290,61 @@ test('evento cancelado no Agenda deixa a sessão scheduled como ausente', () => 
   assert.deepEqual(result.upserts, [{ id: 's1', data: { missingFromCalendar: true } }]);
 });
 
+test('compromisso scheduled que passa a ter mais de 2h no Agenda fica marcado como missingFromCalendar', () => {
+  const result = plan({
+    events: [
+      event('s1', 'Consulta - Maria Souza', '2026-11-10T10:00:00-03:00', {
+        end: { dateTime: '2026-11-10T13:00:00-03:00' },
+      }),
+    ],
+    patients: [patient('p1', 'Maria Souza')],
+    existingSessions: [session('s1')],
+  });
+  assert.deepEqual(result.upserts, [{ id: 's1', data: { missingFromCalendar: true } }]);
+  assert.deepEqual(result.summary, { created: 0, updated: 0, unidentified: 0, missing: 1 });
+});
+
+test('compromisso done com mais de 2h no Agenda não sofre alterações', () => {
+  const result = plan({
+    events: [
+      event('s1', 'Consulta - Maria Souza', '2026-11-10T10:00:00-03:00', {
+        end: { dateTime: '2026-11-10T13:00:00-03:00' },
+      }),
+    ],
+    patients: [patient('p1', 'Maria Souza')],
+    existingSessions: [session('s1', { status: 'done' })],
+  });
+  assert.deepEqual(result.upserts, []);
+  assert.deepEqual(result.deletes, []);
+  assert.deepEqual(result.summary, { created: 0, updated: 0, unidentified: 0, missing: 0 });
+});
+
+test('compromisso scheduled sem paciente que tem mais de 2h no Agenda é removido em deletes', () => {
+  const result = plan({
+    events: [
+      event('s1', 'Brás Engenharia', '2026-11-02T08:00:00-03:00', {
+        end: { dateTime: '2026-11-02T17:00:00-03:00' },
+      }),
+    ],
+    patients: [patient('p1', 'Maria Souza')],
+    existingSessions: [session('s1', { patientId: null, calendarTitle: 'Brás Engenharia' })],
+  });
+  assert.deepEqual(result.upserts, []);
+  assert.deepEqual(result.deletes, ['s1']);
+  assert.deepEqual(result.summary, { created: 0, updated: 0, unidentified: 0, missing: 0 });
+});
+
+test('compromisso scheduled sem paciente ausente do Agenda é removido em deletes', () => {
+  const result = plan({
+    events: [],
+    patients: [patient('p1', 'Maria Souza')],
+    existingSessions: [session('s1', { patientId: null, calendarTitle: 'Brás Engenharia', missingFromCalendar: true })],
+  });
+  assert.deepEqual(result.upserts, []);
+  assert.deepEqual(result.deletes, ['s1']);
+  assert.deepEqual(result.summary, { created: 0, updated: 0, unidentified: 0, missing: 0 });
+});
+
 test('rodar duas vezes seguidas com as sessões resultantes não gera novos created', () => {
   const events = [
     event('e1', 'Consulta - Maria Souza', '2026-11-10T10:00:00-03:00'),
@@ -268,7 +363,7 @@ test('rodar duas vezes seguidas com as sessões resultantes não gera novos crea
 });
 
 const makeFakes = ({ events = [], sessions = [], calendarError = null } = {}) => {
-  const calls = { list: [], applied: [], sessionsRange: [], recorded: [] };
+  const calls = { list: [], applied: [], deleted: [], sessionsRange: [], recorded: [] };
   const calendar = {
     events: {
       list: async (params) => {
@@ -286,6 +381,9 @@ const makeFakes = ({ events = [], sessions = [], calendarError = null } = {}) =>
     },
     applyUpserts: async (upserts) => {
       calls.applied.push(upserts);
+    },
+    applyDeletes: async (ids) => {
+      calls.deleted.push(ids);
     },
     recordSync: async (month, syncedAt) => {
       calls.recorded.push({ month, syncedAt, afterApply: calls.applied.length });
@@ -361,4 +459,31 @@ test('syncMonth rejeita mês inválido sem chamar o Agenda', async () => {
   const { calls, calendar, repo } = makeFakes();
   await assert.rejects(syncMonth({ month: '2026-13', calendar, calendarId: 'cal-id', repo }), /Mês inválido/);
   assert.equal(calls.list.length, 0);
+});
+
+test('syncMonth remove sessões scheduled sem paciente quando o evento passa de 2h ou some', async () => {
+  const { calls, calendar, repo } = makeFakes({
+    events: [
+      event('long1', 'Brás Engenharia', '2026-11-02T08:00:00-03:00', {
+        end: { dateTime: '2026-11-02T17:00:00-03:00' },
+      }),
+    ],
+    sessions: [session('long1', { patientId: null, calendarTitle: 'Brás Engenharia' })],
+  });
+  const summary = await syncMonth({ month: '2026-11', calendar, calendarId: 'cal-id', repo });
+  assert.deepEqual(calls.deleted, [['long1']]);
+  assert.deepEqual(summary, { created: 0, updated: 0, unidentified: 0, missing: 0 });
+});
+
+test('syncMonth não registra sincronização quando applyDeletes falha', async () => {
+  const { calls, calendar, repo } = makeFakes({
+    sessions: [session('s1', { patientId: null })],
+  });
+  repo.applyDeletes = async () => {
+    throw new Error('Falha ao remover');
+  };
+  await assert.rejects(syncMonth({ month: '2026-11', calendar, calendarId: 'cal-id', repo }), {
+    message: 'Falha ao remover',
+  });
+  assert.equal(calls.recorded.length, 0);
 });

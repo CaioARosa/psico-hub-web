@@ -81,7 +81,8 @@ function fakeDb(initialDocs = {}) {
     batch: () => {
       const ops = [];
       return {
-        set: (ref, data, options) => ops.push({ id: ref.id, data, options }),
+        set: (ref, data, options) => ops.push({ op: 'set', id: ref.id, data, options }),
+        delete: (ref) => ops.push({ op: 'delete', id: ref.id }),
         commit: async () => commits.push(ops),
       };
     },
@@ -123,4 +124,13 @@ test('applyUpserts: escreve em lotes de até 400', async () => {
   const upserts = Array.from({ length: 950 }, (_, i) => ({ id: `u${i}`, data: { missingFromCalendar: true } }));
   await repo.applyUpserts(upserts);
   assert.deepEqual(commits.map((c) => c.length), [400, 400, 150]);
+});
+
+test('applyDeletes: remove documentos em lotes de até 400', async () => {
+  const { db, commits } = fakeDb();
+  const repo = createFirestoreRepo(db);
+  const ids = Array.from({ length: 450 }, (_, i) => `d${i}`);
+  await repo.applyDeletes(ids);
+  assert.deepEqual(commits.map((c) => c.length), [400, 50]);
+  assert.deepEqual(commits[0][0], { op: 'delete', id: 'd0' });
 });
