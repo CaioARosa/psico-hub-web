@@ -24,7 +24,59 @@ describe('sessionFromDoc', () => {
       packageAmountApplied: null,
       chargeNoShowApplied: null,
       missingFromCalendar: true,
+      rescheduledToId: null,
+      rescheduledToStartsAt: null,
+      statusBeforeReschedule: null,
+      rescheduledFromId: null,
+      rescheduledFromStartsAt: null,
     });
+  });
+
+  it('lê status rescheduled e os campos de reagendamento', () => {
+    const to = new Date('2026-11-26T23:00:00Z');
+    const session = sessionFromDoc('x', {
+      status: 'rescheduled',
+      rescheduledToId: 'n1',
+      rescheduledToStartsAt: to,
+      statusBeforeReschedule: 'no_show',
+    });
+    expect(session.status).toBe('rescheduled');
+    expect(session.rescheduledToId).toBe('n1');
+    expect(session.rescheduledToStartsAt).toBe(to);
+    expect(session.statusBeforeReschedule).toBe('no_show');
+    expect(session.rescheduledFromId).toBeNull();
+    expect(session.rescheduledFromStartsAt).toBeNull();
+  });
+
+  it('lê a origem do reagendamento a partir de Timestamp', () => {
+    const session = sessionFromDoc('n1', {
+      rescheduledFromId: 'x',
+      rescheduledFromStartsAt: timestamp,
+    });
+    expect(session.rescheduledFromId).toBe('x');
+    expect(session.rescheduledFromStartsAt).toBe(date);
+  });
+
+  it('campos de reagendamento ausentes ou inválidos viram null', () => {
+    const absent = sessionFromDoc('x', {});
+    expect(absent.rescheduledToId).toBeNull();
+    expect(absent.rescheduledToStartsAt).toBeNull();
+    expect(absent.statusBeforeReschedule).toBeNull();
+    expect(absent.rescheduledFromId).toBeNull();
+    expect(absent.rescheduledFromStartsAt).toBeNull();
+
+    const invalid = sessionFromDoc('x', {
+      rescheduledToId: 42,
+      rescheduledToStartsAt: 'texto',
+      statusBeforeReschedule: 'done',
+      rescheduledFromId: '',
+      rescheduledFromStartsAt: 123,
+    });
+    expect(invalid.rescheduledToId).toBeNull();
+    expect(invalid.rescheduledToStartsAt).toBeNull();
+    expect(invalid.statusBeforeReschedule).toBeNull();
+    expect(invalid.rescheduledFromId).toBeNull();
+    expect(invalid.rescheduledFromStartsAt).toBeNull();
   });
 
   it('tolera campos ausentes', () => {

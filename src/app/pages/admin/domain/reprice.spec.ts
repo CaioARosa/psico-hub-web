@@ -12,6 +12,11 @@ function session(id: string, status: SessionStatus): Session {
     packageAmountApplied: null,
     chargeNoShowApplied: null,
     missingFromCalendar: false,
+    rescheduledToId: null,
+    rescheduledToStartsAt: null,
+    statusBeforeReschedule: null,
+    rescheduledFromId: null,
+    rescheduledFromStartsAt: null,
   };
 }
 

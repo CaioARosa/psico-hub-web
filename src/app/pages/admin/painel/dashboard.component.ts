@@ -127,6 +127,10 @@ import { RevenueChartComponent } from './revenue-chart.component';
             <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="dashboard().cancelled" [countFormat]="formatCount"></dd>
           </div>
           <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4">
+            <dt class="text-xs font-medium text-muted-foreground">Reagendadas</dt>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="dashboard().rescheduled" [countFormat]="formatCount"></dd>
+          </div>
+          <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4">
             <dt class="text-xs font-medium text-muted-foreground">Recebido</dt>
             <dd class="font-display text-2xl text-primary mt-1 tabular-nums" [appCountUp]="dashboard().received" [countFormat]="formatCents"></dd>
           </div>

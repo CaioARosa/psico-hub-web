@@ -50,6 +50,11 @@ function session(status: Session['status']): Session {
     packageAmountApplied: 0,
     chargeNoShowApplied: status === 'no_show' ? false : null,
     missingFromCalendar: false,
+    rescheduledToId: null,
+    rescheduledToStartsAt: null,
+    statusBeforeReschedule: null,
+    rescheduledFromId: null,
+    rescheduledFromStartsAt: null,
   };
 }
 

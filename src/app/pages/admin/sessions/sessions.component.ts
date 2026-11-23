@@ -465,6 +465,7 @@ export class SessionsComponent {
     if (status === 'done') return 'admin-badge-smooth bg-[#D4E6E1] text-[#1C221F]';
     if (status === 'no_show') return 'admin-badge-smooth bg-amber-100 text-amber-800';
     if (status === 'cancelled') return 'admin-badge-smooth bg-stone-100 text-stone-700';
+    if (status === 'rescheduled') return 'admin-badge-smooth bg-slate-100 text-slate-700';
     return 'admin-badge-smooth bg-[#4C645B]/10 text-[#556661]';
   }
 

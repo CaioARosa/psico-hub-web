@@ -37,6 +37,11 @@ function session(
     packageAmountApplied: null,
     chargeNoShowApplied: null,
     missingFromCalendar: false,
+    rescheduledToId: null,
+    rescheduledToStartsAt: null,
+    statusBeforeReschedule: null,
+    rescheduledFromId: null,
+    rescheduledFromStartsAt: null,
     ...fields,
   };
 }
@@ -84,6 +89,14 @@ describe('buildDashboard: contagens', () => {
     expect(dashboard.done).toBe(4);
     expect(dashboard.noShow).toBe(1);
     expect(dashboard.cancelled).toBe(1);
+  });
+
+  it('conta reagendadas separado das canceladas', () => {
+    const sessions = [...novemberSessions, session('r1', '2026-11-14T13:00:00Z', 'rescheduled')];
+    const dashboard = dashboardFor('2026-11', { sessions });
+    expect(dashboard.rescheduled).toBe(1);
+    expect(dashboard.cancelled).toBe(1);
+    expect(dashboardFor('2026-11').rescheduled).toBe(0);
   });
 
   it('sessão às 23:30 do último dia (UTC-3) conta no mês anterior', () => {

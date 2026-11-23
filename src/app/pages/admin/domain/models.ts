@@ -15,7 +15,9 @@ export interface Patient {
   agreement: Agreement;
 }
 
-export type SessionStatus = 'scheduled' | 'done' | 'no_show' | 'cancelled';
+export type SessionStatus = 'scheduled' | 'done' | 'no_show' | 'cancelled' | 'rescheduled';
+
+export type ReschedulableStatus = 'scheduled' | 'no_show' | 'cancelled';
 
 export interface Session {
   id: string;
@@ -29,6 +31,11 @@ export interface Session {
   /** `null` em sessões anteriores à Fase 2 (ou ainda não marcadas como falta). */
   chargeNoShowApplied: boolean | null;
   missingFromCalendar: boolean;
+  rescheduledToId: string | null;
+  rescheduledToStartsAt: Date | null;
+  statusBeforeReschedule: ReschedulableStatus | null;
+  rescheduledFromId: string | null;
+  rescheduledFromStartsAt: Date | null;
 }
 
 export interface Payment {

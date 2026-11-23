@@ -6,7 +6,7 @@ export function isValidMonth(month: string): boolean {
   return MONTH.test(month);
 }
 
-const MONTH_ABBREVIATIONS = [
+export const MONTH_ABBREVIATIONS = [
   'jan',
   'fev',
   'mar',

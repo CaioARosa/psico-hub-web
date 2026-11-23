@@ -46,6 +46,11 @@ function makeSession(overrides: Partial<Session> & { id: string }): Session {
     packageAmountApplied: null,
     chargeNoShowApplied: null,
     missingFromCalendar: false,
+    rescheduledToId: null,
+    rescheduledToStartsAt: null,
+    statusBeforeReschedule: null,
+    rescheduledFromId: null,
+    rescheduledFromStartsAt: null,
     ...overrides,
   };
 }

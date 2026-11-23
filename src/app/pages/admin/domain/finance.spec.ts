@@ -36,6 +36,11 @@ function session(
     packageAmountApplied: null,
     chargeNoShowApplied: null,
     missingFromCalendar: false,
+    rescheduledToId: null,
+    rescheduledToStartsAt: null,
+    statusBeforeReschedule: null,
+    rescheduledFromId: null,
+    rescheduledFromStartsAt: null,
     ...fields,
   };
 }
@@ -97,6 +102,17 @@ describe('dueByMonth: devido por sessão', () => {
     expect(dueByMonth(ana, [{ ...marked, chargeNoShowApplied: false }]).size).toBe(0);
   });
 
+  it('reagendada nunca cobra, mesmo vinda de falta cobrada', () => {
+    const sessions = [
+      session('a', '2026-11-03T13:00:00.000Z', 'rescheduled', {
+        amountApplied: 15000,
+        chargeNoShowApplied: true,
+        statusBeforeReschedule: 'no_show',
+      }),
+    ];
+    expect(dueByMonth(ana, sessions).size).toBe(0);
+  });
+
   it('cancelled e scheduled nunca contam', () => {
     const sessions = [
       session('a', '2026-11-03T13:00:00.000Z', 'cancelled', { amountApplied: 15000 }),
@@ -137,6 +153,14 @@ describe('dueByMonth: devido de pacote', () => {
       }),
     ];
     expect(dueByMonth(anaMonthly, sessions).size).toBe(0);
+  });
+
+  it('sessão reagendada não é a primeira do pacote', () => {
+    const sessions = [
+      session('a', '2026-11-03T13:00:00.000Z', 'rescheduled', { packageAmountApplied: 70000 }),
+      session('b', '2026-11-10T13:00:00.000Z', 'scheduled', { packageAmountApplied: 60000 }),
+    ];
+    expect(dueByMonth(anaMonthly, sessions)).toEqual(new Map([['2026-11', 60000]]));
   });
 
   it('no_show conta como primeira sessão do pacote', () => {

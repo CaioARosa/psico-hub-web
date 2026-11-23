@@ -212,9 +212,11 @@ function sessionCharge(session: Session, agreement: Agreement | null): number {
   return chargesNoShow ? session.amountApplied : 0;
 }
 
-/** Pacote do mês: valor da primeira sessão não cancelada (sessões já ordenadas por data). */
+/** Pacote do mês: valor da primeira sessão não cancelada nem reagendada (sessões já ordenadas por data). */
 function packageCharge(monthSessions: Session[], agreement: Agreement | null): number {
-  const first = monthSessions.find(session => session.status !== 'cancelled');
+  const first = monthSessions.find(
+    session => session.status !== 'cancelled' && session.status !== 'rescheduled',
+  );
   if (!first) return 0;
   // Sessão sem valor congelado (anterior à Fase 2): regra de sessão nova sobre o acordo atual.
   return first.packageAmountApplied ?? packageAmountForNewSession(agreement);

@@ -24,6 +24,7 @@ export interface Dashboard {
   done: number;
   noShow: number;
   cancelled: number;
+  rescheduled: number;
   received: number;
   due: number;
   expected: number;
@@ -66,6 +67,7 @@ export function buildDashboard(input: {
     done: done.length,
     noShow: monthSessions.filter(session => session.status === 'no_show').length,
     cancelled: monthSessions.filter(session => session.status === 'cancelled').length,
+    rescheduled: monthSessions.filter(session => session.status === 'rescheduled').length,
     received: summary.totals.received,
     due: summary.totals.due,
     expected: expectedFor(patients),
