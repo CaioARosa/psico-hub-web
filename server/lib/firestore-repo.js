@@ -39,7 +39,7 @@ function planRescheduleCommit(existingData, { originalId, newId, newData, origin
   return {
     writes: [
       { action: 'set', id: newId, data: newData },
-      { action: 'update', id: originalId, data: originalUpdate },
+      { action: 'update', id: originalId, data: { ...originalUpdate, statusBeforeReschedule: existingData.status } },
     ],
   };
 }

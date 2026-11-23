@@ -138,11 +138,20 @@ for (const status of ['scheduled', 'no_show', 'cancelled']) {
     assert.deepEqual(planRescheduleCommit({ status }, rescheduleArgs), {
       writes: [
         { action: 'set', id: 'new1', data: rescheduleArgs.newData },
-        { action: 'update', id: 'old1', data: rescheduleArgs.originalUpdate },
+        { action: 'update', id: 'old1', data: { ...rescheduleArgs.originalUpdate, statusBeforeReschedule: status } },
       ],
     });
   });
 }
+
+test('planRescheduleCommit: statusBeforeReschedule vem do status lido na transação', () => {
+  const args = {
+    ...rescheduleArgs,
+    originalUpdate: { ...rescheduleArgs.originalUpdate, statusBeforeReschedule: 'scheduled' },
+  };
+  const { writes } = planRescheduleCommit({ status: 'no_show' }, args);
+  assert.equal(writes[1].data.statusBeforeReschedule, 'no_show');
+});
 
 for (const existing of [null, { status: 'done' }, { status: 'rescheduled' }]) {
   test(`planRescheduleCommit: lança NOT_RESCHEDULABLE para ${JSON.stringify(existing)}`, () => {
@@ -175,7 +184,11 @@ test('commitReschedule: grava a nova sessão e atualiza a original na transaçã
   await createFirestoreRepo(db).commitReschedule(rescheduleArgs);
   assert.deepEqual(writes, [
     { op: 'set', path: 'sessions/new1', data: rescheduleArgs.newData },
-    { op: 'update', path: 'sessions/old1', data: rescheduleArgs.originalUpdate },
+    {
+      op: 'update',
+      path: 'sessions/old1',
+      data: { ...rescheduleArgs.originalUpdate, statusBeforeReschedule: 'scheduled' },
+    },
   ]);
 });
 
