@@ -7,6 +7,7 @@ const { getAuth, getDb } = require('./lib/firebase');
 const { createFirestoreRepo } = require('./lib/firestore-repo');
 const { monthWindow, syncMonth } = require('./lib/calendar-sync');
 const { buildBookingEvent } = require('./lib/booking-event');
+const { rescheduleSession } = require('./lib/reschedule');
 
 // Load environment variables
 dotenv.config();
@@ -210,6 +211,31 @@ app.post(
     } catch (error) {
       console.error('Error syncing calendar:', error);
       return res.status(500).json({ error: 'Falha ao sincronizar a agenda.' });
+    }
+  }
+);
+
+/**
+ * Route: POST /api/admin/sessions/:id/reschedule
+ * Moves a session to a new date/time, creating a new Calendar event and session (admin only)
+ */
+app.post(
+  ['/api/admin/sessions/:id/reschedule', '/admin/sessions/:id/reschedule'],
+  requireAdmin({ verifyIdToken: (token) => getAuth().verifyIdToken(token) }),
+  async (req, res) => {
+    try {
+      const { status, body } = await rescheduleSession({
+        sessionId: req.params.id,
+        startsAt: req.body?.startsAt,
+        force: req.body?.force === true,
+        calendar,
+        calendarId,
+        repo: createFirestoreRepo(getDb()),
+      });
+      return res.status(status).json(body);
+    } catch (error) {
+      console.error('Error rescheduling session:', error);
+      return res.status(500).json({ error: 'Falha ao reagendar. Tente novamente.' });
     }
   }
 );

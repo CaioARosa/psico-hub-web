@@ -1,4 +1,11 @@
 const SESSION_MINUTES = 50;
+const SESSION_REMINDERS = {
+  useDefault: false,
+  overrides: [
+    { method: 'email', minutes: 24 * 60 },
+    { method: 'popup', minutes: 60 },
+  ],
+};
 
 // A descrição do evento não inclui e-mail nem texto livre do paciente (queixas):
 // a agenda é lida por mais pessoas/serviços do que o necessário e a observação
@@ -16,14 +23,8 @@ function buildBookingEvent({ service, date, time, name, phone }) {
       `🧩 Tipo de Sessão: ${service}`,
     start: { dateTime: slotStart.toISOString(), timeZone: 'America/Sao_Paulo' },
     end: { dateTime: slotEnd.toISOString(), timeZone: 'America/Sao_Paulo' },
-    reminders: {
-      useDefault: false,
-      overrides: [
-        { method: 'email', minutes: 24 * 60 },
-        { method: 'popup', minutes: 60 },
-      ],
-    },
+    reminders: SESSION_REMINDERS,
   };
 }
 
-module.exports = { buildBookingEvent };
+module.exports = { buildBookingEvent, SESSION_MINUTES, SESSION_REMINDERS };

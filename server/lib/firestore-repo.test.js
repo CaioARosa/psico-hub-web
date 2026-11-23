@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { resolveUpsertWrite, toDate, createFirestoreRepo } = require('./firestore-repo');
+const { resolveUpsertWrite, planRescheduleCommit, toDate, createFirestoreRepo } = require('./firestore-repo');
 
 const startsAt = new Date('2026-11-10T13:00:00Z');
 const createUpsert = {
@@ -124,6 +124,76 @@ test('applyUpserts: escreve em lotes de até 400', async () => {
   const upserts = Array.from({ length: 950 }, (_, i) => ({ id: `u${i}`, data: { missingFromCalendar: true } }));
   await repo.applyUpserts(upserts);
   assert.deepEqual(commits.map((c) => c.length), [400, 400, 150]);
+});
+
+const rescheduleArgs = {
+  originalId: 'old1',
+  newId: 'new1',
+  newData: { status: 'scheduled', startsAt },
+  originalUpdate: { status: 'rescheduled', rescheduledToId: 'new1' },
+};
+
+for (const status of ['scheduled', 'no_show', 'cancelled']) {
+  test(`planRescheduleCommit: original ${status} cria a nova e atualiza a original`, () => {
+    assert.deepEqual(planRescheduleCommit({ status }, rescheduleArgs), {
+      writes: [
+        { action: 'set', id: 'new1', data: rescheduleArgs.newData },
+        { action: 'update', id: 'old1', data: rescheduleArgs.originalUpdate },
+      ],
+    });
+  });
+}
+
+for (const existing of [null, { status: 'done' }, { status: 'rescheduled' }]) {
+  test(`planRescheduleCommit: lança NOT_RESCHEDULABLE para ${JSON.stringify(existing)}`, () => {
+    assert.throws(() => planRescheduleCommit(existing, rescheduleArgs), { code: 'NOT_RESCHEDULABLE' });
+  });
+}
+
+function fakeTransactionDb(docs) {
+  const writes = [];
+  const db = {
+    collection: (name) => ({ doc: (id) => ({ path: `${name}/${id}`, id }) }),
+    runTransaction: async (fn) =>
+      fn({
+        get: async (ref) => ({ exists: ref.id in docs, data: () => docs[ref.id] }),
+        set: (ref, data) => writes.push({ op: 'set', path: ref.path, data }),
+        update: (ref, data) => writes.push({ op: 'update', path: ref.path, data }),
+      }),
+  };
+  return { db, writes };
+}
+
+test('commitReschedule: original done lança NOT_RESCHEDULABLE e não grava nada', async () => {
+  const { db, writes } = fakeTransactionDb({ old1: { status: 'done' } });
+  await assert.rejects(createFirestoreRepo(db).commitReschedule(rescheduleArgs), { code: 'NOT_RESCHEDULABLE' });
+  assert.deepEqual(writes, []);
+});
+
+test('commitReschedule: grava a nova sessão e atualiza a original na transação', async () => {
+  const { db, writes } = fakeTransactionDb({ old1: { status: 'scheduled' } });
+  await createFirestoreRepo(db).commitReschedule(rescheduleArgs);
+  assert.deepEqual(writes, [
+    { op: 'set', path: 'sessions/new1', data: rescheduleArgs.newData },
+    { op: 'update', path: 'sessions/old1', data: rescheduleArgs.originalUpdate },
+  ]);
+});
+
+test('getSession converte startsAt e devolve null quando não existe', async () => {
+  const date = new Date('2026-11-10T13:00:00Z');
+  const db = {
+    collection: () => ({
+      doc: (id) => ({
+        get: async () =>
+          id === 's1'
+            ? { exists: true, id, data: () => ({ status: 'scheduled', startsAt: { toDate: () => date } }) }
+            : { exists: false, id },
+      }),
+    }),
+  };
+  const repo = createFirestoreRepo(db);
+  assert.deepEqual(await repo.getSession('s1'), { id: 's1', status: 'scheduled', startsAt: date });
+  assert.equal(await repo.getSession('nope'), null);
 });
 
 test('applyDeletes: remove documentos em lotes de até 400', async () => {

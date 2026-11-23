@@ -29,6 +29,21 @@ function resolveUpsertWrite(upsert, existingData) {
   };
 }
 
+const RESCHEDULABLE_STATUSES = new Set(['scheduled', 'no_show', 'cancelled']);
+
+// Revalida a original dentro da transação: outra aba pode tê-la concluído/reagendado no meio.
+function planRescheduleCommit(existingData, { originalId, newId, newData, originalUpdate }) {
+  if (!existingData || !RESCHEDULABLE_STATUSES.has(existingData.status)) {
+    throw Object.assign(new Error('Sessão não pode mais ser reagendada.'), { code: 'NOT_RESCHEDULABLE' });
+  }
+  return {
+    writes: [
+      { action: 'set', id: newId, data: newData },
+      { action: 'update', id: originalId, data: originalUpdate },
+    ],
+  };
+}
+
 function chunk(items, size) {
   const chunks = [];
   for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
@@ -57,6 +72,24 @@ function createFirestoreRepo(db) {
       return snapshot.docs.map((doc) => {
         const data = doc.data();
         return { id: doc.id, ...data, startsAt: toDate(data.startsAt) };
+      });
+    },
+
+    async getSession(id) {
+      const snap = await sessions().doc(id).get();
+      if (!snap.exists) return null;
+      const data = snap.data();
+      return { id: snap.id, ...data, startsAt: toDate(data.startsAt) };
+    },
+
+    async commitReschedule(args) {
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(sessions().doc(args.originalId));
+        const { writes } = planRescheduleCommit(snap.exists ? snap.data() : null, args);
+        for (const { action, id, data } of writes) {
+          if (action === 'set') tx.set(sessions().doc(id), data);
+          else tx.update(sessions().doc(id), data);
+        }
       });
     },
 
@@ -94,4 +127,4 @@ function createFirestoreRepo(db) {
   };
 }
 
-module.exports = { createFirestoreRepo, resolveUpsertWrite, toDate };
+module.exports = { createFirestoreRepo, resolveUpsertWrite, planRescheduleCommit, toDate };
