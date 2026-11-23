@@ -9,12 +9,12 @@ Complementa `2026-11-12-gestao-consultorio-design.md` e `2026-11-23-vinculo-paci
 | Item | Estado |
 | :-- | :-- |
 | "Trocar paciente" (qualquer status) | **Feito** — commit `b19a659`. `patientChangeUpdate` em `domain/session-update.ts`, `SessionsService.changePatient`, UI inline em `sessions.component.ts` |
-| Esta spec | Escrita; aguardando revisão da usuária |
-| Plano de implementação | **A fazer**: `docs/superpowers/plans/2026-11-23-reagendar-e-agenda.md` (skill `writing-plans`) |
+| Esta spec | **Aprovada** |
+| Plano de implementação | **Escrito**: `docs/superpowers/plans/2026-11-23-reagendar-e-agenda.md` (6 tarefas; marcar `- [x]` ao concluir) |
 | Execução | Escolhida: **subagent-driven-development** (ledger em `.superpowers/sdd/<plano>/progress.md`) |
 | Mockups | `.superpowers/brainstorm/505-1795466315/content/agenda-layout.html` (escolhida opção C) |
 
-Próximo passo ao retomar: ler esta spec → rodar `writing-plans` sobre ela → executar com `subagent-driven-development`.
+Próximo passo ao retomar: abrir o plano → ver no ledger `.superpowers/sdd/<plano>/progress.md` (ou `git log`) qual tarefa terminou → executar a próxima com `subagent-driven-development`.
 
 ## 1. Objetivo
 
