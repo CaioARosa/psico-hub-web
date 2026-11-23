@@ -30,11 +30,8 @@ describe('RescheduleService', () => {
 
   afterEach(() => http.verify());
 
-  /** O token é obtido de forma assíncrona antes do POST; espera a requisição aparecer. */
-  async function expectPost() {
-    await Promise.resolve();
-    await Promise.resolve();
-    return http.expectOne(URL);
+  function expectPost() {
+    return vi.waitFor(() => http.expectOne(URL));
   }
 
   it('envia POST com id codificado, corpo e Bearer token', async () => {
@@ -67,7 +64,11 @@ describe('RescheduleService', () => {
   });
 
   it('200 com startsAt inválido ou ausente -> falha genérica', async () => {
-    for (const body of [{ newSessionId: 'new-1', startsAt: 'xyz' }, { newSessionId: 'new-1' }, null]) {
+    for (const body of [
+      { newSessionId: 'new-1', startsAt: 'xyz' },
+      { newSessionId: 'new-1' },
+      null,
+    ]) {
       const promise = service.reschedule('a/b c', startsAt);
       (await expectPost()).flush(body);
       await expect(promise).rejects.toThrow(GENERIC);
@@ -80,7 +81,11 @@ describe('RescheduleService', () => {
       {
         error: 'Já existe compromisso nesse horário.',
         conflicts: [
-          { title: 'Consulta', startsAt: '2026-11-26T23:00:00.000Z', endsAt: '2026-11-27T00:00:00.000Z' },
+          {
+            title: 'Consulta',
+            startsAt: '2026-11-26T23:00:00.000Z',
+            endsAt: '2026-11-27T00:00:00.000Z',
+          },
           { startsAt: '2026-11-27T00:00:00.000Z', endsAt: '2026-11-27T01:00:00.000Z' },
           { title: 'Quebrado', startsAt: 'nope', endsAt: '2026-11-27T01:00:00.000Z' },
         ],
@@ -109,7 +114,10 @@ describe('RescheduleService', () => {
   it('409 com conflitos todos inválidos -> caminho de erro', async () => {
     const promise = service.reschedule('a/b c', startsAt);
     (await expectPost()).flush(
-      { error: 'Já existe compromisso nesse horário.', conflicts: [{ title: 'x', startsAt: 'nope' }] },
+      {
+        error: 'Já existe compromisso nesse horário.',
+        conflicts: [{ title: 'x', startsAt: 'nope' }],
+      },
       { status: 409, statusText: 'Conflict' },
     );
     await expect(promise).rejects.toThrow('Já existe compromisso nesse horário.');
@@ -123,7 +131,10 @@ describe('RescheduleService', () => {
 
   it('erro de rede (status 0) -> falha genérica', async () => {
     const promise = service.reschedule('a/b c', startsAt);
-    (await expectPost()).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+    (await expectPost()).error(new ProgressEvent('error'), {
+      status: 0,
+      statusText: 'Unknown Error',
+    });
     await expect(promise).rejects.toThrow(GENERIC);
   });
 });

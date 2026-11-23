@@ -22,7 +22,10 @@ function toDate(value: unknown): Date | null {
 }
 
 function parseConflicts(body: unknown): RescheduleConflict[] {
-  const raw = typeof body === 'object' && body !== null ? (body as { conflicts?: unknown }).conflicts : undefined;
+  const raw =
+    typeof body === 'object' && body !== null
+      ? (body as { conflicts?: unknown }).conflicts
+      : undefined;
   if (!Array.isArray(raw)) return [];
   const conflicts: RescheduleConflict[] = [];
   for (const item of raw as { title?: unknown; startsAt?: unknown; endsAt?: unknown }[]) {
