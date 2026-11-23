@@ -103,7 +103,7 @@ describe('canReschedule', () => {
   it('é false para realizada, já reagendada e sem paciente', () => {
     expect(canReschedule(session({ id: 'a', status: 'done' }))).toBe(false);
     expect(canReschedule(session({ id: 'b', status: 'rescheduled' }))).toBe(false);
-    expect(canReschedule(session({ id: 'c', patientId: null }))).toBe(false);
+    expect(canReschedule(session({ id: 'c', status: 'scheduled', patientId: null }))).toBe(false);
   });
 });
 
@@ -156,6 +156,22 @@ describe('rescheduleNote', () => {
       rescheduledFromStartsAt: new Date('2026-11-23T22:00:00.000Z'),
     });
     expect(rescheduleNote(created)).toBe('Reagendada de seg, 23/nov, 19:00');
+  });
+
+  it('reagendada sem rescheduledToStartsAt e sem origem é null', () => {
+    const original = session({ id: 'a', status: 'rescheduled', rescheduledToStartsAt: null });
+    expect(rescheduleNote(original)).toBeNull();
+  });
+
+  it('com destino e origem, mostra só o destino', () => {
+    const both = session({
+      id: 'a',
+      status: 'rescheduled',
+      rescheduledToStartsAt: to,
+      statusBeforeReschedule: 'scheduled',
+      rescheduledFromStartsAt: new Date('2026-11-23T22:00:00.000Z'),
+    });
+    expect(rescheduleNote(both)).toBe('Reagendada para qui, 26/nov, 20:00');
   });
 
   it('sem campos de reagendamento é null', () => {

@@ -1,4 +1,5 @@
-import type { ReschedulableStatus, Session, SessionStatus } from './models';
+import { RESCHEDULABLE_STATUSES } from './models';
+import type { Session, SessionStatus } from './models';
 
 const STATUSES: readonly SessionStatus[] = [
   'scheduled',
@@ -7,7 +8,6 @@ const STATUSES: readonly SessionStatus[] = [
   'cancelled',
   'rescheduled',
 ];
-const RESCHEDULABLE: readonly ReschedulableStatus[] = ['scheduled', 'no_show', 'cancelled'];
 
 function toDateOrNull(value: unknown): Date | null {
   if (value instanceof Date) return value;
@@ -39,7 +39,8 @@ export function sessionFromDoc(id: string, data: Record<string, any>): Session {
     missingFromCalendar: data['missingFromCalendar'] === true,
     rescheduledToId: idOrNull(data['rescheduledToId']),
     rescheduledToStartsAt: toDateOrNull(data['rescheduledToStartsAt']),
-    statusBeforeReschedule: RESCHEDULABLE.find(s => s === data['statusBeforeReschedule']) ?? null,
+    statusBeforeReschedule:
+      RESCHEDULABLE_STATUSES.find(s => s === data['statusBeforeReschedule']) ?? null,
     rescheduledFromId: idOrNull(data['rescheduledFromId']),
     rescheduledFromStartsAt: toDateOrNull(data['rescheduledFromStartsAt']),
   };

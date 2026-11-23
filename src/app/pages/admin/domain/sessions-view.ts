@@ -1,4 +1,5 @@
-import { MONTH_ABBREVIATIONS } from './month';
+import { BRT_OFFSET_MS, MONTH_ABBREVIATIONS } from './month';
+import { RESCHEDULABLE_STATUSES } from './models';
 import type { Session, SessionStatus } from './models';
 
 export interface SessionGroups {
@@ -15,8 +16,7 @@ const STATUS_LABELS: Record<SessionStatus, string> = {
   rescheduled: 'Reagendada',
 };
 
-const WEEKDAY_ABBREVIATIONS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
-const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
+const WEEKDAY_ABBREVIATIONS: readonly string[] = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
 const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
   timeZone: 'America/Sao_Paulo',
@@ -42,9 +42,8 @@ export function canConfirm(session: Session): boolean {
 }
 
 export function canReschedule(session: Session): boolean {
-  const { patientId, status } = session;
   return (
-    patientId !== null && (status === 'scheduled' || status === 'no_show' || status === 'cancelled')
+    session.patientId !== null && RESCHEDULABLE_STATUSES.some(status => status === session.status)
   );
 }
 
@@ -69,7 +68,10 @@ export function formatSessionDateTime(date: Date): string {
   return dateTimeFormatter.format(date);
 }
 
-/** `qui, 26/nov, 20:00` em UTC-3 fixo; abreviações fixas porque `Intl` varia com o ICU. */
+/**
+ * `qui, 26/nov, 20:00` em UTC−3 fixo (Brasil sem horário de verão desde 2019);
+ * abreviações fixas porque `Intl` varia com o ICU.
+ */
 export function formatShortDateTime(date: Date): string {
   const local = new Date(date.getTime() - BRT_OFFSET_MS);
   const pad = (value: number) => String(value).padStart(2, '0');

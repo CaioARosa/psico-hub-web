@@ -1,12 +1,13 @@
 const MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
 const UTC_OFFSET_HOURS = 3;
-const BRT_OFFSET_MS = UTC_OFFSET_HOURS * 60 * 60 * 1000;
+/** UTC−3 fixo (Brasil sem horário de verão desde 2019). */
+export const BRT_OFFSET_MS = UTC_OFFSET_HOURS * 60 * 60 * 1000;
 
 export function isValidMonth(month: string): boolean {
   return MONTH.test(month);
 }
 
-export const MONTH_ABBREVIATIONS = [
+export const MONTH_ABBREVIATIONS: readonly string[] = [
   'jan',
   'fev',
   'mar',

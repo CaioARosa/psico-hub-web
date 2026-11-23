@@ -19,6 +19,12 @@ export type SessionStatus = 'scheduled' | 'done' | 'no_show' | 'cancelled' | 're
 
 export type ReschedulableStatus = 'scheduled' | 'no_show' | 'cancelled';
 
+export const RESCHEDULABLE_STATUSES: readonly ReschedulableStatus[] = [
+  'scheduled',
+  'no_show',
+  'cancelled',
+];
+
 export interface Session {
   id: string;
   patientId: string | null;
