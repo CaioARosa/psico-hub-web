@@ -15,15 +15,23 @@ export type RescheduleResult =
   | { kind: 'ok'; newSessionId: string; startsAt: Date }
   | { kind: 'conflict'; conflicts: RescheduleConflict[] };
 
-interface RescheduleResponse {
-  newSessionId: string;
-  startsAt: string;
+function toDate(value: unknown): Date | null {
+  if (typeof value !== 'string') return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
-interface ConflictBody {
-  title?: string;
-  startsAt: string;
-  endsAt: string;
+function parseConflicts(body: unknown): RescheduleConflict[] {
+  const raw = typeof body === 'object' && body !== null ? (body as { conflicts?: unknown }).conflicts : undefined;
+  if (!Array.isArray(raw)) return [];
+  const conflicts: RescheduleConflict[] = [];
+  for (const item of raw as { title?: unknown; startsAt?: unknown; endsAt?: unknown }[]) {
+    const startsAt = toDate(item?.startsAt);
+    const endsAt = toDate(item?.endsAt);
+    if (!startsAt || !endsAt) continue;
+    conflicts.push({ title: typeof item.title === 'string' ? item.title : '', startsAt, endsAt });
+  }
+  return conflicts;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -40,29 +48,29 @@ export class RescheduleService {
       throw new Error(rescheduleErrorMessage(401));
     }
 
+    let result: { newSessionId?: unknown; startsAt?: unknown } | null;
     try {
-      const result = await firstValueFrom(
-        this.http.post<RescheduleResponse>(
+      result = await firstValueFrom(
+        this.http.post<{ newSessionId?: unknown; startsAt?: unknown } | null>(
           `${this.apiUrl}/admin/sessions/${encodeURIComponent(sessionId)}/reschedule`,
           { startsAt: startsAt.toISOString(), force },
           { headers: { Authorization: `Bearer ${token}` } },
         ),
       );
-      return { kind: 'ok', newSessionId: result.newSessionId, startsAt: new Date(result.startsAt) };
     } catch (err) {
       if (!(err instanceof HttpErrorResponse)) throw new Error(rescheduleErrorMessage(0));
-      const conflicts: unknown = err.error?.conflicts;
-      if (err.status === 409 && Array.isArray(conflicts)) {
-        return {
-          kind: 'conflict',
-          conflicts: (conflicts as ConflictBody[]).map((c) => ({
-            title: c.title ?? '',
-            startsAt: new Date(c.startsAt),
-            endsAt: new Date(c.endsAt),
-          })),
-        };
+      if (err.status === 409) {
+        const conflicts = parseConflicts(err.error);
+        if (conflicts.length > 0) return { kind: 'conflict', conflicts };
       }
       throw new Error(rescheduleErrorMessage(err.status, err.error));
     }
+
+    const newStartsAt = toDate(result?.startsAt);
+    const newSessionId = result?.newSessionId;
+    if (!newStartsAt || typeof newSessionId !== 'string' || !newSessionId) {
+      throw new Error(rescheduleErrorMessage(0));
+    }
+    return { kind: 'ok', newSessionId, startsAt: newStartsAt };
   }
 }

@@ -15,7 +15,14 @@ describe('zonedDateTime', () => {
     expect(() => zonedDateTime('', '')).toThrow();
   });
 
+  it('aceita 29/02 em ano bissexto e os limites do dia', () => {
+    expect(zonedDateTime('2028-02-29', '10:00').toISOString()).toBe('2028-02-29T13:00:00.000Z');
+    expect(zonedDateTime('2026-11-26', '00:00').toISOString()).toBe('2026-11-26T03:00:00.000Z');
+    expect(zonedDateTime('2026-11-26', '23:59').toISOString()).toBe('2026-11-27T02:59:00.000Z');
+  });
+
   it('rejeita datas e horas impossíveis', () => {
+    expect(() => zonedDateTime('2027-02-29', '10:00')).toThrow();
     expect(() => zonedDateTime('2026-02-30', '10:00')).toThrow();
     expect(() => zonedDateTime('2026-13-01', '10:00')).toThrow();
     expect(() => zonedDateTime('2026-11-26', '25:00')).toThrow();

@@ -20,7 +20,7 @@ describe('rescheduleErrorMessage', () => {
   it('sem corpo ou corpo inválido -> falha genérica', () => {
     expect(rescheduleErrorMessage(500)).toBe('Falha ao reagendar. Tente novamente.');
     expect(rescheduleErrorMessage(500, { error: '  ' })).toBe('Falha ao reagendar. Tente novamente.');
-    expect(rescheduleErrorMessage(502, 'Bad Gateway' as never)).toBe(
+    expect(rescheduleErrorMessage(502, 'Bad Gateway')).toBe(
       'Falha ao reagendar. Tente novamente.',
     );
   });
