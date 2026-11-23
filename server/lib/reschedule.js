@@ -1,7 +1,8 @@
 const { SESSION_MINUTES, SESSION_REMINDERS } = require('./booking-event');
+const { RESCHEDULABLE_STATUSES } = require('./firestore-repo');
 
 const TIME_ZONE = 'America/Sao_Paulo';
-const NON_RESCHEDULABLE_STATUSES = new Set(['done', 'rescheduled']);
+const SESSION_ID = /^[A-Za-z0-9_-]+$/;
 // Sem offset explícito, o horário seria interpretado no fuso do servidor.
 const ISO_WITH_OFFSET = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 
@@ -14,7 +15,7 @@ function parseStartsAt(value) {
 }
 
 function isGone(error) {
-  const status = error?.code ?? error?.response?.status;
+  const status = error?.code ?? error?.status ?? error?.response?.status;
   return status === 404 || status === 410;
 }
 
@@ -66,14 +67,16 @@ async function deleteEventQuietly({ calendar, calendarId, eventId }) {
 
 async function rescheduleSession({ sessionId, startsAt, force, calendar, calendarId, repo }) {
   if (!calendar) return fail(503, 'Google Agenda não configurado.');
+  // Datas passadas são aceitas de propósito: permite registrar uma remarcação esquecida.
   const newStart = parseStartsAt(startsAt);
   if (!newStart) return fail(400, 'Data/hora inválida.');
+  if (typeof sessionId !== 'string' || !SESSION_ID.test(sessionId)) return fail(404, 'Sessão não encontrada.');
 
   try {
     const session = await repo.getSession(sessionId);
     if (!session) return fail(404, 'Sessão não encontrada.');
     if (!session.patientId) return fail(422, 'Vincule um paciente antes de reagendar.');
-    if (NON_RESCHEDULABLE_STATUSES.has(session.status)) return fail(409, 'Esta sessão não pode ser reagendada.');
+    if (!RESCHEDULABLE_STATUSES.has(session.status)) return fail(409, 'Esta sessão não pode ser reagendada.');
     if (session.startsAt?.getTime() === newStart.getTime()) {
       return fail(400, 'Escolha uma data/hora diferente da atual.');
     }
@@ -104,10 +107,10 @@ async function rescheduleSession({ sessionId, startsAt, force, calendar, calenda
           patientId: session.patientId,
           calendarEventId: newId,
           startsAt: newStart,
-          calendarTitle: session.calendarTitle,
+          calendarTitle: session.calendarTitle ?? null,
           status: 'scheduled',
-          amountApplied: session.amountApplied,
-          packageAmountApplied: session.packageAmountApplied,
+          amountApplied: session.amountApplied ?? null,
+          packageAmountApplied: session.packageAmountApplied ?? null,
           chargeNoShowApplied: null,
           missingFromCalendar: false,
           rescheduledFromId: session.id,
@@ -117,7 +120,6 @@ async function rescheduleSession({ sessionId, startsAt, force, calendar, calenda
           status: 'rescheduled',
           rescheduledToId: newId,
           rescheduledToStartsAt: newStart,
-          statusBeforeReschedule: session.status,
         },
       });
     } catch (error) {

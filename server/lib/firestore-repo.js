@@ -127,4 +127,4 @@ function createFirestoreRepo(db) {
   };
 }
 
-module.exports = { createFirestoreRepo, resolveUpsertWrite, planRescheduleCommit, toDate };
+module.exports = { createFirestoreRepo, resolveUpsertWrite, planRescheduleCommit, toDate, RESCHEDULABLE_STATUSES };

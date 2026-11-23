@@ -91,6 +91,12 @@ test('404 quando a sessão não existe', async () => {
   assert.deepEqual(result, { status: 404, body: { error: 'Sessão não encontrada.' } });
 });
 
+test('404 para id de sessão com caracteres inválidos', async () => {
+  const { result, calls } = await run({ sessionId: 'a/b' });
+  assert.deepEqual(result, { status: 404, body: { error: 'Sessão não encontrada.' } });
+  assert.equal(calls.get.length, 0);
+});
+
 test('422 quando a sessão não tem paciente', async () => {
   const { result } = await run({}, { session: { ...baseSession(), patientId: null } });
   assert.deepEqual(result, { status: 422, body: { error: 'Vincule um paciente antes de reagendar.' } });
@@ -160,7 +166,6 @@ test('sucesso: cria evento novo, grava a transação e apaga o antigo', async ()
         status: 'rescheduled',
         rescheduledToId: 'new1',
         rescheduledToStartsAt: newStart,
-        statusBeforeReschedule: 'no_show',
       },
     },
   ]);
@@ -179,6 +184,13 @@ for (const error of [{ code: 404 }, { response: { status: 410 } }]) {
     });
   });
 }
+
+test('campos ausentes na sessão original viram null na nova', async () => {
+  const { packageAmountApplied, ...session } = baseSession();
+  const { result, calls } = await run({}, { session });
+  assert.equal(result.status, 200);
+  assert.equal(calls.commit[0].newData.packageAmountApplied, null);
+});
 
 test('erro inesperado ao ler o evento original vira 500 sem gravar', async () => {
   const { result, calls } = await run({}, { getEvent: () => Promise.reject({ code: 500 }) });
