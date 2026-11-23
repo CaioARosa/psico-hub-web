@@ -26,6 +26,16 @@ const inactivePatient: Patient = {
   active: false,
 };
 
+const otherPatient: Patient = {
+  ...activePatient,
+  id: 'p3',
+  name: 'Bruno Lima',
+};
+
+function buttonByText(root: HTMLElement, text: string): HTMLButtonElement | undefined {
+  return Array.from(root.querySelectorAll('button')).find(b => b.textContent?.trim() === text);
+}
+
 function makeSession(overrides: Partial<Session> & { id: string }): Session {
   return {
     patientId: 'p1',
@@ -49,6 +59,7 @@ describe('SessionsComponent', () => {
   let watchMonthCalls: string[] = [];
   let setStatusCalls: Array<{ id: string; status: string }> = [];
   let linkPatientCalls: Array<{ id: string; patient: Patient }> = [];
+  let changePatientCalls: Array<{ id: string; patient: Patient }> = [];
   let clearMissingCalls: string[] = [];
   let removeUnlinkedCalls: string[] = [];
   let syncImpl: (month: string) => Promise<{ created: number; updated: number; unidentified: number; missing: number }>;
@@ -61,13 +72,20 @@ describe('SessionsComponent', () => {
     watchMonthCalls = [];
     setStatusCalls = [];
     linkPatientCalls = [];
+    changePatientCalls = [];
     clearMissingCalls = [];
     removeUnlinkedCalls = [];
     syncImpl = async () => ({ created: 3, updated: 1, unidentified: 1, missing: 0 });
 
     const fakeSessionsService: Pick<
       SessionsService,
-      'watchMonth' | 'sessionsOfMonth' | 'setStatus' | 'linkPatient' | 'clearMissing' | 'removeUnlinked'
+      | 'watchMonth'
+      | 'sessionsOfMonth'
+      | 'setStatus'
+      | 'linkPatient'
+      | 'changePatient'
+      | 'clearMissing'
+      | 'removeUnlinked'
     > = {
       watchMonth: (month: string): MonthWatch => {
         watchMonthCalls.push(month);
@@ -88,6 +106,9 @@ describe('SessionsComponent', () => {
       },
       linkPatient: async (id, patient) => {
         linkPatientCalls.push({ id, patient });
+      },
+      changePatient: async (id, patient) => {
+        changePatientCalls.push({ id, patient });
       },
       clearMissing: async id => {
         clearMissingCalls.push(id);
@@ -235,5 +256,75 @@ describe('SessionsComponent', () => {
     removeButton?.click();
     await fixture.whenStable();
     expect(removeUnlinkedCalls).toEqual(['s-unid-miss']);
+  });
+
+  describe('Trocar paciente', () => {
+    beforeEach(() => {
+      patientsSignal.set([activePatient, inactivePatient, otherPatient]);
+    });
+
+    it('aparece em sessão com paciente em qualquer status e não em sessão sem paciente', () => {
+      sessionsSignal.set([
+        makeSession({ id: 's-done', status: 'done' }),
+        makeSession({ id: 's-unid', patientId: null, calendarTitle: 'Consulta - Desconhecido' }),
+      ]);
+
+      const fixture = TestBed.createComponent(SessionsComponent);
+      fixture.detectChanges();
+
+      const root = fixture.nativeElement as HTMLElement;
+      const buttons = Array.from(root.querySelectorAll('button')).filter(
+        b => b.textContent?.trim() === 'Trocar paciente',
+      );
+      expect(buttons.length).toBe(1);
+    });
+
+    it('lista só pacientes ativos diferentes do atual e salva a troca', async () => {
+      const linked = makeSession({ id: 's-linked', status: 'no_show' });
+      sessionsSignal.set([linked]);
+
+      const fixture = TestBed.createComponent(SessionsComponent);
+      fixture.detectChanges();
+      const root = fixture.nativeElement as HTMLElement;
+
+      buttonByText(root, 'Trocar paciente')?.click();
+      fixture.detectChanges();
+
+      root.querySelector<HTMLButtonElement>('#change-patient-s-linked [role="combobox"]')?.click();
+      fixture.detectChanges();
+      const options = Array.from(document.querySelectorAll('[role="option"]')).map(o => o.textContent?.trim());
+      expect(options).toContain('Bruno Lima');
+      expect(options).not.toContain('Ana Paula');
+      expect(options).not.toContain('Carlos Inativo');
+
+      expect(buttonByText(root, 'Salvar')?.disabled).toBe(true);
+      fixture.componentInstance.selectChangePatient('p3');
+      fixture.detectChanges();
+
+      buttonByText(root, 'Salvar')?.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(changePatientCalls).toEqual([{ id: 's-linked', patient: otherPatient }]);
+      expect(buttonByText(root, 'Salvar')).toBeUndefined();
+    });
+
+    it('Cancelar fecha o seletor sem salvar', () => {
+      sessionsSignal.set([makeSession({ id: 's-linked' })]);
+
+      const fixture = TestBed.createComponent(SessionsComponent);
+      fixture.detectChanges();
+      const root = fixture.nativeElement as HTMLElement;
+
+      buttonByText(root, 'Trocar paciente')?.click();
+      fixture.detectChanges();
+      expect(root.querySelector('#change-patient-s-linked')).not.toBeNull();
+
+      buttonByText(root, 'Cancelar')?.click();
+      fixture.detectChanges();
+
+      expect(root.querySelector('#change-patient-s-linked')).toBeNull();
+      expect(changePatientCalls).toEqual([]);
+    });
   });
 });

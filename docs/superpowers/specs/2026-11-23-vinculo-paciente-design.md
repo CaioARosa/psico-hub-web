@@ -81,7 +81,7 @@ Cada regra produz candidatos; a primeira regra com candidato **único** vence. R
   2. `patients/{patient.id}`: `aliases` ← `arrayUnion(chave)`;
   3. todo outro paciente que tem a chave: `aliases` ← `arrayRemove(chave)`.
   Devolve quantas sessões vinculou. Chave vazia (título só com pontuação) não vira apelido; as sessões são vinculadas mesmo assim.
-- `changePatient(id: string, patient: Patient): Promise<void>` — só para sessão conhecida `scheduled` com paciente (senão erro); mesmo batch: sessão recebe `patientId` + preço do novo paciente; a chave do título vai para o novo paciente e sai dos demais.
+- `changePatient(id: string, patient: Patient): Promise<void>` — **já implementado (2026-11-23), antes do resto desta spec**, para sessão conhecida com paciente em **qualquer status** (decisão da usuária: erro percebido depois de marcar Realizada/Faltou também precisa de correção). Grava `patientChangeUpdate` (`domain/session-update.ts`): `patientId` + preço do novo acordo e, em `no_show`, `chargeNoShowApplied` do novo paciente. Recusa: sessão desconhecida, sem paciente, mesmo paciente, paciente inativo. **Pendente desta spec:** passar a usar o mesmo batch para mover a chave do título para o novo paciente e tirá-la dos demais.
 
 Erros seguem `runWrite`/`SAVE_ERROR`.
 
@@ -105,7 +105,7 @@ Cartão por grupo:
 
 ### Aba "Todas" e "Pendentes"
 - Sessão sem paciente: em vez do seletor, selo **Sem paciente** e link **Resolver** (ativa a aba "Não identificados").
-- Sessão `scheduled` com paciente: ação discreta **Trocar paciente** que abre seletor + **Salvar** no próprio cartão e chama `changePatient`.
+- Sessão com paciente (qualquer status): ação discreta **Trocar paciente** que abre seletor (ativos, sem o atual) + **Salvar**/**Cancelar** no próprio cartão e chama `changePatient`. *(Já implementado.)*
 
 ### Resumo da sincronização
 `syncSummary`: `3 novas · 2 vinculadas automaticamente · 1 sem paciente · 0 removidas do Agenda` (`autoLinked` ausente → 0; singular/plural como hoje).

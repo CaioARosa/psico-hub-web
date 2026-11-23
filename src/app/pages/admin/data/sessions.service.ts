@@ -5,7 +5,7 @@ import { pricingForAgreement } from '../domain/money';
 import { monthWindow } from '../domain/month';
 import type { Patient, Session, SessionStatus } from '../domain/models';
 import { sessionFromDoc } from '../domain/session-doc';
-import { sessionStatusUpdate } from '../domain/session-update';
+import { patientChangeUpdate, sessionStatusUpdate } from '../domain/session-update';
 import { canConfirm } from '../domain/sessions-view';
 import { FIRESTORE } from './firebase';
 import { PatientsService } from './patients.service';
@@ -144,6 +144,16 @@ export class SessionsService {
         ...pricingForAgreement(patient.agreement),
       }),
     );
+  }
+
+  /** Corrige vínculo errado em qualquer status, recalculando o preço pelo acordo do novo paciente. */
+  async changePatient(id: string, patient: Patient): Promise<void> {
+    const session = this.known(id);
+    if (!session) throw new Error(NOT_FOUND_ERROR);
+    if (!canConfirm(session)) throw new Error('Sessão sem paciente: use Vincular.');
+    if (session.patientId === patient.id) throw new Error('Esta sessão já está com este paciente.');
+    if (!patient.active) throw new Error('Escolha um paciente ativo.');
+    await runWrite(() => updateDoc(doc(this.db, 'sessions', id), patientChangeUpdate(session, patient)));
   }
 
   async clearMissing(id: string): Promise<void> {
