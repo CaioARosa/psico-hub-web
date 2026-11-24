@@ -22,7 +22,7 @@ import { ZardSelectImports } from '@/shared/components/select';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
 import { ZardTabGroupComponent, ZardTabsImports } from '@/shared/components/tabs';
-import { CalendarSyncService } from '../data/calendar-sync.service';
+import { AutoSyncService } from '../data/auto-sync.service';
 import { PatientsService } from '../data/patients.service';
 import { SAVE_ERROR } from '../data/safe-write';
 import { SessionsService } from '../data/sessions.service';
@@ -331,7 +331,7 @@ function parseQueryTab(raw: string | null | undefined): SessionTab | null {
 export class SessionsComponent {
   protected readonly sessionsService = inject(SessionsService);
   protected readonly patientsService = inject(PatientsService);
-  private readonly calendarSync = inject(CalendarSyncService);
+  private readonly autoSync = inject(AutoSyncService);
   private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly tabGroup = viewChild(ZardTabGroupComponent);
 
@@ -467,8 +467,8 @@ export class SessionsComponent {
     this.syncError.set(null);
     this.syncMessage.set(null);
     try {
-      const result = await this.calendarSync.sync(this.month());
-      this.syncMessage.set(syncSummary(result));
+      const outcome = await this.autoSync.run([this.month()], { force: true });
+      this.syncMessage.set(syncSummary(outcome.totals));
     } catch (err) {
       this.syncError.set(
         err instanceof Error ? err.message : 'Falha ao sincronizar a agenda. Tente novamente.',

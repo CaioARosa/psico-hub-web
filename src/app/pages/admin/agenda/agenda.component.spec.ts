@@ -1,8 +1,10 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { vi } from 'vitest';
 
 import { CalendarSyncService } from '../data/calendar-sync.service';
+import { CalendarSyncsService } from '../data/calendar-syncs.service';
 import { PatientsService } from '../data/patients.service';
 import { RescheduleService } from '../data/reschedule.service';
 import { SessionsService, type AllSessionsWatch } from '../data/sessions.service';
@@ -57,6 +59,7 @@ describe('AgendaComponent', () => {
   let errorSignal = signal<string | null>(null);
   let patientsSignal = signal<Patient[]>([activePatient, secondPatient]);
   let syncCalls: string[] = [];
+  let readCalls: string[] = [];
   let syncImpl: (
     month: string,
   ) => Promise<{ created: number; updated: number; unidentified: number; missing: number }>;
@@ -67,6 +70,7 @@ describe('AgendaComponent', () => {
     errorSignal = signal<string | null>(null);
     patientsSignal = signal<Patient[]>([activePatient, secondPatient]);
     syncCalls = [];
+    readCalls = [];
     syncImpl = async month => {
       syncCalls.push(month);
       return { created: 2, updated: 1, unidentified: 0, missing: 0 };
@@ -103,6 +107,15 @@ describe('AgendaComponent', () => {
         { provide: SessionsService, useValue: fakeSessionsService },
         { provide: PatientsService, useValue: fakePatientsService },
         { provide: CalendarSyncService, useValue: fakeCalendarSync },
+        {
+          provide: CalendarSyncsService,
+          useValue: {
+            lastSyncedAtOnce: async (month: string) => {
+              readCalls.push(month);
+              return new Date();
+            },
+          },
+        },
         { provide: RescheduleService, useValue: fakeReschedule },
       ],
     });
@@ -219,4 +232,16 @@ describe('AgendaComponent', () => {
       '4 novas, 2 atualizadas, 0 sem paciente, 0 removidas do Agenda',
     );
   });
-});
+
+  it('trocar de semana verifica os meses da nova semana sem forçar a sincronização', async () => {
+    const fixture = TestBed.createComponent(AgendaComponent);
+    fixture.componentInstance.window.set(weekWindow(new Date('2026-11-25T15:00:00.000Z')));
+    fixture.detectChanges();
+
+    fixture.componentInstance.shift(1); // 30 nov – 6 dez 2026
+    await vi.waitFor(() => expect(readCalls).toEqual(['2026-11', '2026-12']));
+    fixture.detectChanges();
+
+    expect(syncCalls).toEqual([]);
+    expect((fixture.nativeElement as HTMLElement).textContent ?? '').toContain('Atualizado agora há pouco');
+  });});

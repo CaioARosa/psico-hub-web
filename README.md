@@ -228,6 +228,7 @@ psico-hub-web/
 | `/admin/pacientes` | `PatientsComponent` | Cadastro e edição de pacientes e seus acordos financeiros |
 | `/admin/pagamentos` | `PaymentsComponent` | Registro de Pix (paciente, valor, data, mês de referência), histórico em tempo real, edição e exclusão |
 | `/admin/financeiro` | `FinanceComponent` | Resumo do mês: recebido, a receber e em atraso por paciente, com abatimento por crédito, atalho *Registrar Pix* e cobrança via WhatsApp |
+| `/admin/cobranca` | `CobrancaComponent` | Fila de cobrança: uma paciente em atraso por vez, mensagem editável, abertura do WhatsApp e registro de quem já foi cobrada (aceita `?mes=YYYY-MM`) |
 | `/admin/painel` | `DashboardComponent` | Números do mês, previsto × realizado, gráfico dos últimos 6 meses e alertas de frequência |
 | `**` | *(Redirect)* | Redireciona qualquer rota inválida para `/` |
 
@@ -283,6 +284,18 @@ Painel privado de uso exclusivo da psicóloga para gestão operacional do consul
 - **Cobrança via WhatsApp (`/admin/financeiro`)**: pacientes com **Em atraso** maior que zero (em meses com sessões vinculadas) ganham o botão **Cobrar no WhatsApp** ao lado de *Registrar Pix*. Ele abre `https://wa.me/<número>` em nova aba (`noopener noreferrer`) com mensagem pronta trazendo o primeiro nome do paciente e o **total devido** (`A receber` do mês + `Em atraso`).
 - **Normalização e validação do telefone**: números brasileiros com 10 ou 11 dígitos recebem `55` na frente; números com 12 ou 13 dígitos que já começam com `55` são mantidos. Se o telefone cadastrado for inválido, a linha exibe `"Telefone inválido para WhatsApp. Corrija em Pacientes."` no lugar do botão; pacientes removidos e meses sem sessões vinculadas (quando os valores viram `"—"`) não exibem botão nem aviso.
 - **Envio manual**: o sistema apenas monta o link; nenhum envio automático ocorre e nada é gravado no Firestore ao clicar.
+
+### O que a Fase 5 entrega
+
+- **Sincronização automática da agenda**: ao abrir `/admin`, o sistema sincroniza sozinho o **mês atual e o próximo**, a menos que a última sincronização do mês tenha **menos de 6 horas** (`calendarSyncs/{YYYY-MM}`). Ao trocar de semana na Agenda para outro mês, a mesma checagem acontece. A Agenda mostra "Atualizado há X" e "Sincronizando…". Falha na sincronização automática não bloqueia nada: aparece só o aviso "Não foi possível atualizar a agenda agora." Os botões **Sincronizar agenda** (Agenda e Sessões) continuam e forçam a sincronização. O backend não mudou.
+- **Fila de cobrança (`/admin/cobranca`)**: uma paciente em atraso por vez, com o total devido e a mensagem pronta e **editável**. **Abrir WhatsApp** abre o `wa.me` em nova aba; depois a tela pergunta "Enviou a mensagem?" e só então **Sim, marcar como cobrada** grava a cobrança. **Pular** tira a paciente da fila sem gravar. Quem foi cobrada há menos de 7 dias sai do passo a passo e aparece na lista "Cobradas há menos de 7 dias". Pacientes com telefone inválido ficam numa lista à parte, com o atalho para corrigir em Pacientes. O envio continua **manual**.
+- **Registro de cobranças**: coleção `charges`, um documento por paciente e mês (`{patientId}_{YYYY-MM}`) com `patientId`, `month`, `chargedAt` e `amount` em centavos. O **texto da mensagem não é salvo**. A tela Financeiro mostra o selo "Cobrada em dd/mm" e o botão **Cobrar em fila**.
+
+#### Limitações conhecidas (Fase 5)
+
+- **Só a última cobrança do mês**: marcar de novo a mesma paciente no mesmo mês atualiza a data, sem histórico.
+- **Sincronização só com o painel aberto**: não há sincronização agendada no servidor.
+- **Relógio do aparelho**: a regra das 6 horas usa o relógio do navegador; um relógio errado só causa uma sincronização a mais ou a menos.
 
 ### Configuração Inicial no Firebase / GCP (Provisionamento único)
 

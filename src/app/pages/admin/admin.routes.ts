@@ -39,6 +39,10 @@ export const ADMIN_ROUTES: Routes = [
         path: 'financeiro',
         loadComponent: () => import('./financeiro/finance.component').then(m => m.FinanceComponent),
       },
+      {
+        path: 'cobranca',
+        loadComponent: () => import('./cobranca/cobranca.component').then(m => m.CobrancaComponent),
+      },
     ],
   },
 ];

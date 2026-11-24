@@ -29,7 +29,7 @@ Prioridad: **P0** bloquea producción · **P1** antes de la Fase 2 · **P2** mej
 ## P2 — Mejoras
 
 - [ ] **T14. Regla de cancelación tardía** (`chargeLateCancel`) además de `chargeNoShow`. (2 h)
-- [ ] **T15. Fase 4: mensaje de cobro editable y con tono acogedor** antes de abrir `wa.me`. (2 h)
+- [x] **T15. Fase 4: mensaje de cobro editable y con tono acogedor** antes de abrir `wa.me`. Hecho el 2026-11-24 en `/admin/cobranca` (texto editable por paciente, sin guardar el texto). Plantillas guardadas quedan fuera de alcance. (2 h)
 - [ ] **T16. Documentación:** README (Render → Cloud Run, árbol de carpetas con `/admin`) y comentario "PENDING" de `firebase-config.ts`. (20 min)
 - [ ] **T17. Skill de proyecto `@psico-compliance-br`** (ver `plan_implementacion.md`, sección 5), si el usuario lo aprueba. (1 h)
 

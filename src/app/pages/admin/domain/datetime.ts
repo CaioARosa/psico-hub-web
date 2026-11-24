@@ -39,3 +39,9 @@ export function dateKeyOf(date: Date): string {
 export function timeOf(date: Date): string {
   return wallClockIso(date).slice(11, 16);
 }
+
+/** Dia e mês (`dd/mm`) de `date` em UTC-3. */
+export function shortDateOf(date: Date): string {
+  const [, month, day] = dateKeyOf(date).split('-');
+  return `${day}/${month}`;
+}

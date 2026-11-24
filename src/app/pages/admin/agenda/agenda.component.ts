@@ -9,7 +9,7 @@ import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardCardImports } from '@/shared/components/card';
 import { ZardEmptyComponent } from '@/shared/components/empty';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
-import { CalendarSyncService } from '../data/calendar-sync.service';
+import { AutoSyncService } from '../data/auto-sync.service';
 import { PatientsService } from '../data/patients.service';
 import { SessionsService } from '../data/sessions.service';
 import {
@@ -24,7 +24,8 @@ import { timeOf } from '../domain/datetime';
 import type { Session, SessionStatus } from '../domain/models';
 import { currentMonth } from '../domain/month';
 import { rescheduleNote, statusLabel } from '../domain/sessions-view';
-import { syncSummary, type SyncCounts } from '../domain/sync-summary';
+import { syncedAgoLabel } from '../domain/sync-freshness';
+import { syncSummary } from '../domain/sync-summary';
 import { SessionActionsComponent } from '../sessions/session-actions.component';
 
 @Component({
@@ -49,6 +50,11 @@ import { SessionActionsComponent } from '../sessions/session-actions.component';
         <div>
           <h1 class="font-display text-3xl text-foreground tracking-tight">Agenda</h1>
           <p class="text-sm font-medium text-muted-foreground mt-0.5 tabular-nums">{{ label() }}</p>
+          @if (autoSync.syncing()) {
+            <p class="text-xs text-muted-foreground mt-0.5" role="status">Sincronizando…</p>
+          } @else if (syncedAgo(); as ago) {
+            <p class="text-xs text-muted-foreground mt-0.5">Atualizado {{ ago }}</p>
+          }
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -122,6 +128,8 @@ import { SessionActionsComponent } from '../sessions/session-actions.component';
 
       @if (syncError()) {
         <z-alert zType="destructive" zRole="alert" [zDescription]="syncError()!" />
+      } @else if (autoSync.error(); as autoError) {
+        <p class="text-xs text-amber-800" role="status">{{ autoError }}</p>
       }
 
       @if (actionMessage()) {
@@ -233,7 +241,7 @@ import { SessionActionsComponent } from '../sessions/session-actions.component';
 export class AgendaComponent {
   protected readonly sessionsService = inject(SessionsService);
   protected readonly patientsService = inject(PatientsService);
-  private readonly calendarSync = inject(CalendarSyncService);
+  protected readonly autoSync = inject(AutoSyncService);
 
   readonly watch = this.sessionsService.watchAll();
   readonly now = signal(new Date());
@@ -249,6 +257,10 @@ export class AgendaComponent {
   readonly actionError = signal<string | null>(null);
 
   readonly label = computed(() => weekLabel(this.window()));
+  protected readonly syncedAgo = computed(() => {
+    const syncedAt = this.autoSync.lastSyncedAt();
+    return syncedAt ? syncedAgoLabel(syncedAt, new Date()) : null;
+  });
   readonly days = computed(() => groupByDay(this.watch.sessions(), this.window(), this.now()));
   readonly patientNames = computed(
     () => new Map(this.patientsService.patients().map(p => [p.id, p.name])),
@@ -260,6 +272,7 @@ export class AgendaComponent {
     this.expandedId.set(null);
     this.actionMessage.set(null);
     this.actionError.set(null);
+    void this.autoSync.run(monthsInWindow(this.window()));
   }
 
   goToToday(): void {
@@ -269,6 +282,7 @@ export class AgendaComponent {
     this.expandedId.set(null);
     this.actionMessage.set(null);
     this.actionError.set(null);
+    void this.autoSync.run(monthsInWindow(this.window()));
   }
 
   onRowClick(session: Session, event?: Event): void {
@@ -334,16 +348,8 @@ export class AgendaComponent {
     this.syncError.set(null);
     this.syncMessage.set(null);
     try {
-      const months = monthsInWindow(this.window());
-      const totals: SyncCounts = { created: 0, updated: 0, unidentified: 0, missing: 0 };
-      for (const month of months) {
-        const result = await this.calendarSync.sync(month);
-        totals.created += result.created;
-        totals.updated += result.updated;
-        totals.unidentified += result.unidentified;
-        totals.missing += result.missing;
-      }
-      this.syncMessage.set(syncSummary(totals));
+      const outcome = await this.autoSync.run(monthsInWindow(this.window()), { force: true });
+      this.syncMessage.set(syncSummary(outcome.totals));
     } catch (err) {
       this.syncError.set(
         err instanceof Error ? err.message : 'Falha ao sincronizar a agenda. Tente novamente.',
