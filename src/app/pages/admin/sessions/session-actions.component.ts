@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  output,
+  signal,
+} from '@angular/core';
 
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSelectImports } from '@/shared/components/select';
@@ -10,9 +19,13 @@ import { canConfirm } from '../domain/sessions-view';
 
 /**
  * Ações de uma sessão (confirmar status e trocar paciente), compartilhadas entre telas.
- * O host usa `display: contents`: os botões de status e o bloco de troca viram itens do
- * container flex-wrap do card, e o bloco de troca ocupa a linha inteira abaixo.
+ *
+ * O host usa `display: contents`, então o componente deve ficar dentro de um container
+ * `flex flex-wrap`: os botões de status viram itens desse container e o bloco de troca
+ * ocupa a linha inteira abaixo (`basis-full`).
  */
+export type SessionActionMode = 'change';
+
 @Component({
   selector: 'app-session-actions',
   standalone: true,
@@ -24,6 +37,7 @@ import { canConfirm } from '../domain/sessions-view';
       <button
         z-button
         [zType]="session().status === 'done' ? 'default' : 'outline'"
+        [attr.aria-pressed]="session().status === 'done'"
         zSize="sm"
         type="button"
         [zDisabled]="!canChangeStatus() || disabled()"
@@ -34,6 +48,7 @@ import { canConfirm } from '../domain/sessions-view';
       <button
         z-button
         [zType]="session().status === 'no_show' ? 'default' : 'outline'"
+        [attr.aria-pressed]="session().status === 'no_show'"
         zSize="sm"
         type="button"
         [zDisabled]="!canChangeStatus() || disabled()"
@@ -44,6 +59,7 @@ import { canConfirm } from '../domain/sessions-view';
       <button
         z-button
         [zType]="session().status === 'cancelled' ? 'default' : 'outline'"
+        [attr.aria-pressed]="session().status === 'cancelled'"
         zSize="sm"
         type="button"
         [zDisabled]="!canChangeStatus() || disabled()"
@@ -55,7 +71,7 @@ import { canConfirm } from '../domain/sessions-view';
 
     @if (hasPatient()) {
       <div class="basis-full space-y-3">
-        @if (changing()) {
+        @if (mode() === 'change') {
           <z-separator />
           <div class="flex flex-wrap items-end gap-2">
             <div class="space-y-1 grow max-w-xs">
@@ -126,19 +142,26 @@ export class SessionActionsComponent {
   readonly session = input.required<Session>();
   readonly patients = input.required<Patient[]>();
   /** Alguma gravação da tela está em andamento; trava as ações deste card. */
-  readonly busy = input(false);
+  readonly locked = input(false);
 
-  /** Ação concluída; traz a mensagem de sucesso, quando houver. */
+  /** Ação concluída: `null` para status e troca de paciente; a mensagem de sucesso nas ações que têm uma. */
   readonly done = output<string | null>();
   readonly failed = output<string>();
   /** Início (true) e fim (false) de uma gravação, para a tela travar as demais ações. */
-  readonly busyChange = output<boolean>();
+  readonly workingChange = output<boolean>();
 
   readonly working = signal(false);
-  readonly changing = signal(false);
-  readonly changeSelection = signal<string | null>(null);
+  /** Formulário aberto no card; volta a fechado quando a sessão do input muda. */
+  readonly mode = linkedSignal<string, SessionActionMode | null>({
+    source: () => this.session().id,
+    computation: () => null,
+  });
+  readonly changeSelection = linkedSignal<string, string | null>({
+    source: () => this.session().id,
+    computation: () => null,
+  });
 
-  readonly disabled = computed(() => this.working() || this.busy());
+  readonly disabled = computed(() => this.working() || this.locked());
   readonly hasPatient = computed(() => canConfirm(this.session()));
   readonly canChangeStatus = computed(() => this.hasPatient() && this.session().status !== 'rescheduled');
   readonly changeOptions = computed(() =>
@@ -153,11 +176,11 @@ export class SessionActionsComponent {
 
   startChangePatient(): void {
     this.changeSelection.set(null);
-    this.changing.set(true);
+    this.mode.set('change');
   }
 
   cancelChangePatient(): void {
-    this.changing.set(false);
+    this.mode.set(null);
     this.changeSelection.set(null);
   }
 
@@ -178,7 +201,7 @@ export class SessionActionsComponent {
   private async run(action: () => Promise<void>): Promise<void> {
     if (this.disabled()) return;
     this.working.set(true);
-    this.busyChange.emit(true);
+    this.workingChange.emit(true);
     try {
       await action();
       this.done.emit(null);
@@ -186,7 +209,7 @@ export class SessionActionsComponent {
       this.failed.emit(err instanceof Error ? err.message : SAVE_ERROR);
     } finally {
       this.working.set(false);
-      this.busyChange.emit(false);
+      this.workingChange.emit(false);
     }
   }
 }

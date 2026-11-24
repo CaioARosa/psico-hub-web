@@ -56,15 +56,19 @@ describe('SessionActionsComponent', () => {
   let setStatusCalls: Array<{ id: string; status: string }> = [];
   let changePatientCalls: Array<{ id: string; patient: Patient }> = [];
   let setStatusError: Error | null = null;
+  let changePatientError: Error | null = null;
   let doneEvents: Array<string | null> = [];
   let failedEvents: string[] = [];
+  let workingEvents: boolean[] = [];
 
   beforeEach(() => {
     setStatusCalls = [];
     changePatientCalls = [];
     setStatusError = null;
+    changePatientError = null;
     doneEvents = [];
     failedEvents = [];
+    workingEvents = [];
 
     const fakeSessionsService: Pick<SessionsService, 'setStatus' | 'changePatient'> = {
       setStatus: async (id, status) => {
@@ -72,6 +76,7 @@ describe('SessionActionsComponent', () => {
         setStatusCalls.push({ id, status });
       },
       changePatient: async (id, patient) => {
+        if (changePatientError) throw changePatientError;
         changePatientCalls.push({ id, patient });
       },
     };
@@ -91,13 +96,18 @@ describe('SessionActionsComponent', () => {
     fixture.componentRef.setInput('patients', patients);
     fixture.componentInstance.done.subscribe(message => doneEvents.push(message));
     fixture.componentInstance.failed.subscribe(message => failedEvents.push(message));
+    fixture.componentInstance.workingChange.subscribe(working => workingEvents.push(working));
     fixture.detectChanges();
     return fixture;
   }
 
-  it('Realizada, Faltou e Cancelada gravam o status e emitem done', async () => {
-    const fixture = mount(makeSession({ id: 's1' }));
+  it('Realizada, Faltou e Cancelada gravam o status, emitem workingChange e done', async () => {
+    const fixture = mount(makeSession({ id: 's1', status: 'done' }));
     const root = fixture.nativeElement as HTMLElement;
+
+    expect(buttonByText(root, 'Realizada')?.getAttribute('aria-pressed')).toBe('true');
+    expect(buttonByText(root, 'Faltou')?.getAttribute('aria-pressed')).toBe('false');
+    expect(buttonByText(root, 'Cancelada')?.getAttribute('aria-pressed')).toBe('false');
 
     for (const [text, status] of [
       ['Realizada', 'done'],
@@ -110,18 +120,36 @@ describe('SessionActionsComponent', () => {
     }
 
     expect(doneEvents).toEqual([null, null, null]);
+    expect(workingEvents).toEqual([true, false, true, false, true, false]);
     expect(failedEvents).toEqual([]);
   });
 
-  it('emite failed com a mensagem quando setStatus falha', async () => {
+  it('emite failed com a mensagem quando setStatus falha e reabilita os botões', async () => {
     setStatusError = new Error('Sem conexão.');
     const fixture = mount(makeSession({ id: 's1' }));
+    const root = fixture.nativeElement as HTMLElement;
 
-    buttonByText(fixture.nativeElement as HTMLElement, 'Realizada')?.click();
+    buttonByText(root, 'Realizada')?.click();
     await fixture.whenStable();
+    fixture.detectChanges();
 
     expect(failedEvents).toEqual(['Sem conexão.']);
     expect(doneEvents).toEqual([]);
+    expect(workingEvents).toEqual([true, false]);
+    for (const text of ['Realizada', 'Faltou', 'Cancelada', 'Trocar paciente']) {
+      expect(buttonByText(root, text)?.disabled).toBe(false);
+    }
+  });
+
+  it('desabilita todos os botões quando locked é true', () => {
+    const fixture = mount(makeSession({ id: 's1' }));
+    fixture.componentRef.setInput('locked', true);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+
+    for (const text of ['Realizada', 'Faltou', 'Cancelada', 'Trocar paciente']) {
+      expect(buttonByText(root, text)?.disabled).toBe(true);
+    }
   });
 
   it('desabilita os botões de status em sessão reagendada', () => {
@@ -193,6 +221,41 @@ describe('SessionActionsComponent', () => {
 
       expect(root.querySelector('#change-patient-s-linked')).toBeNull();
       expect(changePatientCalls).toEqual([]);
+    });
+
+    it('mantém o seletor aberto com a seleção quando changePatient falha', async () => {
+      changePatientError = new Error('Falha ao trocar.');
+      const fixture = mount(makeSession({ id: 's-linked' }));
+      const root = fixture.nativeElement as HTMLElement;
+
+      buttonByText(root, 'Trocar paciente')?.click();
+      fixture.componentInstance.selectChangePatient('p3');
+      fixture.detectChanges();
+
+      buttonByText(root, 'Salvar')?.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(failedEvents).toEqual(['Falha ao trocar.']);
+      expect(root.querySelector('#change-patient-s-linked')).not.toBeNull();
+      expect(fixture.componentInstance.changeSelection()).toBe('p3');
+    });
+
+    it('fecha o seletor quando o input session muda para outra sessão', () => {
+      const fixture = mount(makeSession({ id: 's-1' }));
+      const root = fixture.nativeElement as HTMLElement;
+
+      buttonByText(root, 'Trocar paciente')?.click();
+      fixture.componentInstance.selectChangePatient('p3');
+      fixture.detectChanges();
+      expect(root.querySelector('#change-patient-s-1')).not.toBeNull();
+
+      fixture.componentRef.setInput('session', makeSession({ id: 's-2' }));
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.mode()).toBeNull();
+      expect(fixture.componentInstance.changeSelection()).toBeNull();
+      expect(root.querySelector('#change-patient-s-2')).toBeNull();
     });
   });
 });

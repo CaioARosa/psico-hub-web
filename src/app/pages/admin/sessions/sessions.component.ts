@@ -194,8 +194,8 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
                       <app-session-actions
                         [session]="session"
                         [patients]="patientsService.patients()"
-                        [busy]="busyId() !== null"
-                        (busyChange)="onActionBusy(session.id, $event)"
+                        [locked]="busyId() !== null"
+                        (workingChange)="onActionBusy(session.id, $event)"
                         (done)="flashSession(session.id)"
                         (failed)="actionError.set($event)"
                       />
