@@ -1,4 +1,4 @@
-import { syncFreshness, syncFreshnessNote } from './sync-freshness';
+import { needsAutoSync, syncedAgoLabel, syncFreshness, syncFreshnessNote } from './sync-freshness';
 
 const now = new Date('2026-11-17T15:00:00Z');
 const hoursAgo = (hours: number) => new Date(now.getTime() - hours * 60 * 60 * 1000);
@@ -59,5 +59,32 @@ describe('syncFreshnessNote', () => {
     const note = syncFreshnessNote({ kind: 'stale', syncedAt: new Date('2026-11-12T13:00:00Z'), days: 5 });
     expect(note?.warn).toBe(true);
     expect(note?.text).toContain('há 5 dias');
+  });
+});
+
+describe('needsAutoSync', () => {
+  it('sem registro precisa sincronizar', () => {
+    expect(needsAutoSync(null, now)).toBe(true);
+  });
+
+  it('menos de 6 h é recente e 6 h exatas pedem sincronização', () => {
+    expect(needsAutoSync(hoursAgo(5.9), now)).toBe(false);
+    expect(needsAutoSync(hoursAgo(6), now)).toBe(true);
+  });
+
+  it('registro no futuro (relógio atrasado) conta como recente', () => {
+    expect(needsAutoSync(new Date(now.getTime() + 60 * 60 * 1000), now)).toBe(false);
+  });
+});
+
+describe('syncedAgoLabel', () => {
+  it.each([
+    [0.01, 'agora há pouco'],
+    [0.5, 'há 30 min'],
+    [5, 'há 5 h'],
+    [49, 'há 2 dias'],
+    [-1, 'agora há pouco'],
+  ])('%s h atrás vira "%s"', (hours, label) => {
+    expect(syncedAgoLabel(hoursAgo(hours), now)).toBe(label);
   });
 });
