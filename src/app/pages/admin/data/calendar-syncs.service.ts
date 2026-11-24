@@ -1,5 +1,5 @@
 import { DestroyRef, Injectable, Signal, inject, signal } from '@angular/core';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 
 import { FIRESTORE } from './firebase';
 
@@ -18,6 +18,13 @@ export class CalendarSyncsService {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.current?.unsubscribe());
+  }
+
+  /** Leitura única da última sincronização do mês (`null` se nunca sincronizou). Falhas de leitura propagam. */
+  async lastSyncedAtOnce(month: string): Promise<Date | null> {
+    const snapshot = await getDoc(doc(this.db, 'calendarSyncs', month));
+    const value = snapshot.data()?.['syncedAt'];
+    return value && typeof value.toDate === 'function' ? value.toDate() : null;
   }
 
   /** Idempotente para o mesmo mês; ao trocar de mês, o listener anterior é encerrado. Pode ser chamado em `computed`. */
