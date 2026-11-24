@@ -169,6 +169,9 @@ export class SessionsService {
   }
 
   private known(id: string): Session | undefined {
-    return this.current?.watch.sessions().find(s => s.id === id);
+    return (
+      this.current?.watch.sessions().find(s => s.id === id) ??
+      this.all?.watch.sessions().find(s => s.id === id)
+    );
   }
 }

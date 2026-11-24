@@ -1,5 +1,15 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCalendar, lucideCheck, lucideRefreshCw, lucideX } from '@ng-icons/lucide';
 
@@ -11,7 +21,7 @@ import { ZardEmptyComponent } from '@/shared/components/empty';
 import { ZardSelectImports } from '@/shared/components/select';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
-import { ZardTabsImports } from '@/shared/components/tabs';
+import { ZardTabGroupComponent, ZardTabsImports } from '@/shared/components/tabs';
 import { CalendarSyncService } from '../data/calendar-sync.service';
 import { PatientsService } from '../data/patients.service';
 import { SAVE_ERROR } from '../data/safe-write';
@@ -32,6 +42,16 @@ import { SessionActionsComponent } from './session-actions.component';
 
 export type SessionTab = 'all' | 'pending' | 'unidentified';
 const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
+const QUERY_TAB_MAP: Readonly<Record<string, SessionTab>> = {
+  todas: 'all',
+  pendentes: 'pending',
+  'nao-identificados': 'unidentified',
+};
+
+function parseQueryTab(raw: string | null | undefined): SessionTab | null {
+  if (!raw) return null;
+  return QUERY_TAB_MAP[raw] ?? null;
+}
 
 @Component({
   selector: 'app-admin-sessions',
@@ -312,10 +332,12 @@ export class SessionsComponent {
   protected readonly sessionsService = inject(SessionsService);
   protected readonly patientsService = inject(PatientsService);
   private readonly calendarSync = inject(CalendarSyncService);
+  private readonly route = inject(ActivatedRoute, { optional: true });
+  private readonly tabGroup = viewChild(ZardTabGroupComponent);
 
-  readonly month = signal(currentMonth(new Date()));
+  readonly month = signal(this.initialMonth());
   readonly watch = signal(this.sessionsService.watchMonth(this.month()));
-  readonly activeTab = signal<SessionTab>('all');
+  readonly activeTab = signal<SessionTab>(this.initialTab());
 
   readonly syncing = signal(false);
   readonly syncMessage = signal<string | null>(null);
@@ -330,6 +352,22 @@ export class SessionsComponent {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.clearFlashTimer());
+    afterNextRender(() => {
+      const idx = TAB_ORDER.indexOf(this.activeTab());
+      if (idx > 0) {
+        this.tabGroup()?.selectTabByIndex(idx);
+      }
+    });
+  }
+
+  private initialMonth(): string {
+    const param = this.route?.snapshot?.queryParamMap?.get('mes') ?? null;
+    return param && isValidMonth(param) ? param : currentMonth(new Date());
+  }
+
+  private initialTab(): SessionTab {
+    const param = this.route?.snapshot?.queryParamMap?.get('aba') ?? null;
+    return parseQueryTab(param) ?? 'all';
   }
 
   readonly groups = computed(() => groupSessions(this.watch().sessions(), new Date()));

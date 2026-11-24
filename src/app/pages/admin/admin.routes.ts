@@ -14,7 +14,11 @@ export const ADMIN_ROUTES: Routes = [
     providers: [provideZardCharts()],
     loadComponent: () => import('./admin-shell.component').then(m => m.AdminShellComponent),
     children: [
-      { path: '', redirectTo: 'sessoes', pathMatch: 'full' },
+      { path: '', redirectTo: 'agenda', pathMatch: 'full' },
+      {
+        path: 'agenda',
+        loadComponent: () => import('./agenda/agenda.component').then(m => m.AgendaComponent),
+      },
       {
         path: 'painel',
         loadComponent: () => import('./painel/dashboard.component').then(m => m.DashboardComponent),

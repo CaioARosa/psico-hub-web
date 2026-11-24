@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { CalendarSyncService } from '../data/calendar-sync.service';
 import { PatientsService } from '../data/patients.service';
 import { RescheduleService } from '../data/reschedule.service';
@@ -62,6 +63,7 @@ describe('SessionsComponent', () => {
   let setStatusImpl: ((id: string, status: string) => Promise<void>) | null = null;
   let clearMissingCalls: string[] = [];
   let removeUnlinkedCalls: string[] = [];
+  let queryParams: Record<string, string> = {};
   let syncImpl: (month: string) => Promise<{ created: number; updated: number; unidentified: number; missing: number }>;
 
   beforeEach(() => {
@@ -75,6 +77,7 @@ describe('SessionsComponent', () => {
     setStatusImpl = null;
     clearMissingCalls = [];
     removeUnlinkedCalls = [];
+    queryParams = {};
     syncImpl = async () => ({ created: 3, updated: 1, unidentified: 1, missing: 0 });
 
     const fakeSessionsService: Pick<
@@ -138,6 +141,10 @@ describe('SessionsComponent', () => {
         { provide: PatientsService, useValue: fakePatientsService },
         { provide: CalendarSyncService, useValue: fakeCalendarSync },
         { provide: RescheduleService, useValue: fakeReschedule },
+        {
+          provide: ActivatedRoute,
+          useFactory: () => ({ snapshot: { queryParamMap: convertToParamMap(queryParams) } }),
+        },
       ],
     });
   });
@@ -358,5 +365,15 @@ describe('SessionsComponent', () => {
     expect(statusAlert?.textContent ?? '').toContain(
       'Reagendada para qui, 03/dez, 19:00. (em dezembro)',
     );
+  });
+
+  it('inicializa mês e aba ativa a partir dos query params mes e aba', () => {
+    queryParams = { mes: '2026-10', aba: 'nao-identificados' };
+    const fixture = TestBed.createComponent(SessionsComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.month()).toBe('2026-10');
+    expect(watchMonthCalls).toContain('2026-10');
+    expect(fixture.componentInstance.activeTab()).toBe('unidentified');
   });
 });

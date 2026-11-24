@@ -97,6 +97,7 @@ export class AdminShellComponent {
   private readonly nav = viewChild.required<ElementRef<HTMLElement>>('nav');
 
   protected readonly links = [
+    { path: '/admin/agenda', label: 'Agenda' },
     { path: '/admin/painel', label: 'Painel' },
     { path: '/admin/pacientes', label: 'Pacientes' },
     { path: '/admin/sessoes', label: 'Sessões' },
