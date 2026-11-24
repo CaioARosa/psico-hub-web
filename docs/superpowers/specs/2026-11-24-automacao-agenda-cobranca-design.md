@@ -71,9 +71,9 @@ Duas etapas independentes, cada uma com seu commit e seu deploy.
 
 ### Peças
 1. `domain/charge-queue.ts` (função pura): monta a fila a partir do resumo do Financeiro.
-   - Entram pacientes com `toReceive + overdue > 0` e telefone válido.
+   - Entram pacientes com `overdue > 0` (mesma regra do botão atual do Financeiro), mês com sessões vinculadas, cadastro existente e telefone válido. O valor cobrado é `toReceive + overdue`.
    - Ordem: nunca cobradas primeiro, depois a cobrança mais antiga, depois o maior valor.
-   - Cobrada há menos de **7 dias** (`CHARGE_COOLDOWN_DAYS = 7`) fica marcada "cobrada recentemente" e vai para o fim.
+   - Cobrada há menos de **7 dias** (`CHARGE_COOLDOWN_DAYS = 7`) fica marcada "cobrada recentemente", vai para o fim e aparece numa lista "Cobradas há menos de 7 dias" fora do passo a passo (a fila só avança sobre as pendentes).
 2. `domain/charge-message.ts`: nova `whatsappLink(phone, text)` aceitando texto livre. `chargeMessage` e `whatsappChargeUrl` permanecem; o Financeiro continua usando a última.
 3. `ChargesService` (novo): `watch(month)` devolve o mapa `patientId → chargedAt`; `markCharged(patientId, month, amount)` grava com o padrão `safe-write` existente.
 4. `CobrancaComponent` (novo, lazy em `admin.routes.ts`, item no menu do `AdminShell`).
