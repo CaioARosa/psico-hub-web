@@ -194,7 +194,7 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
                       <app-session-actions
                         [session]="session"
                         [patients]="patientsService.patients()"
-                        [busy]="busyId() === session.id"
+                        [busy]="busyId() !== null"
                         (busyChange)="onActionBusy(session.id, $event)"
                         (done)="flashSession(session.id)"
                         (failed)="actionError.set($event)"
@@ -450,8 +450,12 @@ export class SessionsComponent {
   }
 
   protected onActionBusy(id: string, busy: boolean): void {
-    if (busy) this.actionError.set(null);
-    this.busyId.set(busy ? id : null);
+    if (busy) {
+      this.actionError.set(null);
+      this.busyId.set(id);
+    } else if (this.busyId() === id) {
+      this.busyId.set(null);
+    }
   }
 
   async keepSession(session: Session): Promise<void> {

@@ -80,7 +80,7 @@ import { canConfirm } from '../domain/sessions-view';
               zSize="sm"
               type="button"
               class="h-10 rounded-xl px-4"
-              [zLoading]="disabled()"
+              [zLoading]="working()"
               [zDisabled]="!changeSelection() || disabled()"
               (click)="saveChangePatient()"
             >
@@ -125,7 +125,7 @@ export class SessionActionsComponent {
 
   readonly session = input.required<Session>();
   readonly patients = input.required<Patient[]>();
-  /** Outra ação da tela está em andamento nesta sessão. */
+  /** Alguma gravação da tela está em andamento; trava as ações deste card. */
   readonly busy = input(false);
 
   /** Ação concluída; traz a mensagem de sucesso, quando houver. */

@@ -270,6 +270,33 @@ describe('SessionsComponent', () => {
     expect(root.querySelectorAll('z-card app-session-actions').length).toBe(3);
   });
 
+  it('trava as ações de todos os cards enquanto uma gravação está em andamento', async () => {
+    let resolveWrite!: () => void;
+    setStatusImpl = () => new Promise<void>(resolve => (resolveWrite = resolve));
+    sessionsSignal.set([makeSession({ id: 's-a' }), makeSession({ id: 's-b' })]);
+
+    const fixture = TestBed.createComponent(SessionsComponent);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const cardButtons = (index: number) => {
+      const card = root.querySelectorAll('app-session-actions')[index] as HTMLElement;
+      return ['Realizada', 'Faltou', 'Cancelada'].map(text => buttonByText(card, text));
+    };
+
+    cardButtons(0)[0]?.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.busyId()).toBe('s-a');
+    for (const button of cardButtons(1)) expect(button?.disabled).toBe(true);
+
+    resolveWrite();
+    await new Promise(resolve => setTimeout(resolve));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.busyId()).toBeNull();
+    for (const button of cardButtons(1)) expect(button?.disabled).toBe(false);
+  });
+
   it('exibe o erro emitido pelas ações da sessão', async () => {
     setStatusImpl = async () => {
       throw new Error('Sem conexão.');
