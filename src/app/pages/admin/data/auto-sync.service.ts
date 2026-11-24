@@ -56,7 +56,9 @@ export class AutoSyncService {
     try {
       for (const month of months) {
         const joined = this.inFlight.get(month);
-        const step = joined ? await this.join(joined, force) : await this.start(month, force);
+        let step = joined ? await this.join(joined, force) : await this.start(month, force);
+        // Clique manual que caiu numa automática que acabou pulando o mês: sincroniza de verdade.
+        if (force && joined && step?.kind === 'skipped') step = await this.start(month, true);
         if (step === null) continue;
         if (step.kind === 'synced' && (force || !joined)) {
           outcome.synced.push(month);
@@ -93,7 +95,7 @@ export class AutoSyncService {
       this.errorState.set(AUTO_SYNC_ERROR);
       return null;
     } finally {
-      this.inFlight.delete(month);
+      if (this.inFlight.get(month) === promise) this.inFlight.delete(month);
     }
   }
 

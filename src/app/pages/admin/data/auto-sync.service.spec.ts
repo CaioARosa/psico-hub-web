@@ -108,6 +108,21 @@ describe('AutoSyncService', () => {
     expect(b.skipped).toEqual(['2026-11']);
   });
 
+  it('force durante uma automática que acaba pulando ainda sincroniza o mês', async () => {
+    let finishRead!: (value: Date | null) => void;
+    lastSyncedAtOnce.mockImplementation(() => new Promise<Date | null>(resolve => (finishRead = resolve)));
+
+    const auto = service();
+    const automatic = auto.run(['2026-11']);
+    await vi.waitFor(() => expect(lastSyncedAtOnce).toHaveBeenCalled());
+    const manual = auto.run(['2026-11'], { force: true });
+    finishRead(hoursAgo(1));
+    const [, forced] = await Promise.all([automatic, manual]);
+
+    expect(sync).toHaveBeenCalledTimes(1);
+    expect(forced.synced).toEqual(['2026-11']);
+  });
+
   it('syncing fica verdadeiro durante a execução e falso depois', async () => {
     let finish!: (value: SyncResult) => void;
     sync.mockImplementation(() => new Promise<SyncResult>(resolve => (finish = resolve)));

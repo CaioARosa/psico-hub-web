@@ -72,8 +72,12 @@ describe('needsAutoSync', () => {
     expect(needsAutoSync(hoursAgo(6), now)).toBe(true);
   });
 
-  it('registro no futuro (relógio atrasado) conta como recente', () => {
+  it('registro até 1 h no futuro (pequena diferença de relógio) conta como recente', () => {
     expect(needsAutoSync(new Date(now.getTime() + 60 * 60 * 1000), now)).toBe(false);
+  });
+
+  it('registro muito no futuro (relógio do aparelho atrasado) não bloqueia a sincronização', () => {
+    expect(needsAutoSync(new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000), now)).toBe(true);
   });
 });
 

@@ -11,10 +11,15 @@ const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
 
-/** Sem registro, ou com registro de {@link AUTO_SYNC_AFTER_HOURS} horas ou mais. Registro no futuro (relógio atrasado) conta como recente. */
+/**
+ * Sem registro, com registro de {@link AUTO_SYNC_AFTER_HOURS} horas ou mais, ou com registro mais de 1 h no futuro
+ * (relógio do aparelho atrasado: sem esse limite a agenda ficaria dias sem sincronizar). Até 1 h no futuro é só
+ * diferença de relógio e conta como recente.
+ */
 export function needsAutoSync(lastSyncedAt: Date | null, now: Date): boolean {
   if (!lastSyncedAt) return true;
-  return now.getTime() - lastSyncedAt.getTime() >= AUTO_SYNC_AFTER_HOURS * HOUR_MS;
+  const elapsed = now.getTime() - lastSyncedAt.getTime();
+  return elapsed >= AUTO_SYNC_AFTER_HOURS * HOUR_MS || elapsed < -HOUR_MS;
 }
 
 /** Rótulo curto de quanto tempo faz que a agenda foi sincronizada: `há 30 min`, `há 5 h`, `há 2 dias`. */
