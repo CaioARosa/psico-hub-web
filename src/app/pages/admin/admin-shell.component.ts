@@ -15,6 +15,7 @@ import { lucideLogOut } from '@ng-icons/lucide';
 
 import { ZardButtonComponent } from '@/shared/components/button';
 import { AuthService } from './data/auth.service';
+import { AutoSyncService } from './data/auto-sync.service';
 import { prefersReducedMotion } from './motion/reduced-motion';
 import { useNoIndex } from './noindex';
 
@@ -91,6 +92,7 @@ interface PillBox {
 })
 export class AdminShellComponent {
   private readonly auth = inject(AuthService);
+  private readonly autoSync = inject(AutoSyncService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sentinel = viewChild.required<ElementRef<HTMLElement>>('sentinel');
@@ -118,6 +120,7 @@ export class AdminShellComponent {
     this.destroyRef.onDestroy(() => this.cancelRaf());
 
     afterNextRender(() => {
+      void this.autoSync.runOnEntry();
       this.observeScroll();
       this.observeLayout();
     });
