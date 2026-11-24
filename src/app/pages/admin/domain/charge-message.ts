@@ -18,12 +18,16 @@ export function chargeMessage(name: string, totalCents: number): string {
   return `Olá, ${firstName(name)}! Tudo bem? Passando para lembrar do valor em aberto das sessões: ${formatCents(totalCents)}. Quando fizer o Pix, pode me mandar o comprovante? Obrigada!`;
 }
 
+/** Monta o link `https://wa.me/...` com texto livre, ou `null` se o telefone for inválido ou o texto estiver vazio. */
+export function whatsappLink(phone: string, text: string): string | null {
+  const normalized = whatsappNumber(phone);
+  if (!normalized || text.trim() === '') return null;
+  return `https://wa.me/${normalized}?text=${encodeURIComponent(text)}`;
+}
+
 /** Monta o link `https://wa.me/...` pronto para cobrança manual, ou `null` se faltar número, nome ou valor válido. */
 export function whatsappChargeUrl(phone: string, name: string, totalCents: number): string | null {
-  const normalized = whatsappNumber(phone);
-  if (!normalized || firstName(name) === '') return null;
+  if (firstName(name) === '') return null;
   if (!Number.isSafeInteger(totalCents) || totalCents <= 0) return null;
-
-  const text = encodeURIComponent(chargeMessage(name, totalCents));
-  return `https://wa.me/${normalized}?text=${text}`;
+  return whatsappLink(phone, chargeMessage(name, totalCents));
 }

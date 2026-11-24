@@ -1,4 +1,4 @@
-import { chargeMessage, whatsappChargeUrl, whatsappNumber } from './charge-message';
+import { chargeMessage, whatsappChargeUrl, whatsappLink, whatsappNumber } from './charge-message';
 import { formatCents } from './money';
 
 describe('whatsappNumber', () => {
@@ -60,4 +60,20 @@ describe('whatsappChargeUrl', () => {
       expect(whatsappChargeUrl('(11) 98888-7777', 'Ana Paula', totalCents)).toBeNull();
     },
   );
+});
+
+describe('whatsappLink', () => {
+  it('monta URL wa.me com número normalizado e o texto livre codificado', () => {
+    expect(whatsappLink('(11) 98888-7777', 'Oi, Ana! Tudo bem?')).toBe(
+      `https://wa.me/5511988887777?text=${encodeURIComponent('Oi, Ana! Tudo bem?')}`,
+    );
+  });
+
+  it('devolve null para telefone inválido', () => {
+    expect(whatsappLink('1234-567', 'Oi')).toBeNull();
+  });
+
+  it.each(['', '   '])('devolve null para texto vazio (%j)', text => {
+    expect(whatsappLink('(11) 98888-7777', text)).toBeNull();
+  });
 });
