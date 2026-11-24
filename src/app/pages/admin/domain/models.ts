@@ -17,6 +17,9 @@ export interface Patient {
 
 export type SessionStatus = 'scheduled' | 'done' | 'no_show' | 'cancelled' | 'rescheduled';
 
+/** Status que a psicóloga confirma manualmente (Realizada/Faltou/Cancelada). */
+export type ConfirmableStatus = Exclude<SessionStatus, 'scheduled' | 'rescheduled'>;
+
 export type ReschedulableStatus = 'scheduled' | 'no_show' | 'cancelled';
 
 export const RESCHEDULABLE_STATUSES: readonly ReschedulableStatus[] = [

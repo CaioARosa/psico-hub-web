@@ -3,7 +3,7 @@ import { collection, deleteDoc, doc, onSnapshot, orderBy, query, updateDoc, wher
 
 import { pricingForAgreement } from '../domain/money';
 import { monthWindow } from '../domain/month';
-import type { Patient, Session, SessionStatus } from '../domain/models';
+import type { ConfirmableStatus, Patient, Session } from '../domain/models';
 import { sessionFromDoc } from '../domain/session-doc';
 import { patientChangeUpdate, sessionStatusUpdate } from '../domain/session-update';
 import { canConfirm } from '../domain/sessions-view';
@@ -128,7 +128,7 @@ export class SessionsService {
   }
 
   /** Recusa sessão sem paciente, conferindo os dados que o serviço tem (não só a UI). */
-  async setStatus(id: string, status: Exclude<SessionStatus, 'scheduled'>): Promise<void> {
+  async setStatus(id: string, status: ConfirmableStatus): Promise<void> {
     const session = this.known(id);
     if (!session) throw new Error(NOT_FOUND_ERROR);
     if (!canConfirm(session)) throw new Error(UNIDENTIFIED_ERROR);

@@ -16,12 +16,13 @@ import { CalendarSyncService } from '../data/calendar-sync.service';
 import { PatientsService } from '../data/patients.service';
 import { SAVE_ERROR } from '../data/safe-write';
 import { SessionsService } from '../data/sessions.service';
-import type { Patient, Session, SessionStatus } from '../domain/models';
+import type { ConfirmableStatus, Session, SessionStatus } from '../domain/models';
 import { currentMonth, isValidMonth } from '../domain/month';
 import { canConfirm, formatSessionDateTime, groupSessions, statusLabel } from '../domain/sessions-view';
 import { syncSummary } from '../domain/sync-summary';
 import { MonthPickerComponent } from '../month-picker.component';
 import { canAnimateMotion } from '../motion/reduced-motion';
+import { SessionActionsComponent } from './session-actions.component';
 
 export type SessionTab = 'all' | 'pending' | 'unidentified';
 const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
@@ -36,6 +37,7 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
     ZardBadgeComponent,
     ZardAlertComponent,
     MonthPickerComponent,
+    SessionActionsComponent,
     ...ZardSelectImports,
     ZardSkeletonComponent,
     ZardEmptyComponent,
@@ -189,103 +191,15 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
                         }
                       </div>
 
-                      <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Confirmar status da sessão">
-                        <button
-                          z-button
-                          [zType]="session.status === 'done' ? 'default' : 'outline'"
-                          zSize="sm"
-                          type="button"
-                          [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
-                          (click)="changeStatus(session, 'done')"
-                        >
-                          Realizada
-                        </button>
-                        <button
-                          z-button
-                          [zType]="session.status === 'no_show' ? 'default' : 'outline'"
-                          zSize="sm"
-                          type="button"
-                          [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
-                          (click)="changeStatus(session, 'no_show')"
-                        >
-                          Faltou
-                        </button>
-                        <button
-                          z-button
-                          [zType]="session.status === 'cancelled' ? 'default' : 'outline'"
-                          zSize="sm"
-                          type="button"
-                          [zDisabled]="!canConfirmSession(session) || busyId() === session.id"
-                          (click)="changeStatus(session, 'cancelled')"
-                        >
-                          Cancelada
-                        </button>
-                      </div>
+                      <app-session-actions
+                        [session]="session"
+                        [patients]="patientsService.patients()"
+                        [busy]="busyId() === session.id"
+                        (busyChange)="onActionBusy(session.id, $event)"
+                        (done)="flashSession(session.id)"
+                        (failed)="actionError.set($event)"
+                      />
                     </div>
-
-                    @if (canConfirmSession(session)) {
-                      @if (changingId() === session.id) {
-                        <z-separator />
-                        <div class="flex flex-wrap items-end gap-2">
-                          <div class="space-y-1 grow max-w-xs">
-                            <label [attr.for]="'change-patient-' + session.id" class="block text-xs font-medium text-foreground">
-                              Trocar para
-                            </label>
-                            <z-select
-                              [id]="'change-patient-' + session.id"
-                              [zLabel]="'Trocar para'"
-                              zPlaceholder="Selecione um paciente..."
-                              class="w-full"
-                              [zValue]="changeSelection() ?? ''"
-                              (zSelectionChange)="selectChangePatient($any($event))"
-                            >
-                              @for (patient of changeOptions(session); track patient.id) {
-                                <z-select-item [zValue]="patient.id">{{ patient.name }}</z-select-item>
-                              }
-                            </z-select>
-                          </div>
-                          <button
-                            z-button
-                            zSize="sm"
-                            type="button"
-                            class="h-10 rounded-xl px-4"
-                            [zLoading]="busyId() === session.id"
-                            [zDisabled]="!changeSelection() || busyId() === session.id"
-                            (click)="saveChangePatient(session)"
-                          >
-                            Salvar
-                          </button>
-                          <button
-                            z-button
-                            zType="ghost"
-                            zSize="sm"
-                            type="button"
-                            class="h-10 rounded-xl px-4"
-                            [zDisabled]="busyId() === session.id"
-                            (click)="cancelChangePatient()"
-                          >
-                            Cancelar
-                          </button>
-                          <p class="w-full text-xs text-muted-foreground">
-                            O valor da sessão passa a seguir o acordo do novo paciente.
-                          </p>
-                        </div>
-                      } @else {
-                        <div class="flex justify-end -mt-1">
-                          <button
-                            z-button
-                            zType="ghost"
-                            zSize="sm"
-                            type="button"
-                            class="text-xs text-muted-foreground"
-                            [zDisabled]="busyId() === session.id"
-                            (click)="startChangePatient(session)"
-                          >
-                            Trocar paciente
-                          </button>
-                        </div>
-                      }
-                    }
 
                     @if (!canConfirmSession(session)) {
                       <z-separator />
@@ -392,8 +306,6 @@ export class SessionsComponent {
   readonly justUpdatedId = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
   readonly selectedPatients = signal<Record<string, string | undefined>>({});
-  readonly changingId = signal<string | null>(null);
-  readonly changeSelection = signal<string | null>(null);
   private flashTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
@@ -420,7 +332,6 @@ export class SessionsComponent {
     this.syncMessage.set(null);
     this.syncError.set(null);
     this.actionError.set(null);
-    this.cancelChangePatient();
     this.watch.set(this.sessionsService.watchMonth(value));
   }
 
@@ -469,7 +380,7 @@ export class SessionsComponent {
     return 'admin-badge-smooth bg-[#4C645B]/10 text-[#556661]';
   }
 
-  private flashSession(id: string): void {
+  protected flashSession(id: string): void {
     if (!canAnimateMotion()) return;
     this.clearFlashTimer();
     this.justUpdatedId.set(id);
@@ -503,7 +414,7 @@ export class SessionsComponent {
     }
   }
 
-  async changeStatus(session: Session, status: Exclude<SessionStatus, 'scheduled'>): Promise<void> {
+  async changeStatus(session: Session, status: ConfirmableStatus): Promise<void> {
     if (this.busyId() !== null) return;
     if (!canConfirm(session)) {
       this.actionError.set('Vincule um paciente a esta sessão antes de confirmá-la.');
@@ -538,33 +449,9 @@ export class SessionsComponent {
     }
   }
 
-  startChangePatient(session: Session): void {
-    this.actionError.set(null);
-    this.changeSelection.set(null);
-    this.changingId.set(session.id);
-  }
-
-  cancelChangePatient(): void {
-    this.changingId.set(null);
-    this.changeSelection.set(null);
-  }
-
-  selectChangePatient(patientId: string): void {
-    this.changeSelection.set(patientId);
-  }
-
-  protected changeOptions(session: Session): Patient[] {
-    return this.activePatients().filter(p => p.id !== session.patientId);
-  }
-
-  async saveChangePatient(session: Session): Promise<void> {
-    const patient = this.changeOptions(session).find(p => p.id === this.changeSelection());
-    if (!patient) return;
-    await this.runSessionAction(session.id, async () => {
-      await this.sessionsService.changePatient(session.id, patient);
-      this.cancelChangePatient();
-      this.flashSession(session.id);
-    });
+  protected onActionBusy(id: string, busy: boolean): void {
+    if (busy) this.actionError.set(null);
+    this.busyId.set(busy ? id : null);
   }
 
   async keepSession(session: Session): Promise<void> {
