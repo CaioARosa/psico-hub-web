@@ -105,6 +105,7 @@ export class AdminShellComponent {
     { path: '/admin/sessoes', label: 'Sessões' },
     { path: '/admin/pagamentos', label: 'Pagamentos' },
     { path: '/admin/financeiro', label: 'Financeiro' },
+    { path: '/admin/cobranca', label: 'Cobrança' },
   ];
 
   protected readonly scrolled = signal(false);

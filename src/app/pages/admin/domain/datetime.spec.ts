@@ -1,4 +1,4 @@
-import { dateKeyOf, timeOf, zonedDateTime } from './datetime';
+import { dateKeyOf, shortDateOf, timeOf, zonedDateTime } from './datetime';
 
 describe('zonedDateTime', () => {
   it('interpreta data e hora em UTC-3', () => {
@@ -41,5 +41,15 @@ describe('dateKeyOf e timeOf', () => {
     const date = zonedDateTime('2027-01-01', '00:15');
     expect(dateKeyOf(date)).toBe('2027-01-01');
     expect(timeOf(date)).toBe('00:15');
+  });
+});
+
+describe('shortDateOf', () => {
+  it('formata dd/mm em UTC-3', () => {
+    expect(shortDateOf(new Date('2026-11-20T15:00:00Z'))).toBe('20/11');
+  });
+
+  it('antes das 03:00Z ainda é o dia anterior em UTC-3', () => {
+    expect(shortDateOf(new Date('2026-11-21T02:00:00Z'))).toBe('20/11');
   });
 });
