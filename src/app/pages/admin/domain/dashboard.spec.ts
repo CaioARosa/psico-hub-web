@@ -134,16 +134,47 @@ describe('buildDashboard: valores', () => {
     expect(dashboard.due).toBe(summary.totals.due);
   });
 
-  it('previsto soma só pacientes ativos', () => {
-    expect(dashboardFor('2026-11').expected).toBe(120000);
+  it('sem agendadas, o previsto do mês é igual ao devido', () => {
+    expect(dashboardFor('2026-11').expected).toBe(100000);
   });
 
-  it('paciente com sessionsPerMonth 0 não entra no previsto', () => {
-    const withZero = [
-      patient('ana', 'Ana', { ...perSession, sessionsPerMonth: 0 }),
-      ...patients.slice(1),
+  it('previsto soma agendadas e deixa canceladas e reagendadas de fora', () => {
+    const sessions = [
+      ...novemberSessions,
+      session('a5', '2026-11-24T13:00:00Z', 'scheduled', { amountApplied: 15000 }),
+      session('a6', '2026-11-25T13:00:00Z', 'cancelled', { amountApplied: 15000 }),
+      session('a7', '2026-11-26T13:00:00Z', 'rescheduled', { amountApplied: 15000 }),
+      session('b2', '2026-11-25T13:00:00Z', 'scheduled', {
+        patientId: 'bruno',
+        packageAmountApplied: 60000,
+      }),
     ];
-    expect(dashboardFor('2026-11', { patients: withZero }).expected).toBe(60000);
+    expect(dashboardFor('2026-11', { sessions }).expected).toBe(115000);
+  });
+
+  it('agendada ausente do Agenda fica fora do previsto', () => {
+    const sessions = [
+      ...novemberSessions,
+      session('a5', '2026-11-24T13:00:00Z', 'scheduled', {
+        amountApplied: 15000,
+        missingFromCalendar: true,
+      }),
+    ];
+    expect(dashboardFor('2026-11', { sessions }).expected).toBe(100000);
+  });
+
+  it('pacote só com agendadas entra uma vez no previsto do mês futuro', () => {
+    const sessions = [3, 10].map(day =>
+      session(`b-dez-${day}`, `2026-12-${String(day).padStart(2, '0')}T13:00:00Z`, 'scheduled', {
+        patientId: 'bruno',
+        packageAmountApplied: 60000,
+      }),
+    );
+    expect(dashboardFor('2026-12', { sessions }).expected).toBe(60000);
+  });
+
+  it('mês sem sessões tem previsto zero', () => {
+    expect(dashboardFor('2026-08').expected).toBe(0);
   });
 });
 

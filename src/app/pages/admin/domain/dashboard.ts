@@ -1,4 +1,4 @@
-import { summarizeMonth } from './finance';
+import { expectedForMonth, summarizeMonth } from './finance';
 import type { Ledger } from './finance';
 import { currentMonth, shiftMonth } from './month';
 import type { Patient, Session } from './models';
@@ -70,7 +70,7 @@ export function buildDashboard(input: {
     rescheduled: monthSessions.filter(session => session.status === 'rescheduled').length,
     received: summary.totals.received,
     due: summary.totals.due,
-    expected: expectedFor(patients),
+    expected: expectedForMonth({ patients, sessions: input.sessions, month }),
     hasSessions: summary.hasSessions,
     hasLinkedSessions: summary.hasLinkedSessions,
     unlinkedSessions: summary.unlinkedSessions,
@@ -110,16 +110,4 @@ function alertsFor(
   return alerts.sort(
     (a, b) => a.name.localeCompare(b.name, 'pt-BR') || a.patientId.localeCompare(b.patientId),
   );
-}
-
-function expectedFor(patients: Patient[]): number {
-  let total = 0;
-  for (const { active, agreement } of patients) {
-    if (!active || agreement.sessionsPerMonth <= 0) continue;
-    total +=
-      agreement.type === 'per_session'
-        ? agreement.sessionsPerMonth * agreement.amount
-        : agreement.amount;
-  }
-  return total;
 }

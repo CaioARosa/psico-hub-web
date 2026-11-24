@@ -190,6 +190,30 @@ export function summarizeMonth(ledger: Ledger, month: string): MonthSummary {
   };
 }
 
+/** Previsto do mês: o devido se as agendadas que seguem no Agenda forem realizadas; canceladas e reagendadas ficam fora. */
+export function expectedForMonth(input: {
+  patients: Patient[];
+  sessions: Session[];
+  month: string;
+}): number {
+  const agreements = new Map(input.patients.map(patient => [patient.id, patient.agreement] as const));
+  const asDone = input.sessions
+    .filter(
+      session =>
+        currentMonth(session.startsAt) === input.month &&
+        !(session.status === 'scheduled' && session.missingFromCalendar),
+    )
+    .map(session =>
+      session.status === 'scheduled' ? { ...session, status: 'done' as const } : session,
+    );
+
+  let total = 0;
+  for (const [patientId, sessions] of groupBy(asDone, session => session.patientId)) {
+    for (const due of dueFor(agreements.get(patientId) ?? null, sessions).values()) total += due;
+  }
+  return total;
+}
+
 function dueFor(agreement: Agreement | null, sessions: Session[]): Map<string, number> {
   const ordered = [...sessions].sort(
     (a, b) => a.startsAt.getTime() - b.startsAt.getTime() || a.id.localeCompare(b.id),

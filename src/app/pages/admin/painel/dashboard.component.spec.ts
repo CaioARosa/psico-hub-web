@@ -92,7 +92,6 @@ function scenarioSessions(): Session[] {
       id: 'ana-nov-3',
       startsAt: new Date('2026-11-26T13:00:00.000Z'),
       status: 'scheduled',
-      amountApplied: 0,
     }),
     makeSession({
       id: 'bruno-nov',
@@ -245,7 +244,7 @@ describe('DashboardComponent', () => {
     expect(cardValue(fixture, 'Cancelamentos')).toBe('0');
     expect(cardValue(fixture, 'Recebido')).toBe(money(15000));
     expect(cardValue(fixture, 'Devido')).toBe(money(90000));
-    expect(cardValue(fixture, 'Previsto (acordos atuais)')).toBe(money(120000));
+    expect(cardValue(fixture, 'Previsto do mês')).toBe(money(105000));
   });
 
   it('Recebido e Devido batem com o Financeiro', () => {
@@ -269,7 +268,7 @@ describe('DashboardComponent', () => {
 
     expect(block).toContain('Previsto × Realizado');
     expect(block).toContain(money(90000));
-    expect(block).toContain(money(120000));
+    expect(block).toContain(money(105000));
     expect(forecastBlock(fixture).querySelector('[aria-hidden="true"]')).not.toBeNull();
   });
 
@@ -369,7 +368,7 @@ describe('DashboardComponent', () => {
     expect(cardValue(fixture, 'Devido')).toBe('—');
   });
 
-  it('mês só com sessão sem paciente: Devido e Realizado viram traço, Recebido continua', () => {
+  it('mês só com sessão sem paciente: Devido, Realizado e Previsto viram traço, Recebido continua', () => {
     sessionsSignal.update(list => [
       ...list,
       makeSession({
@@ -395,7 +394,7 @@ describe('DashboardComponent', () => {
     expect(cardValue(fixture, 'Devido')).toBe('—');
     expect(cardValue(fixture, 'Recebido')).toBe(money(50000));
     expect(cardValue(fixture, 'Realizado')).toBe('—');
-    expect(cardValue(fixture, 'Previsto (acordos atuais)')).toBe(money(120000));
+    expect(cardValue(fixture, 'Previsto do mês')).toBe('—');
     expect(forecastBlock(fixture).querySelector('[aria-hidden="true"]')).toBeNull();
   });
 

@@ -139,8 +139,8 @@ import { RevenueChartComponent } from './revenue-chart.component';
             <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="dueCents()" [countFormat]="formatCents"></dd>
           </div>
           <div appSpotlight class="bg-card rounded-2xl border border-border shadow-2xs p-4 col-span-2">
-            <dt class="text-xs font-medium text-muted-foreground">Previsto (acordos atuais)</dt>
-            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="dashboard().expected" [countFormat]="formatCents"></dd>
+            <dt class="text-xs font-medium text-muted-foreground">Previsto do mês</dt>
+            <dd class="font-display text-2xl text-foreground mt-1 tabular-nums" [appCountUp]="expectedCents()" [countFormat]="formatCents"></dd>
           </div>
         </dl>
 
@@ -161,7 +161,7 @@ import { RevenueChartComponent } from './revenue-chart.component';
               </div>
               <div>
                 <dt class="text-xs text-muted-foreground">Previsto</dt>
-                <dd class="font-display text-xl text-foreground tabular-nums" [appCountUp]="dashboard().expected" [countFormat]="formatCents"></dd>
+                <dd class="font-display text-xl text-foreground tabular-nums" [appCountUp]="expectedCents()" [countFormat]="formatCents"></dd>
               </div>
             </dl>
             @if (forecastPercent() !== null) {
@@ -288,6 +288,12 @@ export class DashboardComponent {
   protected readonly dueCents = computed(() => {
     const { hasLinkedSessions, due } = this.dashboard();
     return hasLinkedSessions ? due : null;
+  });
+
+  /** O previsto vem das sessões do mês: sem sessão vinculada também vira traço. */
+  protected readonly expectedCents = computed(() => {
+    const { hasLinkedSessions, expected } = this.dashboard();
+    return hasLinkedSessions ? expected : null;
   });
 
   /** Aviso sobre a última sincronização: sem ela, agendadas recentes faltam na contagem e geram "falta" falsa. */
