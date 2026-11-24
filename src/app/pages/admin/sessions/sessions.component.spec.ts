@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { CalendarSyncService } from '../data/calendar-sync.service';
 import { PatientsService } from '../data/patients.service';
+import { RescheduleService } from '../data/reschedule.service';
 import { SessionsService, type MonthWatch } from '../data/sessions.service';
 import type { Patient, Session } from '../domain/models';
 import { SessionsComponent } from './sessions.component';
@@ -126,12 +127,17 @@ describe('SessionsComponent', () => {
       sync: (month: string) => syncImpl(month),
     };
 
+    const fakeReschedule: Pick<RescheduleService, 'reschedule'> = {
+      reschedule: async (_id, startsAt) => ({ kind: 'ok', newSessionId: 'new-id', startsAt }),
+    };
+
     TestBed.configureTestingModule({
       imports: [SessionsComponent],
       providers: [
         { provide: SessionsService, useValue: fakeSessionsService },
         { provide: PatientsService, useValue: fakePatientsService },
         { provide: CalendarSyncService, useValue: fakeCalendarSync },
+        { provide: RescheduleService, useValue: fakeReschedule },
       ],
     });
   });
@@ -313,5 +319,44 @@ describe('SessionsComponent', () => {
 
     expect(fixture.componentInstance.actionError()).toBe('Sem conexão.');
     expect(root.textContent ?? '').toContain('Sem conexão.');
+  });
+
+  it('exibe selo Reagendada, nota de reagendamento na original e na nova, e alerta de sucesso de done', () => {
+    sessionsSignal.set([
+      makeSession({
+        id: 's-old',
+        status: 'rescheduled',
+        rescheduledToId: 's-new',
+        rescheduledToStartsAt: new Date('2026-11-26T23:00:00.000Z'),
+        statusBeforeReschedule: 'no_show',
+      }),
+      makeSession({
+        id: 's-new',
+        status: 'scheduled',
+        startsAt: new Date('2026-11-26T23:00:00.000Z'),
+        rescheduledFromId: 's-old',
+        rescheduledFromStartsAt: new Date('2026-11-23T22:00:00.000Z'),
+      }),
+    ]);
+
+    const fixture = TestBed.createComponent(SessionsComponent);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const text = (root.textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('Reagendada');
+    expect(text).toContain('Reagendada para qui, 26/nov, 20:00 (era Faltou)');
+    expect(text).toContain('Reagendada de seg, 23/nov, 19:00');
+
+    const actions = fixture.debugElement.children[0].query(
+      el => el.name === 'app-session-actions',
+    );
+    actions.componentInstance.done.emit('Reagendada para qui, 03/dez, 19:00. (em dezembro)');
+    fixture.detectChanges();
+
+    const statusAlert = root.querySelector('z-alert[zrole="status"], [role="status"]');
+    expect(statusAlert?.textContent ?? '').toContain(
+      'Reagendada para qui, 03/dez, 19:00. (em dezembro)',
+    );
   });
 });

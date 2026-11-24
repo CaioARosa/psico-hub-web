@@ -18,7 +18,13 @@ import { SAVE_ERROR } from '../data/safe-write';
 import { SessionsService } from '../data/sessions.service';
 import type { ConfirmableStatus, Session, SessionStatus } from '../domain/models';
 import { currentMonth, isValidMonth } from '../domain/month';
-import { canConfirm, formatSessionDateTime, groupSessions, statusLabel } from '../domain/sessions-view';
+import {
+  canConfirm,
+  formatSessionDateTime,
+  groupSessions,
+  rescheduleNote,
+  statusLabel,
+} from '../domain/sessions-view';
 import { syncSummary } from '../domain/sync-summary';
 import { MonthPickerComponent } from '../month-picker.component';
 import { canAnimateMotion } from '../motion/reduced-motion';
@@ -62,6 +68,7 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
       .admin-session-card[data-status='done']::before { background-color: #4d6d66; }
       .admin-session-card[data-status='no_show']::before { background-color: #d97706; }
       .admin-session-card[data-status='cancelled']::before { background-color: #a8a29e; }
+      .admin-session-card[data-status='rescheduled']::before { background-color: #64748b; }
       .admin-badge-smooth { transition: background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease; }
       @keyframes session-flash {
         0% { box-shadow: 0 0 0 0 rgb(77 109 102 / 0.28); border-color: rgb(77 109 102 / 0.55); }
@@ -147,6 +154,15 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
 
       <ng-template #sessionContent>
         <div class="admin-pane space-y-4 pt-3">
+          @if (actionMessage()) {
+            <z-alert
+              zRole="status"
+              zIcon="lucideCheck"
+              class="bg-[#D4E6E1]/45 border-[#4D6D66]/25 text-foreground rounded-xl"
+              [zDescription]="actionMessage()!"
+            />
+          }
+
           @if (actionError()) {
             <z-alert zType="destructive" zRole="alert" [zDescription]="actionError()!" />
           }
@@ -186,6 +202,9 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
                           }
                         </div>
                         <p class="text-sm text-muted-foreground tabular-nums">{{ formatDateTime(session.startsAt) }}</p>
+                        @if (noteOf(session); as note) {
+                          <p class="text-xs text-slate-600">{{ note }}</p>
+                        }
                         @if (session.calendarTitle) {
                           <p class="text-xs text-muted-foreground">{{ session.calendarTitle }}</p>
                         }
@@ -196,7 +215,7 @@ const TAB_ORDER: readonly SessionTab[] = ['all', 'pending', 'unidentified'];
                         [patients]="patientsService.patients()"
                         [locked]="busyId() !== null"
                         (workingChange)="onActionBusy(session.id, $event)"
-                        (done)="flashSession(session.id)"
+                        (done)="onActionDone(session.id, $event)"
                         (failed)="actionError.set($event)"
                       />
                     </div>
@@ -304,6 +323,7 @@ export class SessionsComponent {
 
   readonly busyId = signal<string | null>(null);
   readonly justUpdatedId = signal<string | null>(null);
+  readonly actionMessage = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
   readonly selectedPatients = signal<Record<string, string | undefined>>({});
   private flashTimer: ReturnType<typeof setTimeout> | null = null;
@@ -331,6 +351,7 @@ export class SessionsComponent {
     this.month.set(value);
     this.syncMessage.set(null);
     this.syncError.set(null);
+    this.actionMessage.set(null);
     this.actionError.set(null);
     this.watch.set(this.sessionsService.watchMonth(value));
   }
@@ -341,6 +362,7 @@ export class SessionsComponent {
 
   setTab(tab: SessionTab): void {
     this.activeTab.set(tab);
+    this.actionMessage.set(null);
     this.actionError.set(null);
   }
 
@@ -363,6 +385,10 @@ export class SessionsComponent {
 
   protected formatDateTime(date: Date): string {
     return formatSessionDateTime(date);
+  }
+
+  protected noteOf(session: Session): string | null {
+    return rescheduleNote(session);
   }
 
   protected badgeType(status: SessionStatus): ZardBadgeTypeVariants {
@@ -451,11 +477,17 @@ export class SessionsComponent {
 
   protected onActionBusy(id: string, busy: boolean): void {
     if (busy) {
+      this.actionMessage.set(null);
       this.actionError.set(null);
       this.busyId.set(id);
     } else if (this.busyId() === id) {
       this.busyId.set(null);
     }
+  }
+
+  protected onActionDone(id: string, message: string | null): void {
+    this.flashSession(id);
+    if (message) this.actionMessage.set(message);
   }
 
   async keepSession(session: Session): Promise<void> {

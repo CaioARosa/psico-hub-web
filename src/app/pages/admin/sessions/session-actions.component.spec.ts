@@ -1,5 +1,7 @@
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
+import { RescheduleService, type RescheduleResult } from '../data/reschedule.service';
 import { SessionsService } from '../data/sessions.service';
+import { zonedDateTime } from '../domain/datetime';
 import type { Patient, Session } from '../domain/models';
 import { SessionActionsComponent } from './session-actions.component';
 
@@ -55,8 +57,10 @@ function makeSession(overrides: Partial<Session> & { id: string }): Session {
 describe('SessionActionsComponent', () => {
   let setStatusCalls: Array<{ id: string; status: string }> = [];
   let changePatientCalls: Array<{ id: string; patient: Patient }> = [];
+  let rescheduleCalls: Array<{ id: string; startsAt: Date; force: boolean }> = [];
   let setStatusError: Error | null = null;
   let changePatientError: Error | null = null;
+  let rescheduleImpl: (id: string, startsAt: Date, force?: boolean) => Promise<RescheduleResult>;
   let doneEvents: Array<string | null> = [];
   let failedEvents: string[] = [];
   let workingEvents: boolean[] = [];
@@ -64,8 +68,13 @@ describe('SessionActionsComponent', () => {
   beforeEach(() => {
     setStatusCalls = [];
     changePatientCalls = [];
+    rescheduleCalls = [];
     setStatusError = null;
     changePatientError = null;
+    rescheduleImpl = async (id, startsAt, force = false) => {
+      rescheduleCalls.push({ id, startsAt, force });
+      return { kind: 'ok', newSessionId: 'new-1', startsAt };
+    };
     doneEvents = [];
     failedEvents = [];
     workingEvents = [];
@@ -81,9 +90,16 @@ describe('SessionActionsComponent', () => {
       },
     };
 
+    const fakeRescheduleService: Pick<RescheduleService, 'reschedule'> = {
+      reschedule: (id, startsAt, force) => rescheduleImpl(id, startsAt, force),
+    };
+
     TestBed.configureTestingModule({
       imports: [SessionActionsComponent],
-      providers: [{ provide: SessionsService, useValue: fakeSessionsService }],
+      providers: [
+        { provide: SessionsService, useValue: fakeSessionsService },
+        { provide: RescheduleService, useValue: fakeRescheduleService },
+      ],
     });
   });
 
@@ -256,6 +272,159 @@ describe('SessionActionsComponent', () => {
       expect(fixture.componentInstance.mode()).toBeNull();
       expect(fixture.componentInstance.changeSelection()).toBeNull();
       expect(root.querySelector('#change-patient-s-2')).toBeNull();
+    });
+  });
+
+  describe('Reagendar', () => {
+    it('exibe botão Reagendar apenas para scheduled, no_show e cancelled com paciente', () => {
+      for (const status of ['scheduled', 'no_show', 'cancelled'] as const) {
+        const fixture = mount(makeSession({ id: `s-${status}`, status }));
+        expect(buttonByText(fixture.nativeElement as HTMLElement, 'Reagendar')).toBeDefined();
+      }
+
+      for (const status of ['done', 'rescheduled'] as const) {
+        const fixture = mount(makeSession({ id: `s-${status}`, status }));
+        expect(buttonByText(fixture.nativeElement as HTMLElement, 'Reagendar')).toBeUndefined();
+      }
+
+      const unlinked = mount(makeSession({ id: 's-unid', patientId: null }));
+      expect(buttonByText(unlinked.nativeElement as HTMLElement, 'Reagendar')).toBeUndefined();
+    });
+
+    it('preenche data padrão (+7 dias), horário original e texto de apoio ao abrir', () => {
+      const fixture = mount(
+        makeSession({
+          id: 's-orig',
+          startsAt: new Date('2026-11-26T22:00:00.000Z'),
+        }),
+      );
+      const root = fixture.nativeElement as HTMLElement;
+
+      buttonByText(root, 'Reagendar')?.click();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.rescheduleDateKey()).toBe('2026-12-03');
+      expect(fixture.componentInstance.rescheduleTime()).toBe('19:00');
+      const timeInput = root.querySelector<HTMLInputElement>('input[type="time"]');
+      expect(timeInput?.value).toBe('19:00');
+      expect((root.textContent ?? '').replace(/\s+/g, ' ')).toContain(
+        'A sessão de 26/nov fica como Reagendada e não é cobrada. O evento no Google Agenda é movido.',
+      );
+    });
+
+    it('reagenda para outro mês e emite done com o mês por extenso', async () => {
+      const fixture = mount(
+        makeSession({
+          id: 's-orig',
+          startsAt: new Date('2026-11-26T22:00:00.000Z'),
+        }),
+      );
+      const root = fixture.nativeElement as HTMLElement;
+
+      buttonByText(root, 'Reagendar')?.click();
+      fixture.detectChanges();
+
+      buttonByText(root, 'Reagendar')?.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(rescheduleCalls).toEqual([
+        {
+          id: 's-orig',
+          startsAt: zonedDateTime('2026-12-03', '19:00'),
+          force: false,
+        },
+      ]);
+      expect(doneEvents).toEqual(['Reagendada para qui, 03/dez, 19:00. (em dezembro)']);
+      expect(fixture.componentInstance.mode()).toBeNull();
+    });
+
+    it('exibe alerta de conflito e permite Reagendar mesmo assim ou Escolher outro horário', async () => {
+      let callCount = 0;
+      rescheduleImpl = async (id, startsAt, force = false) => {
+        callCount++;
+        rescheduleCalls.push({ id, startsAt, force });
+        if (!force) {
+          return {
+            kind: 'conflict',
+            conflicts: [
+              {
+                title: 'Psicoterapia Bruno',
+                startsAt: new Date('2026-12-03T22:00:00.000Z'),
+                endsAt: new Date('2026-12-03T22:50:00.000Z'),
+              },
+            ],
+          };
+        }
+        return { kind: 'ok', newSessionId: 'new-2', startsAt };
+      };
+
+      const fixture = mount(
+        makeSession({
+          id: 's-orig',
+          startsAt: new Date('2026-11-26T22:00:00.000Z'),
+        }),
+      );
+      const root = fixture.nativeElement as HTMLElement;
+
+      buttonByText(root, 'Reagendar')?.click();
+      fixture.detectChanges();
+
+      buttonByText(root, 'Reagendar')?.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const textAfterConflict = (root.textContent ?? '').replace(/\s+/g, ' ');
+      expect(textAfterConflict).toContain('Já existe compromisso nesse horário:');
+      expect(textAfterConflict).toContain('• Psicoterapia Bruno — 03/dez, 19:00–19:50');
+      expect(doneEvents).toEqual([]);
+
+      buttonByText(root, 'Escolher outro horário')?.click();
+      fixture.detectChanges();
+      expect((root.textContent ?? '').replace(/\s+/g, ' ')).not.toContain(
+        'Já existe compromisso nesse horário:',
+      );
+      expect(fixture.componentInstance.mode()).toBe('reschedule');
+
+      buttonByText(root, 'Reagendar')?.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(callCount).toBe(2);
+
+      buttonByText(root, 'Reagendar mesmo assim')?.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(rescheduleCalls.at(-1)).toEqual({
+        id: 's-orig',
+        startsAt: zonedDateTime('2026-12-03', '19:00'),
+        force: true,
+      });
+      expect(doneEvents).toEqual(['Reagendada para qui, 03/dez, 19:00. (em dezembro)']);
+    });
+
+    it('emite failed quando o serviço de reagendamento lança erro', async () => {
+      rescheduleImpl = async () => {
+        throw new Error('Escolha uma data/hora diferente da atual.');
+      };
+      const fixture = mount(
+        makeSession({
+          id: 's-orig',
+          startsAt: new Date('2026-11-26T22:00:00.000Z'),
+        }),
+      );
+      const root = fixture.nativeElement as HTMLElement;
+
+      buttonByText(root, 'Reagendar')?.click();
+      fixture.detectChanges();
+
+      buttonByText(root, 'Reagendar')?.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(failedEvents).toEqual(['Escolha uma data/hora diferente da atual.']);
+      expect(doneEvents).toEqual([]);
+      expect(fixture.componentInstance.mode()).toBe('reschedule');
     });
   });
 });
