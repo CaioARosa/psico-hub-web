@@ -17,11 +17,13 @@ import { ZardTableImports } from '@/shared/components/table';
 import { MonthPickerComponent } from '../month-picker.component';
 import { CountUpDirective } from '../motion/count-up.directive';
 import { SpotlightDirective } from '../motion/spotlight.directive';
+import { ChargesService } from '../data/charges.service';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService } from '../data/sessions.service';
 import { REMOVED_PATIENT_LABEL, buildLedger, summarizeMonth } from '../domain/finance';
 import { whatsappChargeUrl } from '../domain/charge-message';
+import { shortDateOf } from '../domain/datetime';
 import { currentMonth, isValidMonth } from '../domain/month';
 import { formatCents } from '../domain/money';
 import { pixPrefillQuery } from '../domain/pix-prefill';
@@ -79,9 +81,20 @@ import { unlinkedNote } from '../domain/unlinked-note';
           <p class="text-xs text-muted-foreground mt-0.5">Extrato por paciente, abatimentos e cobrança.</p>
         </div>
 
-        <div class="space-y-1.5">
-          <label for="finance-month" class="block text-sm font-medium text-foreground">Mês</label>
-          <app-month-picker zId="finance-month" [month]="month()" (monthChange)="setMonth($event)" />
+        <div class="flex flex-wrap items-end gap-3">
+          <a
+            z-button
+            zType="outline"
+            class="h-10 rounded-xl px-4"
+            routerLink="/admin/cobranca"
+            [queryParams]="{ mes: month() }"
+          >
+            Cobrar em fila
+          </a>
+          <div class="space-y-1.5">
+            <label for="finance-month" class="block text-sm font-medium text-foreground">Mês</label>
+            <app-month-picker zId="finance-month" [month]="month()" (monthChange)="setMonth($event)" />
+          </div>
         </div>
       </header>
 
@@ -196,6 +209,11 @@ import { unlinkedNote } from '../domain/unlinked-note';
                               Registrar Pix
                             </a>
                           }
+                          @if (row.chargedAt; as chargedAt) {
+                            <span class="text-xs text-muted-foreground whitespace-nowrap">
+                              Cobrada em {{ shortDate(chargedAt) }}
+                            </span>
+                          }
                           @if (row.chargeUrl; as url) {
                             <a
                               z-button
@@ -259,9 +277,11 @@ export class FinanceComponent {
   private readonly sessionsService = inject(SessionsService);
   private readonly patientsService = inject(PatientsService);
   private readonly paymentsService = inject(PaymentsService);
+  private readonly chargesService = inject(ChargesService);
   private readonly allSessions = this.sessionsService.watchAll();
 
   protected readonly formatCents = formatCents;
+  protected readonly shortDate = shortDateOf;
   protected readonly unlinkedNote = unlinkedNote;
 
   readonly month = signal(currentMonth(new Date()));
@@ -295,6 +315,7 @@ export class FinanceComponent {
   );
   readonly rows = computed(() => {
     const hasLinkedSessions = this.summary().hasLinkedSessions;
+    const charges = this.chargesService.watchMonth(this.month()).charges();
     return this.summary().lines.map(line => {
       const patient = this.patientsById().get(line.patientId);
       const canCharge = hasLinkedSessions && line.overdue > 0 && patient !== undefined;
@@ -306,6 +327,7 @@ export class FinanceComponent {
         name: patient?.name ?? REMOVED_PATIENT_LABEL,
         pixQuery: pixPrefillQuery(line),
         chargeUrl,
+        chargedAt: charges.get(line.patientId) ?? null,
         invalidPhone: canCharge && chargeUrl === null,
       };
     });

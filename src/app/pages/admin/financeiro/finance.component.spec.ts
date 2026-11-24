@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { afterEach, vi } from 'vitest';
 
+import { ChargesService, type ChargesWatch } from '../data/charges.service';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
 import { SessionsService, type AllSessionsWatch } from '../data/sessions.service';
@@ -101,6 +102,7 @@ describe('FinanceComponent', () => {
   let sessionsError = signal<string | null>(null);
   let patientsSignal = signal<Patient[]>([]);
   let paymentsSignal = signal<Payment[]>([]);
+  let chargesSignal = signal<ReadonlyMap<string, Date>>(new Map());
 
   beforeEach(() => {
     sessionsSignal = signal(scenarioSessions());
@@ -108,6 +110,7 @@ describe('FinanceComponent', () => {
     sessionsError = signal<string | null>(null);
     patientsSignal = signal<Patient[]>([ana, bruno]);
     paymentsSignal = signal(scenarioPayments());
+    chargesSignal = signal<ReadonlyMap<string, Date>>(new Map());
 
     const fakeSessions: Pick<SessionsService, 'watchAll'> = {
       watchAll: (): AllSessionsWatch => ({
@@ -136,6 +139,17 @@ describe('FinanceComponent', () => {
         { provide: SessionsService, useValue: fakeSessions },
         { provide: PatientsService, useValue: fakePatients },
         { provide: PaymentsService, useValue: fakePayments },
+        {
+          provide: ChargesService,
+          useValue: {
+            watchMonth: (month: string): ChargesWatch => ({
+              month,
+              charges: chargesSignal.asReadonly(),
+              loaded: signal(true).asReadonly(),
+              error: signal<string | null>(null).asReadonly(),
+            }),
+          },
+        },
       ],
     });
   });
@@ -505,6 +519,32 @@ describe('FinanceComponent', () => {
     expect(link.getAttribute('href')).toBe(
       `https://wa.me/5511999999999?text=${encodeURIComponent(chargeMessage('Ana Paula', 30000))}`,
     );
+  });
+
+  it('mostra o selo "Cobrada em 20/11" na linha de quem foi cobrada', () => {
+    chargesSignal.set(new Map([['p1', new Date('2026-11-20T15:00:00.000Z')]]));
+
+    const fixture = openMonth('2026-11');
+
+    expect(normalize(rowOf(fixture, 'Ana Paula').textContent ?? '')).toContain('Cobrada em 20/11');
+  });
+
+  it('não mostra selo de cobrança para quem nunca foi cobrada', () => {
+    const fixture = openMonth('2026-11');
+
+    expect(normalize(rowOf(fixture, 'Ana Paula').textContent ?? '')).not.toContain('Cobrada em');
+  });
+
+  it('o botão Cobrar em fila leva para /admin/cobranca com o mês escolhido', () => {
+    const fixture = openMonth('2026-11');
+
+    const link = Array.from(rootOf(fixture).querySelectorAll('a')).find(
+      a => normalize(a.textContent ?? '') === 'Cobrar em fila',
+    );
+    const url = new URL(link?.getAttribute('href') ?? '', 'http://localhost');
+
+    expect(url.pathname).toBe('/admin/cobranca');
+    expect(url.searchParams.get('mes')).toBe('2026-11');
   });
 
   it('não mostra Cobrar no WhatsApp nem aviso quando o paciente não está em atraso', () => {
