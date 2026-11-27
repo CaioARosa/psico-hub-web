@@ -32,20 +32,32 @@ export class AutoSyncService {
   private readonly active = signal(0);
   private readonly lastSyncedAtState = signal<Date | null>(null);
   private readonly errorState = signal<string | null>(null);
+  private readonly errorNonceState = signal(0);
   private entered = false;
 
   readonly syncing = computed(() => this.active() > 0);
   /** Sincronização mais recente conhecida (lida do Firestore ou feita agora). */
   readonly lastSyncedAt = this.lastSyncedAtState.asReadonly();
-  /** Só erros do modo automático; no modo `force` o erro propaga a quem chamou. */
+  /** Erro de sincronização para exibição no toast global do `/admin`. */
   readonly error = this.errorState.asReadonly();
+  /** Incrementa a cada nova falha para reexibir o toast mesmo se fechado antes. */
+  readonly errorNonce = this.errorNonceState.asReadonly();
 
-  /** Mês atual e o seguinte (UTC-3); só dispara uma vez por instância do serviço. */
+  /** Mês anterior, atual e seguinte (UTC-3); só dispara uma vez por instância do serviço. */
   runOnEntry(now: Date = new Date()): Promise<AutoSyncOutcome> {
     if (this.entered) return Promise.resolve(emptyOutcome());
     this.entered = true;
     const month = currentMonth(now);
-    return this.run([month, shiftMonth(month, 1)]);
+    return this.run([shiftMonth(month, -1), month, shiftMonth(month, 1)]);
+  }
+
+  clearError(): void {
+    this.errorState.set(null);
+  }
+
+  reportError(message: string): void {
+    this.errorState.set(message);
+    this.errorNonceState.update(n => n + 1);
   }
 
   async run(months: string[], options: { force?: boolean } = {}): Promise<AutoSyncOutcome> {
@@ -92,7 +104,7 @@ export class AutoSyncService {
       return await promise;
     } catch (error) {
       if (force) throw error;
-      this.errorState.set(AUTO_SYNC_ERROR);
+      this.reportError(AUTO_SYNC_ERROR);
       return null;
     } finally {
       if (this.inFlight.get(month) === promise) this.inFlight.delete(month);

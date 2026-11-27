@@ -137,15 +137,31 @@ describe('AutoSyncService', () => {
     expect(auto.syncing()).toBe(false);
   });
 
-  it('runOnEntry usa mês atual e o seguinte em UTC-3 e só roda uma vez', async () => {
+  it('runOnEntry usa mês anterior, atual e seguinte em UTC-3 e só roda uma vez', async () => {
     const auto = service();
     const now = new Date('2026-11-30T23:00:00-03:00');
 
     const first = await auto.runOnEntry(now);
     const second = await auto.runOnEntry(now);
 
-    expect(first.synced).toEqual(['2026-11', '2026-12']);
+    expect(first.synced).toEqual(['2026-10', '2026-11', '2026-12']);
     expect(second.synced).toEqual([]);
-    expect(sync).toHaveBeenCalledTimes(2);
+    expect(sync).toHaveBeenCalledTimes(3);
+  });
+
+  it('errorNonce incrementa em cada falha, clearError limpa e reportError registra falha manual', async () => {
+    sync.mockRejectedValue(new Error('falhou'));
+    const auto = service();
+
+    await auto.run(['2026-11']);
+    expect(auto.error()).toBe(AUTO_SYNC_ERROR);
+    expect(auto.errorNonce()).toBe(1);
+
+    auto.clearError();
+    expect(auto.error()).toBeNull();
+
+    auto.reportError('Sem internet agora.');
+    expect(auto.error()).toBe('Sem internet agora.');
+    expect(auto.errorNonce()).toBe(2);
   });
 });
