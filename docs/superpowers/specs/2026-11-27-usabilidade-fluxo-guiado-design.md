@@ -59,7 +59,7 @@ Organizado em 4 blocos incrementais, cada um testável de forma independente:
 - A barra superior mostra um indicador discreto de estado da agenda:
   - Durante sync: `"Atualizando agenda…"` com ícone girando.
   - Em repouso: `"Agenda atualizada há X"` + botão ícone/compacto **`↻`** (`aria-label="Atualizar agenda agora"`) que chama `autoSync.run([month], { force: true })`.
-  - Em erro de sync automático: aviso discreto com botão **`Tentar novamente`**; nunca bloqueia a tela.
+  - Em erro de sync automático (ou manual disparado pelo topo): exibe um **toast (toastr)** flutuante no canto inferior direito (`role="alert"`), com mensagem clara em português, botão **`Tentar novamente`** e botão de fechar (`×`); nunca bloqueia a tela.
 - Removidos os banners repetitivos *"Sincronize a agenda deste mês para ver o devido"* quando o sync está em andamento (enquanto sincroniza um mês sem sessões, mostra estado neutro `"Buscando sessões no Google Agenda…"`). Se após sincronizar realmente não houver sessões, exibe empty state calmo com opção de atualizar.
 
 ### 3.3. Domínio de fluxo e status humano (`domain/workflow.ts`)
@@ -129,7 +129,7 @@ Funções puras, sem dependência de Angular/DOM:
 - Lê os dados reais do consultório para mostrar progresso verdadeiro:
   1. **Passo 1 — Como o consultório funciona aqui:** mapa visual dos 4 passos do ciclo (`1. Pacientes` → `2. Agenda` → `3. Confirmar` → `4. Receber/Cobrar`), com estimativa honesta (~2 min).
   2. **Passo 2 — Pacientes e acordos:** explica que o nome cadastrado casa com o Google Agenda e que o valor/pacote define o cálculo automático. Se já há pacientes ativos, mostra selo verde `"Você já tem X pacientes ativos ✓"`; caso contrário, botão **"Ir cadastrar primeiro paciente"** (fecha o guia e navega para `/admin/pacientes?novo=1`).
-  3. **Passo 3 — Google Agenda automático:** explica que o sistema sincroniza sozinho ao abrir e que eventos com nome diferente caem em `Atendimentos → Pendências`. Botão **"Sincronizar agora"** roda `AutoSyncService.run([month], { force: true })` ali mesmo e mostra o resumo (ex.: *"14 sessões encontradas"*).
+  3. **Passo 3 — Google Agenda automático:** ensina de forma simples como a sincronização funciona: ao abrir o sistema ele já busca automaticamente o **mês passado, o mês atual e o próximo** (e também atualiza sozinho quando ela troca de mês) — ela **não precisa clicar para sincronizar toda vez**, só tocar em `↻` no topo se acabou de mexer no Google Agenda agora. Também explica que eventos com nome diferente caem em `Atendimentos → Pendências`. Botão **"Sincronizar agora"** roda `AutoSyncService.run([month], { force: true })` ali mesmo e mostra o resumo (ex.: *"14 sessões encontradas"*).
   4. **Passo 4 — Sua rotina semanal:** resume os 2 gestos da semana (marcar `Realizada / Faltou` em *Atendimentos* e lançar Pix ou cobrar em *Financeiro*), lembra que o guia fica sempre em `? Como funciona`, e oferece **"Ir para o Início"**.
 
 ---
@@ -201,7 +201,7 @@ Unifica `FinanceComponent`, `CobrancaComponent` e `PaymentsComponent` em 3 sub-a
 ## 7. Erros, Resiliência e Testes
 
 ### Tratamento de erro
-- **Falha no sync automático:** nunca bloqueia visualização de dados em cache/Firestore; mostra aviso discreto no topo com botão `Tentar novamente`.
+- **Falha no sync automático:** nunca bloqueia visualização de dados em cache/Firestore; dispara um **toast (toastr)** com a mensagem do erro, botão `Tentar novamente` e botão fechar (`×`).
 - **Falha ao gravar (vínculo, status, Pix, cobrança):** mantém o padrão `SAVE_ERROR` / `safe-write`, preserva o estado do formulário aberto e permite reenviar.
 - **Falha de `localStorage` no onboarding:** capturada com `try/catch`; o tutorial continua abrindo manualmente pelo `? Como funciona`.
 
