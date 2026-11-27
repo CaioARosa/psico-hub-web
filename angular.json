@@ -25,7 +25,8 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"]
+            "styles": ["src/styles.css"],
+            "scripts": ["src/app/shared/scrollcraft/scrollcraft.js"]
           },
           "configurations": {
             "production": {

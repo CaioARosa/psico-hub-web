@@ -29,6 +29,7 @@ import { AdminMonthService } from '../data/admin-month.service';
 import { ChargesService } from '../data/charges.service';
 import { PatientsService } from '../data/patients.service';
 import { PaymentsService } from '../data/payments.service';
+import { SAVE_ERROR } from '../data/safe-write';
 import { SessionsService } from '../data/sessions.service';
 import { buildChargeQueue } from '../domain/charge-queue';
 import { shortDateOf } from '../domain/datetime';
@@ -37,7 +38,7 @@ import { formatCents } from '../domain/money';
 import { isValidMonth, monthLabel } from '../domain/month';
 import { parsePixPrefill, type PixPrefill } from '../domain/pix-prefill';
 import { unlinkedNote } from '../domain/unlinked-note';
-import { buildFinanceRows, type FinanceRowStatus } from '../domain/workflow';
+import { buildFinanceRows, type FinanceDisplayRow, type FinanceRowStatus } from '../domain/workflow';
 import { CountUpDirective } from '../motion/count-up.directive';
 import { prefersReducedMotion } from '../motion/reduced-motion';
 import { SpotlightDirective } from '../motion/spotlight.directive';
@@ -356,6 +357,7 @@ function parseTab(raw: string | null | undefined): FinanceTab {
                               [href]="url"
                               target="_blank"
                               rel="noopener noreferrer"
+                              (click)="onChargeOpened(row.line.patientId)"
                             >
                               Cobrar no WhatsApp
                               <ng-icon name="lucideExternalLink" class="size-3.5" />
@@ -380,6 +382,41 @@ function parseTab(raw: string | null | undefined): FinanceTab {
                           </button>
                         </div>
                       </div>
+
+                      @if (awaitingChargeId() === row.line.patientId) {
+                        <div
+                          class="rounded-xl border border-[#4D6D66]/25 bg-[#D4E6E1]/45 p-4 space-y-3"
+                          role="group"
+                          aria-label="Confirmar envio da cobrança"
+                        >
+                          <p class="text-sm font-medium text-foreground">Enviou a mensagem?</p>
+                          <div class="flex flex-wrap items-center gap-2">
+                            <button
+                              z-button
+                              type="button"
+                              class="min-h-11 rounded-xl px-4"
+                              [zLoading]="savingCharge()"
+                              [zDisabled]="savingCharge()"
+                              (click)="confirmCharged(row)"
+                            >
+                              Sim, marcar como cobrada
+                            </button>
+                            <button
+                              z-button
+                              zType="outline"
+                              type="button"
+                              class="min-h-11 rounded-xl px-4"
+                              [zDisabled]="savingCharge()"
+                              (click)="awaitingChargeId.set(null)"
+                            >
+                              Ainda não
+                            </button>
+                          </div>
+                          @if (chargeError(); as message) {
+                            <z-alert zType="destructive" zRole="alert" [zDescription]="message" />
+                          }
+                        </div>
+                      }
 
                       @if (isExpanded(row.line.patientId)) {
                         <div class="rounded-xl bg-[#FDFBF7] border border-border/70 p-4 text-sm space-y-2 tabular-nums">
@@ -466,6 +503,9 @@ export class FinanceHubComponent {
   readonly pixFormOpen = signal(false);
   readonly pixPrefill = signal<PixPrefill | null>(null);
   readonly pixError = signal<string | null>(null);
+  readonly awaitingChargeId = signal<string | null>(null);
+  readonly savingCharge = signal(false);
+  readonly chargeError = signal<string | null>(null);
   protected readonly reportPixFailure = (message: string) => this.pixError.set(message);
 
   constructor() {
@@ -573,6 +613,30 @@ export class FinanceHubComponent {
   closePixForm(): void {
     this.pixFormOpen.set(false);
     this.pixPrefill.set(null);
+  }
+
+  onChargeOpened(patientId: string): void {
+    this.chargeError.set(null);
+    this.awaitingChargeId.set(patientId);
+  }
+
+  /** Só marca depois da confirmação, para não registrar cobrança aberta e não enviada. */
+  async confirmCharged(row: FinanceDisplayRow): Promise<void> {
+    if (this.savingCharge()) return;
+    this.savingCharge.set(true);
+    this.chargeError.set(null);
+    try {
+      await this.chargesService.markCharged(
+        row.line.patientId,
+        this.month(),
+        row.line.toReceive + row.line.overdue,
+      );
+      this.awaitingChargeId.set(null);
+    } catch (err) {
+      this.chargeError.set(err instanceof Error ? err.message : SAVE_ERROR);
+    } finally {
+      this.savingCharge.set(false);
+    }
   }
 
   toggleDetails(patientId: string): void {

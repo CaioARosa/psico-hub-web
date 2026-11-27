@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  OnInit,
   computed,
   inject,
   input,
@@ -253,7 +254,7 @@ type FormState =
     </section>
   `,
 })
-export class PaymentsComponent {
+export class PaymentsComponent implements OnInit {
   protected readonly service = inject(PaymentsService);
   protected readonly patientsService = inject(PatientsService);
   private readonly route = inject(ActivatedRoute);
@@ -270,7 +271,7 @@ export class PaymentsComponent {
 
   readonly monthFilter = signal('');
   readonly patientFilter = signal('');
-  readonly form = signal<FormState>(this.initialForm());
+  readonly form = signal<FormState>({ mode: 'closed' });
   readonly confirmingId = signal<string | null>(null);
   readonly busyId = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
@@ -278,6 +279,13 @@ export class PaymentsComponent {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.cancelScroll());
+  }
+
+  /** Embutido no Financeiro, quem abre o Pix com prefill da URL é o hub; abrir aqui duplicaria o formulário. */
+  ngOnInit(): void {
+    if (this.embedded()) return;
+    const initial = this.initialForm();
+    if (initial.mode !== 'closed') this.form.set(initial);
   }
 
   readonly ready = computed(() => this.service.loaded() && this.patientsService.loaded());

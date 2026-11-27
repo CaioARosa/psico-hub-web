@@ -79,6 +79,7 @@ describe('FinanceHubComponent', () => {
   const sessions = signal<Session[]>([]);
   const payments = signal<Payment[]>([]);
   const charges = signal<ReadonlyMap<string, Date>>(new Map());
+  const markCharged = vi.fn(async (_patientId: string, _month: string, _amount: number) => {});
 
   async function setup(params: Record<string, string> = {}): Promise<void> {
     const sessionsWatch: AllSessionsWatch = {
@@ -124,7 +125,7 @@ describe('FinanceHubComponent', () => {
           provide: ChargesService,
           useValue: {
             watchMonth: () => chargesWatch,
-            markCharged: vi.fn(async () => {}),
+            markCharged,
           },
         },
       ],
@@ -155,6 +156,28 @@ describe('FinanceHubComponent', () => {
     ]);
     payments.set([makePayment({ id: 'pay-c', patientId: 'p3', amount: 15000 })]);
     charges.set(new Map());
+    markCharged.mockClear();
+  });
+
+  it('Cobrar no WhatsApp pelo Resumo pede confirmação e registra a cobrança com o total em aberto', async () => {
+    patients.set([ana, { ...bruno, phone: '11988887777' }, carla]);
+    await setup();
+
+    const link = Array.from(fixture.nativeElement.querySelectorAll('a')).find(a =>
+      (a as HTMLAnchorElement).textContent?.includes('Cobrar no WhatsApp'),
+    ) as HTMLAnchorElement;
+    expect(link).toBeDefined();
+    link.addEventListener('click', e => e.preventDefault());
+    link.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Enviou a mensagem?');
+    expect(markCharged).not.toHaveBeenCalled();
+
+    clickButton('Sim, marcar como cobrada');
+    await fixture.whenStable();
+
+    expect(markCharged).toHaveBeenCalledWith('p2', '2026-11', 30000);
   });
 
   it('renderiza cartões limpos sem tabela 7 colunas, filtra Com pendência por padrão e avisa telefone inválido', async () => {
@@ -195,6 +218,12 @@ describe('FinanceHubComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('app-payment-form')).not.toBeNull();
+  });
+
+  it('link legado de Pix (?aba=pix com prefill) abre exatamente um formulário', async () => {
+    await setup({ aba: 'pix', paciente: 'p1', mes: '2026-11', valor: '15000' });
+
+    expect(fixture.nativeElement.querySelectorAll('app-payment-form').length).toBe(1);
   });
 
   it('respeita ?aba=cobrar e ?aba=pix e sincroniza ?mes= no AdminMonthService', async () => {

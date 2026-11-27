@@ -1,917 +1,1126 @@
-<!-- =========================================================
-     NAVEGAÇÃO FLUTUANTE
-     ========================================================= -->
-<nav class="nav-floating" [class.nav-scrolled]="isScrolled()">
-  <div class="max-w-6xl mx-auto px-5 lg:px-10 flex items-center justify-between h-16">
-    <a href="#" class="flex items-center gap-3 group">
-      <img
-        src="assets/tree-logo.png"
-        alt="Logo Lays Coelho"
-        class="w-8 h-8 sm:w-9 sm:h-9 object-contain group-hover:scale-105 transition-transform duration-200"
-      />
-      <div>
-        <span class="font-display text-lg text-[#1C221F] leading-none group-hover:text-[#4D6D66] transition-colors">
-          Lays Coelho
-        </span>
-        <span class="block text-[0.6rem] tracking-[0.14em] uppercase text-[#72807C] font-medium">
-          Psicóloga Clínica
-        </span>
-      </div>
-    </a>
+<div #homeRoot class="sc-home-root relative">
+  <!-- Textura sutil de papel -->
+  <div class="sc-grain" aria-hidden="true" style="opacity: 0.025;"></div>
 
-    <div class="hidden md:flex items-center gap-8">
-      <a href="#sobre" class="nav-link">Sobre</a>
-      <a href="#servicos" class="nav-link">Serviços</a>
-      <a href="#duvidas" class="nav-link">Dúvidas</a>
-      <a href="#contato" class="nav-link">Contato</a>
-    </div>
+  <!-- Barra de progresso fina no topo (ScrollCraft) -->
+  <div data-sc-progress aria-hidden="true"></div>
 
-    <div class="flex items-center gap-2">
-      <a z-button zShape="circle" zSize="lg" href="#agenda" class="px-4 sm:px-5">
-        Agendar Sessão
-      </a>
-      <button
-        z-button
-        zType="ghost"
-        zSize="icon"
-        zShape="circle"
-        type="button"
-        class="md:hidden"
-        aria-label="Abrir menu de navegação"
-        (click)="openMobileMenu()"
-      >
-        <ng-icon name="lucideMenu" class="size-5" />
-      </button>
-    </div>
-  </div>
-</nav>
-
-<ng-template #mobileNavTemplate>
-  <nav aria-label="Menu mobile" class="flex flex-col gap-2 py-2">
-    <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('sobre')">
-      Sobre mim
-    </button>
-    <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('servicos')">
-      Serviços
-    </button>
-    <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('duvidas')">
-      Dúvidas frequentes
-    </button>
-    <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('contato')">
-      Contato
-    </button>
-    <z-separator class="my-2" />
-    <button z-button zShape="circle" type="button" class="h-11 w-full" (click)="navigateToSection('agenda')">
-      Agendar Sessão
-    </button>
-  </nav>
-</ng-template>
-
-<!-- =========================================================
-     HERO
-     ========================================================= -->
-<section class="relative min-h-[100dvh] flex items-center pt-24 pb-16 overflow-hidden bg-background">
-  <!-- Blobs sutis de fundo -->
-  <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-    <div
-      class="blob"
-      style="
-        width: 480px;
-        height: 480px;
-        top: -8%;
-        right: -6%;
-        background: radial-gradient(circle, rgba(212, 230, 225, 0.45) 0%, transparent 70%);
-        --blob-duration: 14s;
-        --blob-delay: 0s;
-      "
-    ></div>
-    <div
-      class="blob"
-      style="
-        width: 360px;
-        height: 360px;
-        bottom: -4%;
-        left: -8%;
-        background: radial-gradient(circle, rgba(77, 109, 102, 0.07) 0%, transparent 70%);
-        --blob-duration: 11s;
-        --blob-delay: 3s;
-      "
-    ></div>
-  </div>
-
-  <!-- Borboletas decorativas -->
-  <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-    @for (b of butterflies(); track b.id) {
-      <div
-        class="butterfly-container"
-        [style.left]="b.left"
-        [style.top]="b.top"
-        [style.--duration]="b.duration"
-        [style.--delay]="b.delay"
-        [style.--flap-speed]="b.flapSpeed"
-      >
-        <svg [attr.width]="b.size" [attr.height]="b.size * 0.75" viewBox="0 0 48 36" fill="none" class="butterfly-wings">
-          <ellipse cx="12" cy="14" rx="11" ry="7" [attr.fill]="b.color" opacity="0.34" transform="rotate(-22 12 14)" />
-          <ellipse cx="36" cy="14" rx="11" ry="7" [attr.fill]="b.color" opacity="0.34" transform="rotate(22 36 14)" />
-          <ellipse cx="11" cy="23" rx="7" ry="5" [attr.fill]="b.color" opacity="0.2" transform="rotate(-35 11 23)" />
-          <ellipse cx="37" cy="23" rx="7" ry="5" [attr.fill]="b.color" opacity="0.2" transform="rotate(35 37 23)" />
-          <line x1="24" y1="3" x2="24" y2="33" stroke="#8B7355" stroke-width="0.9" opacity="0.32" stroke-linecap="round" />
-          <path d="M24 3 Q19 0 16 2" stroke="#8B7355" stroke-width="0.7" opacity="0.28" fill="none" stroke-linecap="round" />
-          <path d="M24 3 Q29 0 32 2" stroke="#8B7355" stroke-width="0.7" opacity="0.28" fill="none" stroke-linecap="round" />
-        </svg>
-      </div>
-    }
-  </div>
-
-  <!-- Conteúdo Hero -->
-  <div class="max-w-6xl mx-auto px-6 lg:px-12 w-full relative z-10 space-y-16">
-    <div class="grid lg:grid-cols-14 gap-12 lg:gap-16 items-center">
-      <!-- Texto -->
-      <div class="lg:col-span-7 animate-fade-in-up">
-        <div class="flex flex-wrap items-center gap-2 mb-5">
-          <z-badge zType="secondary" class="bg-[#D4E6E1]/65 text-[#1C221F] border border-[#4D6D66]/15 px-3 py-1 text-[0.7rem] tracking-wider uppercase font-semibold">
-            Abordagem Sistêmica
-          </z-badge>
-          <span class="text-xs text-[#72807C]">CRP 04/67406 · 100% Online</span>
-        </div>
-
-        <div class="mb-6">
-          <h1 class="font-display text-5xl lg:text-6xl xl:text-7xl text-[#1C221F] leading-[1.06]">
-            "<span class="hero-title-accent">Consciência
-              <svg class="hero-underline" viewBox="0 0 220 12" fill="none" preserveAspectRatio="none" aria-hidden="true">
-                <path d="M2 8.5C58 3 142 2.5 218 7.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-              </svg>
-            </span> é o começo, mas não é o fim"
-          </h1>
-          <p class="text-[#556661] text-sm mt-3 font-light">
-            — Dr. Henry Cloud
-          </p>
-        </div>
-
-        <p class="text-[#556661] text-lg leading-relaxed max-w-md mb-8 font-light">
-          Compreenda as suas dinâmicas emocionais e encontre o equilíbrio
-          entre quem você é e a sua história.
-        </p>
-
-        <div class="flex flex-wrap items-center gap-3 mb-6">
-          <a z-button zShape="circle" href="#agenda" class="h-11 px-7 text-sm">
-            Agende sua Consulta
-            <ng-icon name="lucideArrowRight" class="size-4" />
-          </a>
-          <a z-button zType="outline" zShape="circle" href="#sobre" class="h-11 px-6 text-sm bg-white/70">
-            Conhecer a abordagem
-          </a>
-        </div>
-      </div>
-
-      <!-- Ilustração da Marca -->
-      <div class="lg:col-span-7 animate-fade-in-right relative parallax-slow flex justify-center lg:justify-end items-center">
+  <!-- =========================================================
+       NAVEGAÇÃO EDITORIAL
+       ========================================================= -->
+  <header
+    class="fixed top-0 inset-x-0 z-50 transition-[background-color,border-color,box-shadow] duration-200"
+    [class]="
+      isScrolled()
+        ? 'bg-[#FDFBF7]/92 backdrop-blur-md border-b border-[#1C221F]/10 shadow-[0_6px_24px_rgba(28,34,31,0.05)]'
+        : 'bg-transparent border-b border-transparent'
+    "
+  >
+    <div class="sc-wrap flex items-center justify-between h-16 lg:h-[4.5rem]">
+      <a href="#inicio" class="flex items-center gap-3 group no-underline">
         <img
-          src="assets/revert-brand-hero-art.png"
-          alt="Árvore da Vida e Borboletas - Psicologia Sistêmica"
-          class="relative w-full max-w-sm sm:max-w-md lg:max-w-2xl xl:max-w-3xl h-auto object-contain drop-shadow-sm select-none"
+          src="assets/tree-logo.png"
+          alt="Logo Lays Coelho"
+          width="36"
+          height="36"
+          class="w-8 h-8 sm:w-9 sm:h-9 object-contain transition-transform duration-200 group-hover:scale-105"
         />
+        <div class="leading-tight">
+          <span class="font-display text-lg text-[#1C221F] block group-hover:text-[#4D6D66] transition-colors">
+            Lays Coelho
+          </span>
+          <span class="block text-[0.625rem] tracking-[0.14em] uppercase text-[#556661] font-medium">
+            Psicoterapia Sistêmica
+          </span>
+        </div>
+      </a>
+
+      <nav aria-label="Navegação principal" class="hidden md:flex items-center gap-8">
+        <a href="#sobre" class="nav-link">Sobre</a>
+        <a href="#servicos" class="nav-link">Cuidado</a>
+        <a href="#processo" class="nav-link">Processo</a>
+        <a href="#duvidas" class="nav-link">Dúvidas</a>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <a z-button zShape="circle" zSize="lg" href="#agenda" class="px-4 sm:px-5 whitespace-nowrap">
+          Agendar sessão
+        </a>
+        <button
+          z-button
+          zType="ghost"
+          zSize="icon"
+          zShape="circle"
+          type="button"
+          class="md:hidden"
+          aria-label="Abrir menu de navegação"
+          (click)="openMobileMenu()"
+        >
+          <ng-icon name="lucideMenu" class="size-5" />
+        </button>
       </div>
     </div>
+  </header>
 
-    <!-- Seção Inferior: Abordagem & Calendário -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-12 border-t border-[rgba(76,100,91,0.10)]">
-      <!-- Minha Abordagem -->
-      <div class="w-full lg:col-span-5 space-y-8 animate-fade-in-up">
-        <div>
-          <span class="section-label mb-2">Como trabalho</span>
-          <h3 class="font-display text-3xl text-[#1C221F]">Minha Abordagem</h3>
-        </div>
+  <ng-template #mobileNavTemplate>
+    <nav aria-label="Menu mobile" class="flex flex-col gap-2 py-2">
+      <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('sobre')">
+        Sobre mim
+      </button>
+      <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('servicos')">
+        Territórios de cuidado
+      </button>
+      <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('processo')">
+        O olhar sistêmico
+      </button>
+      <button z-button zType="ghost" type="button" class="justify-start h-11 text-base" (click)="navigateToSection('duvidas')">
+        Dúvidas frequentes
+      </button>
+      <z-separator class="my-2" />
+      <button z-button zShape="circle" type="button" class="h-11 w-full" (click)="navigateToSection('agenda')">
+        Agendar sessão
+      </button>
+    </nav>
+  </ng-template>
 
-        <div class="grid sm:grid-cols-2 gap-6">
-          <div class="space-y-3 group">
-            <div class="w-9 h-9 rounded-xl bg-[#D4E6E1]/50 text-[#4D6D66] flex items-center justify-center p-2 transition-transform duration-200 group-hover:-translate-y-0.5">
-              <div class="w-5 h-5" [innerHTML]="iconBrain | safeHtml"></div>
-            </div>
-            <h4 class="font-display text-lg text-[#1C221F]">1. Terapia Sistêmica</h4>
-            <p class="text-[#556661] text-xs leading-relaxed font-light">
-              Espaço dinâmico, provocações saudáveis, análises de padrões e apontamentos práticos para gerar movimento.
+  <!-- =========================================================
+       SIGNATURE MOVE: FIO SISTÊMICO (LIVE MARGIN FOLIO)
+       ========================================================= -->
+  <aside
+    class="sc-margin-folio"
+    [class.sc-margin-folio--dark]="isDarkChapterActive()"
+    aria-label="Capítulos da página"
+  >
+    <div class="sc-folio-track" aria-hidden="true">
+      <div class="sc-folio-fill" [style.transform]="'scaleY(' + pageProgress() + ')'"></div>
+    </div>
+    @for (ch of chapters(); track ch.id; let i = $index) {
+      <button
+        type="button"
+        class="sc-folio-btn"
+        [class.sc-folio-btn--active]="activeChapter() === i"
+        [class.sc-folio-btn--on-dark]="isDarkChapterActive()"
+        [attr.aria-current]="activeChapter() === i ? 'true' : null"
+        (click)="navigateToSection(ch.id)"
+      >
+        <span>{{ ch.roman }} · {{ ch.label }}</span>
+        <span class="sc-folio-dot" aria-hidden="true"></span>
+      </button>
+    }
+  </aside>
+
+  <main>
+    <!-- =========================================================
+         CAPÍTULO I — RECONHECIMENTO (HERO EDITORIAL COM 3 PLANOS)
+         Device: flow + multi-plane parallax
+         ========================================================= -->
+    <section
+      id="inicio"
+      data-sc-act="flow"
+      class="sc-chapter--paper relative min-h-[100svh] flex items-center pt-24 pb-16 lg:pt-28 lg:pb-24 overflow-x-clip"
+    >
+      <div class="sc-wrap relative z-10">
+        <div class="grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+          <!-- Coluna de Texto (1x) -->
+          <div class="lg:col-span-7 space-y-7">
+            <h1 class="sc-hero-title text-[#1C221F]">
+              "<em class="font-display-italic text-[#4D6D66]">Consciência</em> é o começo, mas não é o fim"
+            </h1>
+
+            <p class="text-xs tracking-[0.14em] uppercase text-[#556661] font-medium">
+              Dr. Henry Cloud
             </p>
+
+            <p class="sc-lede text-[#556661] font-light max-w-[44ch]">
+              Psicoterapia sistêmica online para compreender suas dinâmicas emocionais e encontrar equilíbrio entre quem você é e a sua história.
+            </p>
+
+            <div class="flex flex-wrap items-center gap-4 pt-2">
+              <a z-button zShape="circle" href="#agenda" class="h-12 px-7 text-sm whitespace-nowrap">
+                Agendar sessão
+                <ng-icon name="lucideArrowRight" class="size-4" />
+              </a>
+              <a
+                href="#sobre"
+                class="text-sm font-medium text-[#1C221F] underline underline-offset-4 decoration-[#4D6D66]/45 hover:decoration-[#4D6D66] transition-colors py-2"
+              >
+                Conhecer a abordagem
+              </a>
+            </div>
           </div>
 
-          <div class="space-y-3 group">
-            <div class="w-9 h-9 rounded-xl bg-[#D4E6E1]/50 text-[#4D6D66] flex items-center justify-center p-2 transition-transform duration-200 group-hover:-translate-y-0.5">
-              <div class="w-5 h-5" [innerHTML]="iconLeaf | safeHtml"></div>
-            </div>
-            <h4 class="font-display text-lg text-[#1C221F]">2. Visão ampliada</h4>
-            <p class="text-[#556661] text-xs leading-relaxed font-light">
-              Análise das suas interações familiares, amorosas e profissionais no contexto em que você vive.
-            </p>
-          </div>
-
-          <div class="space-y-3 sm:col-span-2 group">
-            <div class="w-9 h-9 rounded-xl bg-[#D4E6E1]/50 text-[#4D6D66] flex items-center justify-center p-2 transition-transform duration-200 group-hover:-translate-y-0.5">
-              <div class="w-5 h-5" [innerHTML]="iconHeart | safeHtml"></div>
-            </div>
-            <h4 class="font-display text-lg text-[#1C221F]">3. Ressignificação de padrões</h4>
-            <p class="text-[#556661] text-xs leading-relaxed font-light">
-              Identificação de repetições invisíveis, papéis e expectativas herdadas, transformando em escolhas
-              conscientes e alinhadas ao que deseja hoje.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Widget de Agendamento (ZardUI Card + Progress + Skeleton + Empty + Alert + Input) -->
-      <div id="agenda" class="w-full lg:col-span-7">
-        <z-card class="rounded-3xl p-0 ring-1 ring-[#4C645B]/15 shadow-[0_20px_60px_rgba(77,109,102,0.10)] reveal">
-          <!-- Barra de progresso discreta no topo do card -->
-          <z-progress [value]="bookingProgress()" class="h-1 rounded-none bg-[#F5F2ED]" />
-
-          <z-card-content class="p-5 sm:p-7 lg:p-9">
-            <!-- Indicador de passos -->
-            <div class="flex items-center justify-between gap-4 mb-8">
-              <div class="flex items-center">
-                @for (s of [1, 2, 3]; track s; let last = $last) {
-                  <div class="flex items-center">
-                    <div class="flex flex-col items-center">
-                      <div
-                        class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold tabular-nums transition-[background-color,color,transform] duration-200"
-                        [class]="bookingStep() >= s ? 'bg-[#4D6D66] text-white' : 'bg-[#F5F2ED] text-[#72807C]'"
-                      >
-                        @if (bookingStep() > s) {
-                          <ng-icon name="lucideCheck" class="size-3.5" />
-                        } @else {
-                          {{ s }}
-                        }
-                      </div>
-                      <span class="text-[0.625rem] uppercase tracking-widest mt-1 text-[#72807C]">
-                        {{ s === 1 ? 'Tipo' : s === 2 ? 'Data' : 'Dados' }}
-                      </span>
-                    </div>
-                    @if (!last) {
-                      <div
-                        class="h-px w-8 sm:w-12 mx-2 mb-4 transition-colors duration-300"
-                        [class]="bookingStep() > s ? 'bg-[#4D6D66]' : 'bg-[#4C645B]/15'"
-                      ></div>
-                    }
-                  </div>
-                }
+          <!-- Composição Dimensional em 3 Planos Independentes -->
+          <div class="lg:col-span-5 relative pt-4 lg:pt-0">
+            <div class="relative mx-auto max-w-md lg:max-w-none">
+              <!-- Plano 1 (Fundo distante): placa arquitetônica + arcos sistêmicos -->
+              <div
+                data-sc-parallax="-0.65"
+                aria-hidden="true"
+                class="absolute -inset-4 sm:-inset-6 rounded-3xl bg-[#EFEAE0] border border-[#1C221F]/8 overflow-hidden pointer-events-none"
+              >
+                <svg class="w-full h-full opacity-45" viewBox="0 0 420 520" fill="none" preserveAspectRatio="xMidYMid slice">
+                  <circle cx="340" cy="96" r="148" stroke="#4D6D66" stroke-width="0.9" stroke-opacity="0.35" />
+                  <circle cx="340" cy="96" r="98" stroke="#4D6D66" stroke-width="0.8" stroke-dasharray="3 5" stroke-opacity="0.35" />
+                  <path d="M-20 430 C 120 350, 260 390, 440 280" stroke="#4D6D66" stroke-width="1" stroke-opacity="0.3" />
+                </svg>
               </div>
 
-              <z-badge zType="outline" class="hidden sm:inline-flex gap-1.5 text-[#556661] border-[#4C645B]/15 bg-[#FDFBF7]">
-                <ng-icon name="lucideVideo" class="size-3 text-[#4D6D66]" />
-                Sessão 50 min
-              </z-badge>
+              <!-- Plano 2 (Sujeito focal): retrato editorial real de Lays -->
+              <figure data-sc-parallax="-0.2" class="relative z-10 m-0">
+                <div class="rounded-2xl overflow-hidden shadow-[0_24px_56px_rgba(28,34,31,0.14)] ring-1 ring-[#1C221F]/10 bg-[#E8E2D8]">
+                  <img
+                    src="assets/lays_coelho_profile3.jpeg"
+                    alt="Lays Coelho, psicóloga clínica especialista em terapia sistêmica"
+                    width="1000"
+                    height="1250"
+                    class="w-full h-auto aspect-[4/5] object-cover object-top"
+                  />
+                </div>
+                <figcaption class="mt-3 flex items-center justify-between text-xs text-[#556661]">
+                  <span>Lays Coelho · Psicóloga Clínica</span>
+                  <span class="tabular-nums">CRP 04/67406</span>
+                </figcaption>
+              </figure>
+
+              <!-- Plano 3 (Primeiro plano com sobreposição real): placa sistêmica flutuante -->
+              <div
+                data-sc-parallax="0.4"
+                class="relative sm:absolute sm:-left-8 sm:bottom-12 z-20 mt-4 sm:mt-0 max-w-[16rem] rounded-xl bg-[#FDFBF7]/95 backdrop-blur-sm border border-[#1C221F]/12 px-4 py-3.5 shadow-[0_14px_32px_rgba(28,34,31,0.10)]"
+              >
+                <div class="flex items-center gap-3">
+                  <img
+                    src="assets/tree-logo.png"
+                    alt=""
+                    aria-hidden="true"
+                    width="32"
+                    height="32"
+                    class="w-7 h-7 object-contain shrink-0"
+                  />
+                  <div class="text-xs leading-snug">
+                    <p class="font-medium text-[#1C221F] m-0">Atendimento 100% Online</p>
+                    <p class="text-[#556661] m-0 mt-0.5">Individual, casal e familiar</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         CAPÍTULO II — PRESENÇA & MÉTODO (SOBRE + NÚMEROS REAIS)
+         Device: reveal (clip-path) + count (entry)
+         ========================================================= -->
+    <section id="sobre" data-sc-act="flow" class="sc-chapter--linen sc-section border-t border-[#1C221F]/8">
+      <div class="sc-wrap space-y-16 lg:space-y-24">
+        <div class="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          <div class="lg:col-span-5 lg:sticky lg:top-28 space-y-6">
+            <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-[1.06]">
+              Um olhar acolhedor e profundo para
+              <em class="font-display-italic text-[#4D6D66]">você e suas relações</em>
+            </h2>
+
+            <!-- Números reais verificados da clínica (ticks once on entry) -->
+            <div class="grid grid-cols-3 gap-4 pt-6 border-t border-[#1C221F]/12">
+              <div>
+                <p class="font-display text-3xl lg:text-4xl text-[#4D6D66] leading-none m-0">
+                  <span data-sc-count="0 5">5</span>+
+                </p>
+                <p class="text-xs text-[#556661] mt-2 leading-snug">Anos de clínica</p>
+              </div>
+              <div>
+                <p class="font-display text-3xl lg:text-4xl text-[#4D6D66] leading-none m-0">
+                  <span data-sc-count="0 200">200</span>+
+                </p>
+                <p class="text-xs text-[#556661] mt-2 leading-snug">Acolhimentos</p>
+              </div>
+              <div>
+                <p class="font-display text-3xl lg:text-4xl text-[#4D6D66] leading-none m-0">
+                  <span data-sc-count="0 100">100</span>%
+                </p>
+                <p class="text-xs text-[#556661] mt-2 leading-snug">Sigilo ético</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 space-y-10">
+            <div
+              data-sc-reveal="up"
+              data-sc-reveal-at="0.04 0.36"
+              class="space-y-5 text-[#4F5F5A] text-base lg:text-[1.0625rem] leading-relaxed font-light max-w-[60ch]"
+            >
+              <p class="text-[#1C221F] font-normal text-lg">
+                Prazer, sou Lays Stephanie Coelho.
+              </p>
+              <p>
+                Psicóloga formada pela PUC Minas, pós-graduanda em Terapia Sistêmica e atuante na prática clínica há 5 anos (CRP 04/67406).
+              </p>
+              <p>
+                Acredito que não existimos de forma isolada: nossas relações, nossa história e nossas interações moldam quem somos, o modo como sentimos e como nos posicionamos no mundo. Compreender essas conexões é o primeiro passo para quebrar padrões repetitivos e construir novos caminhos.
+              </p>
+              <p>
+                Em consultório, adoto uma postura interventiva e dinâmica. A transformação acontece na troca real: além da escuta cuidadosa, trago questionamentos, reflexões e direções práticas que impulsionam o seu desenvolvimento pessoal.
+              </p>
             </div>
 
-            <!-- PASSO 1 -->
-            @if (bookingStep() === 1) {
-              <div class="animate-fade-in space-y-6">
-                <div>
-                  <h3 class="font-display text-2xl text-[#1C221F]">O que você busca?</h3>
-                  <p class="text-[#72807C] text-sm font-light mt-1">
-                    Pode ser uma dúvida ou uma certeza — os dois são válidos para começar.
+            <!-- 3 Pilares Editoriais (sem cards genéricos em 3 colunas) -->
+            <div class="divide-y divide-[#1C221F]/12 border-y border-[#1C221F]/12">
+              @for (pillar of approachPillars(); track pillar.title) {
+                <div class="py-6 grid sm:grid-cols-12 gap-3 sm:gap-6 items-start">
+                  <div class="sm:col-span-5 flex items-center gap-3">
+                    <div
+                      class="w-5 h-5 text-[#4D6D66] shrink-0"
+                      aria-hidden="true"
+                      [innerHTML]="pillar.svgIcon | safeHtml"
+                    ></div>
+                    <h3 class="font-display text-xl text-[#1C221F] m-0">{{ pillar.title }}</h3>
+                  </div>
+                  <p class="sm:col-span-7 text-sm text-[#4F5F5A] font-light leading-relaxed m-0">
+                    {{ pillar.description }}
                   </p>
                 </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-                  @for (opt of serviceOptions(); track opt.value) {
+    <!-- =========================================================
+         CAPÍTULO III — TERRITÓRIOS DE CUIDADO (HORIZONTAL PAN RAIL)
+         Device: pan (lateral travel on vertical scroll)
+         ========================================================= -->
+    <section
+      id="servicos"
+      data-sc-act="pan"
+      data-sc-span="4.0"
+      class="sc-chapter--paper border-t border-[#1C221F]/8"
+    >
+      <div data-sc-stage class="sc-care-stage">
+        <div class="sc-care-rail" data-sc-pan="0.06">
+          <!-- Slide de abertura no trilho -->
+          <div class="sc-care-lead space-y-5">
+            <span class="section-label">Para quem é</span>
+            <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-[1.05]">
+              Não é preciso estar
+              <em class="font-display-italic text-[#4D6D66]">em crise</em> para começar
+            </h2>
+            <p class="text-sm lg:text-base text-[#556661] font-light leading-relaxed">
+              A terapia é para quem sente que algo pode ser diferente, seja nas relações, nos pensamentos ou na forma como atravessa o dia a dia.
+            </p>
+          </div>
+
+          <!-- 6 Territórios de cuidado -->
+          @for (service of services(); track service.title) {
+            <article class="sc-care-item" [style.--item-at]="service.settleAt">
+              <div class="w-8 h-8 text-[#4D6D66]" aria-hidden="true" [innerHTML]="service.svgIcon | safeHtml"></div>
+              <div class="space-y-3">
+                <h3 class="font-display text-2xl text-[#1C221F] leading-tight m-0">
+                  {{ service.title }}
+                </h3>
+                <p class="text-sm text-[#556661] font-light leading-relaxed m-0">
+                  {{ service.description }}
+                </p>
+              </div>
+            </article>
+          }
+
+          <!-- Nota de fechamento do trilho -->
+          <div class="sc-care-close">
+            <div class="space-y-3">
+              <p class="text-xs uppercase tracking-[0.14em] text-[#9AC2B8] m-0">Próximo passo</p>
+              <h3 class="font-display text-3xl text-[#F5F2ED] leading-tight m-0">
+                Tudo começa por um olhar mais atento
+              </h3>
+              <p class="text-sm text-[#B9C8C3] font-light leading-relaxed m-0">
+                Veja abaixo como os encontros transformam padrões invisíveis em escolhas conscientes.
+              </p>
+            </div>
+            <a
+              href="#agenda"
+              class="inline-flex items-center gap-2 text-sm font-medium text-[#9AC2B8] underline underline-offset-4 hover:text-[#F5F2ED] transition-colors"
+            >
+              Agendar sessão
+              <ng-icon name="lucideArrowRight" class="size-4" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         CAPÍTULO IV — O OLHAR SISTÊMICO (ENGINEERED PEAK)
+         Authored pause + Pinned Fio Sistêmico Constellation (--sc-p)
+         ========================================================= -->
+    <section id="processo" class="sc-chapter--dark border-t border-white/10">
+      <!-- Pausa autoral (silêncio antes do pico) -->
+      <div class="sc-wrap pt-20 pb-8 lg:pt-28 lg:pb-10">
+        <div class="max-w-2xl space-y-4">
+          <h2 class="font-display text-4xl lg:text-6xl text-[#F5F2ED] leading-[1.04]">
+            Como acontece <em class="font-display-italic text-[#9AC2B8]">a terapia</em>
+          </h2>
+          <p class="text-base text-[#B9C8C3] font-light max-w-[52ch]">
+            Na abordagem sistêmica, cada etapa conecta pontos que antes pareciam isolados. Clique em qualquer etapa ou continue rolando para acompanhar o traçado.
+          </p>
+        </div>
+      </div>
+
+      <!-- Palco Pinned do Pico: Constelação Sistêmica desenhada no scroll -->
+      <div #peakAct data-sc-act="pin" data-sc-span="2.6">
+        <div data-sc-stage class="sc-constellation-stage">
+          <div class="sc-wrap grid lg:grid-cols-12 gap-8 lg:gap-12 items-center py-8">
+            <!-- Mapa Sistêmico SVG (Assinatura exclusiva) -->
+            <div class="lg:col-span-6 relative">
+              <div class="rounded-2xl border border-white/10 bg-[#222A27]/85 p-3 sm:p-5 lg:p-6">
+                <svg
+                  viewBox="0 0 600 400"
+                  class="w-full max-h-[220px] sm:max-h-[280px] lg:max-h-none h-auto"
+                  role="img"
+                  aria-label="Mapa sistêmico conectando História, Vínculos, Padrões e Escolhas ao centro Consciência"
+                >
+                  <!-- Anéis guia sutis (sempre presentes como chão do palco) -->
+                  <circle cx="300" cy="200" r="142" stroke="#9AC2B8" stroke-opacity="0.14" stroke-width="1" fill="none" />
+                  <circle cx="300" cy="200" r="84" stroke="#9AC2B8" stroke-opacity="0.14" stroke-width="1" stroke-dasharray="4 6" fill="none" />
+
+                  <!-- Fios sistêmicos desenhados pelo scroll (--sc-p) -->
+                  <path
+                    d="M 118 112 Q 208 136 300 200"
+                    fill="none"
+                    stroke="#9AC2B8"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    class="sc-thread-path"
+                    style="--path-len: 215; --t-start: 0.02; --t-dur: 0.24;"
+                  />
+                  <path
+                    d="M 482 112 Q 392 136 300 200"
+                    fill="none"
+                    stroke="#9AC2B8"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    class="sc-thread-path"
+                    style="--path-len: 215; --t-start: 0.24; --t-dur: 0.24;"
+                  />
+                  <path
+                    d="M 118 292 Q 208 264 300 200"
+                    fill="none"
+                    stroke="#9AC2B8"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    class="sc-thread-path"
+                    style="--path-len: 215; --t-start: 0.46; --t-dur: 0.24;"
+                  />
+                  <path
+                    d="M 482 292 Q 392 264 300 200"
+                    fill="none"
+                    stroke="#9AC2B8"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    class="sc-thread-path"
+                    style="--path-len: 215; --t-start: 0.68; --t-dur: 0.24;"
+                  />
+                  <!-- Arco relacional externo unindo os 4 nós -->
+                  <path
+                    d="M 118 112 C 210 42, 390 42, 482 112 C 538 168, 538 232, 482 292 C 390 360, 210 360, 118 292 C 62 232, 62 168, 118 112"
+                    fill="none"
+                    stroke="#D4E6E1"
+                    stroke-opacity="0.38"
+                    stroke-width="1.25"
+                    class="sc-thread-path"
+                    style="--path-len: 1220; --t-start: 0.12; --t-dur: 0.78;"
+                  />
+
+                  <!-- Nó central: Consciência -->
+                  <g>
+                    <circle cx="300" cy="200" r="46" fill="#2B3A35" stroke="#9AC2B8" stroke-width="1.5" />
+                    <text
+                      x="300"
+                      y="204"
+                      text-anchor="middle"
+                      fill="#F5F2ED"
+                      font-family="Instrument Serif, Georgia, serif"
+                      font-size="18"
+                    >
+                      Consciência
+                    </text>
+                  </g>
+
+                  <!-- 4 Nós clicáveis das etapas -->
+                  <g class="cursor-pointer" (click)="selectStageNode(0)">
+                    <circle
+                      cx="118"
+                      cy="112"
+                      r="34"
+                      [attr.fill]="displayedStageIndex() >= 0 ? '#4D6D66' : '#252E2A'"
+                      [attr.stroke]="displayedStageIndex() === 0 ? '#F5F2ED' : '#9AC2B8'"
+                      [attr.stroke-width]="displayedStageIndex() === 0 ? 2 : 1.2"
+                    />
+                    <text x="118" y="116" text-anchor="middle" fill="#F5F2ED" font-size="12" font-weight="500">
+                      História
+                    </text>
+                  </g>
+
+                  <g class="cursor-pointer" (click)="selectStageNode(1)">
+                    <circle
+                      cx="482"
+                      cy="112"
+                      r="34"
+                      [attr.fill]="displayedStageIndex() >= 1 ? '#4D6D66' : '#252E2A'"
+                      [attr.stroke]="displayedStageIndex() === 1 ? '#F5F2ED' : '#9AC2B8'"
+                      [attr.stroke-width]="displayedStageIndex() === 1 ? 2 : 1.2"
+                    />
+                    <text x="482" y="116" text-anchor="middle" fill="#F5F2ED" font-size="12" font-weight="500">
+                      Vínculos
+                    </text>
+                  </g>
+
+                  <g class="cursor-pointer" (click)="selectStageNode(2)">
+                    <circle
+                      cx="118"
+                      cy="292"
+                      r="34"
+                      [attr.fill]="displayedStageIndex() >= 2 ? '#4D6D66' : '#252E2A'"
+                      [attr.stroke]="displayedStageIndex() === 2 ? '#F5F2ED' : '#9AC2B8'"
+                      [attr.stroke-width]="displayedStageIndex() === 2 ? 2 : 1.2"
+                    />
+                    <text x="118" y="296" text-anchor="middle" fill="#F5F2ED" font-size="12" font-weight="500">
+                      Padrões
+                    </text>
+                  </g>
+
+                  <g class="cursor-pointer" (click)="selectStageNode(3)">
+                    <circle
+                      cx="482"
+                      cy="292"
+                      r="34"
+                      [attr.fill]="displayedStageIndex() >= 3 ? '#4D6D66' : '#252E2A'"
+                      [attr.stroke]="displayedStageIndex() === 3 ? '#F5F2ED' : '#9AC2B8'"
+                      [attr.stroke-width]="displayedStageIndex() === 3 ? 2 : 1.2"
+                    />
+                    <text x="482" y="296" text-anchor="middle" fill="#F5F2ED" font-size="12" font-weight="500">
+                      Escolhas
+                    </text>
+                  </g>
+                </svg>
+
+                <!-- Nota clínica dinâmica da etapa ativa -->
+                <div class="mt-4 pt-4 border-t border-white/10 flex items-start justify-between gap-4">
+                  <p class="text-sm text-[#D4E6E1] font-light m-0">
+                    {{ therapyStages()[displayedStageIndex()].systemicNote }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4 Etapas do Processo Terapêutico -->
+            <div class="lg:col-span-6">
+              <!-- Mobile: seletor compacto + card da etapa ativa (evita corte em 100svh) -->
+              <div class="lg:hidden space-y-4">
+                <div class="grid grid-cols-4 gap-1.5" role="tablist" aria-label="Etapas da terapia">
+                  @for (stage of therapyStages(); track stage.number; let i = $index) {
                     <button
                       type="button"
-                      class="p-5 rounded-2xl border text-left cursor-pointer transition-[border-color,background-color,transform,box-shadow] duration-200 active:scale-[0.97] hover:shadow-sm"
+                      role="tab"
+                      [attr.aria-selected]="displayedStageIndex() === i"
+                      (click)="selectStageNode(i)"
+                      class="py-2 px-1.5 rounded-lg border text-[0.7rem] font-medium text-center transition-colors cursor-pointer"
                       [class]="
-                        selectedService() === opt.value
-                          ? 'border-[#4D6D66] bg-[#D4E6E1]/45 shadow-xs'
-                          : 'border-[#4C645B]/15 bg-[#FDFBF7] hover:border-[#4D6D66]/40'
+                        displayedStageIndex() === i
+                          ? 'border-[#9AC2B8] bg-[#9AC2B8]/15 text-[#F5F2ED]'
+                          : 'border-white/12 bg-white/5 text-[#B9C8C3]'
                       "
-                      (click)="selectedService.set(opt.value)"
                     >
-                      <div class="flex items-center justify-between mb-3">
-                        <div
-                          class="w-5 h-5 transition-colors"
-                          [class]="selectedService() === opt.value ? 'text-[#4D6D66]' : 'text-[#72807C]'"
-                          [innerHTML]="opt.svgIcon | safeHtml"
-                        ></div>
-                        @if (selectedService() === opt.value) {
-                          <span class="w-4 h-4 rounded-full bg-[#4D6D66] text-white flex items-center justify-center">
-                            <ng-icon name="lucideCheck" class="size-2.5" />
+                      {{ stage.nodeLabel }}
+                    </button>
+                  }
+                </div>
+                <div class="sc-stage-card sc-stage-card--active px-4 py-4 rounded-xl">
+                  <div class="flex items-baseline justify-between gap-4 mb-1.5">
+                    <h3 class="font-display text-2xl text-[#F5F2ED] m-0">
+                      {{ therapyStages()[displayedStageIndex()].title }}
+                    </h3>
+                    <span class="text-xs uppercase tracking-[0.12em] text-[#9AC2B8]">
+                      {{ therapyStages()[displayedStageIndex()].nodeLabel }}
+                    </span>
+                  </div>
+                  <p class="text-sm text-[#B9C8C3] font-light leading-relaxed m-0">
+                    {{ therapyStages()[displayedStageIndex()].description }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Desktop: lista completa das 4 etapas -->
+              <div class="hidden lg:block space-y-2">
+                @for (stage of therapyStages(); track stage.number; let i = $index) {
+                  <button
+                    type="button"
+                    (click)="selectStageNode(i)"
+                    class="sc-stage-card w-full text-left px-4 py-4 rounded-xl cursor-pointer"
+                    [class.sc-stage-card--active]="displayedStageIndex() === i"
+                    [class.opacity-65]="displayedStageIndex() !== i"
+                  >
+                    <div class="flex items-baseline justify-between gap-4 mb-1">
+                      <h3 class="font-display text-2xl text-[#F5F2ED] m-0">{{ stage.title }}</h3>
+                      <span class="text-xs uppercase tracking-[0.12em] text-[#9AC2B8]">
+                        {{ stage.nodeLabel }}
+                      </span>
+                    </div>
+                    <p class="text-sm text-[#B9C8C3] font-light leading-relaxed m-0">
+                      {{ stage.description }}
+                    </p>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         CAPÍTULO V — RESSONÂNCIA & CLAREZA (DEPOIMENTOS + FAQ)
+         Device: flow + data-sc-in stagger (reduced top padding after pin)
+         ========================================================= -->
+    <section id="duvidas" class="sc-chapter--linen pt-16 pb-24 lg:pt-20 lg:pb-28 border-t border-[#1C221F]/8">
+      <div class="sc-wrap space-y-20 lg:space-y-24">
+        <!-- Depoimentos em layout editorial assimétrico -->
+        <div class="space-y-12">
+          <div class="max-w-xl" data-sc-in>
+            <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-[1.06]">
+              Experiências de
+              <em class="font-display-italic text-[#4D6D66]">quem passou por aqui</em>
+            </h2>
+          </div>
+
+          <div class="grid lg:grid-cols-12 gap-6" data-sc-in data-sc-stagger="65">
+            @if (testimonials().length > 0) {
+              <z-card class="testimonial-card lg:col-span-7 rounded-2xl p-8 bg-[#FDFBF7] ring-1 ring-[#1C221F]/10 shadow-[0_2px_16px_rgba(28,34,31,0.04)] justify-between">
+                <blockquote class="font-display text-2xl sm:text-[1.75rem] text-[#1C221F] leading-snug m-0 mb-8">
+                  "{{ testimonials()[0].text }}"
+                </blockquote>
+                <div class="flex items-center justify-between gap-3 pt-4 border-t border-[#1C221F]/10">
+                  <div class="flex items-center gap-3">
+                    <z-avatar [zFallback]="testimonials()[0].author[0]" class="bg-[#4D6D66] text-white" />
+                    <span class="text-[#1C221F] text-sm font-medium">{{ testimonials()[0].author }}</span>
+                  </div>
+                  <z-badge zType="secondary" class="bg-[#F5F2ED] text-[#4F5F5A]">{{ testimonials()[0].context }}</z-badge>
+                </div>
+              </z-card>
+            }
+
+            <div class="lg:col-span-5 flex flex-col gap-6">
+              @for (t of testimonials().slice(1); track t.author) {
+                <z-card class="testimonial-card flex-1 rounded-2xl p-6 bg-[#FDFBF7] ring-1 ring-[#1C221F]/10 shadow-[0_2px_16px_rgba(28,34,31,0.04)] justify-between">
+                  <blockquote class="text-[#4F5F5A] text-sm leading-relaxed m-0 mb-6 font-light">
+                    "{{ t.text }}"
+                  </blockquote>
+                  <div class="flex items-center justify-between gap-3 pt-3 border-t border-[#1C221F]/10">
+                    <div class="flex items-center gap-2.5">
+                      <z-avatar zSize="sm" [zFallback]="t.author[0]" class="bg-[#4D6D66] text-white" />
+                      <span class="text-[#1C221F] text-xs font-medium">{{ t.author }}</span>
+                    </div>
+                    <span class="text-xs text-[#556661]">{{ t.context }}</span>
+                  </div>
+                </z-card>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ compacto (comprimido conforme feel.md §5) -->
+        <div class="grid lg:grid-cols-12 gap-10 lg:gap-12 items-start pt-12 border-t border-[#1C221F]/10" data-sc-in>
+          <div class="lg:col-span-5 space-y-3">
+            <h2 class="font-display text-3xl lg:text-4xl text-[#1C221F] leading-tight">
+              Dúvidas <em class="font-display-italic text-[#4D6D66]">frequentes</em>
+            </h2>
+            <p class="text-sm text-[#4F5F5A] font-light leading-relaxed max-w-sm">
+              Respostas diretas para o que costuma gerar insegurança antes da primeira conversa.
+            </p>
+          </div>
+
+          <div class="lg:col-span-7">
+            <z-card class="rounded-2xl p-6 sm:p-8 bg-[#FDFBF7] ring-1 ring-[#1C221F]/10 shadow-[0_2px_16px_rgba(28,34,31,0.04)]">
+              <z-accordion zType="single" zDefaultValue="faq-online">
+                @for (item of faqs(); track item.id) {
+                  <z-accordion-item [zTitle]="item.question" [zValue]="item.id" class="border-[#1C221F]/10">
+                    <p class="text-sm text-[#4F5F5A] font-light leading-relaxed">
+                      {{ item.answer }}
+                    </p>
+                  </z-accordion-item>
+                }
+              </z-accordion>
+            </z-card>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         CAPÍTULO VI — COMPROMISSO (AGENDAMENTO AO VIVO)
+         Device: interactive booking chamber
+         ========================================================= -->
+    <section id="agenda" class="sc-chapter--paper sc-section border-t border-[#1C221F]/8">
+      <div class="sc-wrap">
+        <div class="grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+          <div class="lg:col-span-4 space-y-5" data-sc-in>
+            <span class="section-label">Agenda online</span>
+            <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-[1.05]">
+              A dúvida já é
+              <em class="font-display-italic text-[#4D6D66]">um começo</em>
+            </h2>
+            <p class="text-sm lg:text-base text-[#556661] font-light leading-relaxed">
+              Escolha o tipo de sessão, a data e o horário. Em seguida, a confirmação final acontece direto no WhatsApp com a Lays.
+            </p>
+            <div class="pt-4 space-y-2.5 text-xs text-[#556661] border-t border-[#1C221F]/10">
+              <p class="flex items-center gap-2 m-0">
+                <ng-icon name="lucideVideo" class="size-4 text-[#4D6D66]" />
+                Sessões de 50 minutos por videochamada
+              </p>
+              <p class="flex items-center gap-2 m-0">
+                <ng-icon name="lucideShieldCheck" class="size-4 text-[#4D6D66]" />
+                Sigilo ético e profissional (CRP 04/67406)
+              </p>
+            </div>
+          </div>
+
+          <!-- Widget de Agendamento completo (ZardUI + BookingService) -->
+          <div class="lg:col-span-8">
+            <z-card class="rounded-3xl p-0 bg-white ring-1 ring-[#1C221F]/12 shadow-[0_20px_54px_rgba(28,34,31,0.08)]">
+              <z-progress [value]="bookingProgress()" class="h-1 rounded-none bg-[#F5F2ED]" />
+
+              <z-card-content class="p-5 sm:p-7 lg:p-9">
+                <!-- Indicador de passos -->
+                <div class="flex items-center justify-between gap-4 mb-8">
+                  <div class="flex items-center">
+                    @for (s of [1, 2, 3]; track s; let last = $last) {
+                      <div class="flex items-center">
+                        <div class="flex flex-col items-center">
+                          <div
+                            class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold tabular-nums transition-[background-color,color,transform] duration-200"
+                            [class]="bookingStep() >= s ? 'bg-[#4D6D66] text-white' : 'bg-[#F5F2ED] text-[#556661]'"
+                          >
+                            @if (bookingStep() > s) {
+                              <ng-icon name="lucideCheck" class="size-3.5" />
+                            } @else {
+                              {{ s }}
+                            }
+                          </div>
+                          <span class="text-[0.625rem] uppercase tracking-widest mt-1 text-[#556661]">
+                            {{ s === 1 ? 'Tipo' : s === 2 ? 'Data' : 'Dados' }}
+                          </span>
+                        </div>
+                        @if (!last) {
+                          <div
+                            class="h-px w-8 sm:w-12 mx-2 mb-4 transition-colors duration-300"
+                            [class]="bookingStep() > s ? 'bg-[#4D6D66]' : 'bg-[#1C221F]/15'"
+                          ></div>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  <z-badge zType="outline" class="hidden sm:inline-flex gap-1.5 text-[#556661] border-[#1C221F]/15 bg-[#FDFBF7]">
+                    <ng-icon name="lucideVideo" class="size-3 text-[#4D6D66]" />
+                    Sessão 50 min
+                  </z-badge>
+                </div>
+
+                <!-- PASSO 1 -->
+                @if (bookingStep() === 1) {
+                  <div class="animate-fade-in space-y-6">
+                    <div>
+                      <h3 class="font-display text-2xl text-[#1C221F]">O que você busca?</h3>
+                      <p class="text-[#556661] text-sm font-light mt-1">
+                        Pode ser uma dúvida ou uma certeza: os dois são válidos para começar.
+                      </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                      @for (opt of serviceOptions(); track opt.value) {
+                        <button
+                          type="button"
+                          class="p-5 rounded-2xl border text-left cursor-pointer transition-[border-color,background-color,transform,box-shadow] duration-200 active:scale-[0.97] hover:shadow-sm"
+                          [class]="
+                            selectedService() === opt.value
+                              ? 'border-[#4D6D66] bg-[#D4E6E1]/45 shadow-xs'
+                              : 'border-[#1C221F]/14 bg-[#FDFBF7] hover:border-[#4D6D66]/45'
+                          "
+                          (click)="selectedService.set(opt.value)"
+                        >
+                          <div class="flex items-center justify-between mb-3">
+                            <div
+                              class="w-5 h-5 transition-colors"
+                              [class]="selectedService() === opt.value ? 'text-[#4D6D66]' : 'text-[#556661]'"
+                              [innerHTML]="opt.svgIcon | safeHtml"
+                            ></div>
+                            @if (selectedService() === opt.value) {
+                              <span class="w-4 h-4 rounded-full bg-[#4D6D66] text-white flex items-center justify-center">
+                                <ng-icon name="lucideCheck" class="size-2.5" />
+                              </span>
+                            }
+                          </div>
+                          <h4 class="font-display text-base text-[#1C221F] mb-1">{{ opt.label }}</h4>
+                          <p class="text-[#556661] text-xs leading-relaxed font-light">{{ opt.desc }}</p>
+                        </button>
+                      }
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                      <button z-button zShape="circle" zSize="lg" type="button" class="w-full sm:w-auto px-6" (click)="setStep(2)">
+                        Escolher data e horário
+                        <ng-icon name="lucideArrowRight" class="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                }
+
+                <!-- PASSO 2 -->
+                @if (bookingStep() === 2) {
+                  <div class="animate-fade-in grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+                    <div class="col-span-1 lg:col-span-7 space-y-3">
+                      <z-calendar
+                        zMode="single"
+                        zLocale="pt-BR"
+                        [value]="selectedDate()"
+                        [minDate]="minBookingDate"
+                        [maxDate]="maxBookingDate"
+                        [zDisabledDates]="disabledSundays()"
+                        (dateChange)="onCalendarDateChange($event)"
+                        class="w-full rounded-2xl border border-[#1C221F]/14 bg-[#FDFBF7] p-3 sm:p-4 [--cell-size:--spacing(9)] sm:[--cell-size:--spacing(10)]"
+                      />
+
+                      <div class="flex flex-wrap items-center gap-4 text-xs pt-1 text-[#556661]">
+                        <span class="flex items-center gap-1.5">
+                          <span class="w-2.5 h-2.5 rounded-full inline-block bg-[#4D6D66]"></span>
+                          Selecionado
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                          <span class="w-2.5 h-2.5 rounded-full inline-block bg-[#F5F2ED] ring-1 ring-[#1C221F]/25"></span>
+                          Hoje
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                          <span class="w-2.5 h-2.5 rounded-full inline-block bg-[#1C221F]/12"></span>
+                          Indisponível (domingos e datas passadas)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="col-span-1 lg:col-span-5 space-y-4">
+                      <div class="flex items-center justify-between">
+                        <h4 class="font-display text-lg text-[#1C221F]">Horários disponíveis</h4>
+                        @if (selectedDate()) {
+                          <span class="text-xs text-[#556661] tabular-nums">
+                            {{ selectedDate()?.toLocaleDateString('pt-BR') }}
                           </span>
                         }
                       </div>
-                      <h4 class="font-display text-base text-[#1C221F] mb-1">{{ opt.label }}</h4>
-                      <p class="text-[#556661] text-xs leading-relaxed font-light">{{ opt.desc }}</p>
-                    </button>
-                  }
-                </div>
 
-                <div class="flex justify-end pt-2">
-                  <button z-button zShape="circle" zSize="lg" type="button" class="w-full sm:w-auto px-6" (click)="setStep(2)">
-                    Escolher data e horário
-                    <ng-icon name="lucideArrowRight" class="size-4" />
-                  </button>
-                </div>
-              </div>
-            }
-
-            <!-- PASSO 2 (ZardUI Calendar) -->
-            @if (bookingStep() === 2) {
-              <div class="animate-fade-in grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-                <div class="col-span-1 lg:col-span-7 space-y-3">
-                  <z-calendar
-                    zMode="single"
-                    zLocale="pt-BR"
-                    [value]="selectedDate()"
-                    [minDate]="minBookingDate"
-                    [maxDate]="maxBookingDate"
-                    [zDisabledDates]="disabledSundays()"
-                    (dateChange)="onCalendarDateChange($event)"
-                    class="w-full rounded-2xl border border-[#4C645B]/15 bg-[#FDFBF7] p-3 sm:p-4 [--cell-size:--spacing(9)] sm:[--cell-size:--spacing(10)]"
-                  />
-
-                  <div class="flex flex-wrap items-center gap-4 text-xs pt-1 text-[#72807C]">
-                    <span class="flex items-center gap-1.5">
-                      <span class="w-2.5 h-2.5 rounded-full inline-block bg-[#4D6D66]"></span>
-                      Selecionado
-                    </span>
-                    <span class="flex items-center gap-1.5">
-                      <span class="w-2.5 h-2.5 rounded-full inline-block bg-[#F5F2ED] ring-1 ring-[#4C645B]/25"></span>
-                      Hoje
-                    </span>
-                    <span class="flex items-center gap-1.5">
-                      <span class="w-2.5 h-2.5 rounded-full inline-block bg-[#1C221F]/10"></span>
-                      Indisponível (domingos e datas passadas)
-                    </span>
-                  </div>
-                </div>
-
-                <div class="col-span-1 lg:col-span-5 space-y-4">
-                  <div class="flex items-center justify-between">
-                    <h4 class="font-display text-lg text-[#1C221F]">Horários disponíveis</h4>
-                    @if (selectedDate()) {
-                      <span class="text-xs text-[#72807C] tabular-nums">
-                        {{ selectedDate()?.toLocaleDateString('pt-BR') }}
-                      </span>
-                    }
-                  </div>
-
-                  @if (slotsLoading()) {
-                    <div class="space-y-2.5">
-                      <div class="grid grid-cols-2 gap-2">
-                        <z-skeleton class="h-10 w-full rounded-lg" />
-                        <z-skeleton class="h-10 w-full rounded-lg" />
-                        <z-skeleton class="h-10 w-full rounded-lg" />
-                        <z-skeleton class="h-10 w-full rounded-lg" />
-                      </div>
-                      <p class="text-xs text-[#72807C] font-light">
-                        Verificando disponibilidade na agenda...
-                      </p>
-                    </div>
-                  } @else if (slotsError()) {
-                    <div class="space-y-3">
-                      <z-alert zType="destructive" zTitle="Erro ao consultar agenda" [zDescription]="slotsError()!" />
-                      <button z-button zType="outline" zSize="sm" type="button" (click)="selectDate(selectedDate())">
-                        Tentar novamente
-                      </button>
-                    </div>
-                  } @else if (selectedDate()) {
-                    @if (availableTimeSlots().length > 0) {
-                      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2 stagger-list">
-                        @for (slot of availableTimeSlots(); track slot.time) {
-                          <button
-                            type="button"
-                            [disabled]="!slot.available"
-                            (click)="selectTimeSlot(slot.time)"
-                            class="py-2.5 px-2.5 rounded-xl border text-xs sm:text-sm font-medium tabular-nums transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.96] text-center"
-                            [class]="
-                              slot.available && selectedTimeSlot() === slot.time
-                                ? 'border-[#4D6D66] bg-[#4D6D66] text-white shadow-xs cursor-pointer'
-                                : slot.available
-                                  ? 'border-[#4C645B]/15 bg-[#FDFBF7] text-[#1C221F] hover:border-[#4D6D66]/45 hover:bg-[#D4E6E1]/30 cursor-pointer'
-                                  : 'border-transparent bg-[#F5F2ED] text-[#8F9C99] cursor-not-allowed'
-                            "
-                          >
-                            {{ slot.time }}
-                            @if (!slot.available) {
-                              <span class="block sm:inline text-[0.65rem] opacity-70 sm:ml-1">(ocupada)</span>
-                            }
+                      @if (slotsLoading()) {
+                        <div class="space-y-2.5">
+                          <div class="grid grid-cols-2 gap-2">
+                            <z-skeleton class="h-10 w-full rounded-lg" />
+                            <z-skeleton class="h-10 w-full rounded-lg" />
+                            <z-skeleton class="h-10 w-full rounded-lg" />
+                            <z-skeleton class="h-10 w-full rounded-lg" />
+                          </div>
+                          <p class="text-xs text-[#556661] font-light">
+                            Verificando disponibilidade na agenda...
+                          </p>
+                        </div>
+                      } @else if (slotsError()) {
+                        <div class="space-y-3">
+                          <z-alert zType="destructive" zTitle="Erro ao consultar agenda" [zDescription]="slotsError()!" />
+                          <button z-button zType="outline" zSize="sm" type="button" (click)="selectDate(selectedDate())">
+                            Tentar novamente
                           </button>
+                        </div>
+                      } @else if (selectedDate()) {
+                        @if (availableTimeSlots().length > 0) {
+                          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2 stagger-list">
+                            @for (slot of availableTimeSlots(); track slot.time) {
+                              <button
+                                type="button"
+                                [disabled]="!slot.available"
+                                (click)="selectTimeSlot(slot.time)"
+                                class="py-2.5 px-2.5 rounded-xl border text-xs sm:text-sm font-medium tabular-nums transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.96] text-center"
+                                [class]="
+                                  slot.available && selectedTimeSlot() === slot.time
+                                    ? 'border-[#4D6D66] bg-[#4D6D66] text-white shadow-xs cursor-pointer'
+                                    : slot.available
+                                      ? 'border-[#1C221F]/14 bg-[#FDFBF7] text-[#1C221F] hover:border-[#4D6D66]/45 hover:bg-[#D4E6E1]/30 cursor-pointer'
+                                      : 'border-transparent bg-[#F5F2ED] text-[#72807C] cursor-not-allowed'
+                                "
+                              >
+                                {{ slot.time }}
+                                @if (!slot.available) {
+                                  <span class="block sm:inline text-[0.65rem] opacity-75 sm:ml-1">(ocupada)</span>
+                                }
+                              </button>
+                            }
+                          </div>
+                          <p class="text-xs text-[#556661] font-light flex items-center gap-1.5">
+                            <ng-icon name="lucideClock" class="size-3.5 text-[#4D6D66]" />
+                            Sessão de 50 minutos · Horário de Brasília
+                          </p>
+                        } @else {
+                          <z-empty
+                            zIcon="lucideCalendar"
+                            zTitle="Sem horários neste dia"
+                            zDescription="Escolha outra data no calendário ao lado."
+                            class="border border-dashed border-[#1C221F]/20 rounded-xl p-6"
+                          />
                         }
+                      } @else {
+                        <z-empty
+                          zIcon="lucideCalendar"
+                          zTitle="Selecione uma data"
+                          zDescription="Toque em um dia disponível ao lado para ver os horários."
+                          class="border border-dashed border-[#1C221F]/20 rounded-xl p-6"
+                        />
+                      }
+                    </div>
+
+                    <div class="col-span-1 lg:col-span-12 pt-4">
+                      <z-separator class="mb-5" />
+                      <div class="flex items-center justify-between gap-3">
+                        <button z-button zType="outline" zShape="circle" type="button" class="px-5 h-10" (click)="setStep(1)">
+                          <ng-icon name="lucideArrowLeft" class="size-4" />
+                          Voltar
+                        </button>
+                        <button
+                          z-button
+                          zShape="circle"
+                          type="button"
+                          class="px-6 h-10"
+                          [zDisabled]="!selectedDate() || !selectedTimeSlot()"
+                          (click)="setStep(3)"
+                        >
+                          Continuar
+                          <ng-icon name="lucideArrowRight" class="size-4" />
+                        </button>
                       </div>
-                      <p class="text-xs text-[#72807C] font-light flex items-center gap-1.5">
-                        <ng-icon name="lucideClock" class="size-3.5 text-[#4D6D66]" />
-                        Sessão de 50 minutos · Horário de Brasília
-                      </p>
-                    } @else {
-                      <z-empty
-                        zIcon="lucideCalendar"
-                        zTitle="Sem horários neste dia"
-                        zDescription="Escolha outra data no calendário ao lado."
-                        class="border border-dashed border-[#4C645B]/20 rounded-xl p-6"
-                      />
-                    }
-                  } @else {
-                    <z-empty
-                      zIcon="lucideCalendar"
-                      zTitle="Selecione uma data"
-                      zDescription="Toque em um dia disponível ao lado para ver os horários."
-                      class="border border-dashed border-[#4C645B]/20 rounded-xl p-6"
-                    />
-                  }
-                </div>
-
-                <div class="col-span-1 lg:col-span-12 pt-4">
-                  <z-separator class="mb-5" />
-                  <div class="flex items-center justify-between gap-3">
-                    <button z-button zType="outline" zShape="circle" type="button" class="px-5 h-10" (click)="setStep(1)">
-                      <ng-icon name="lucideArrowLeft" class="size-4" />
-                      Voltar
-                    </button>
-                    <button
-                      z-button
-                      zShape="circle"
-                      type="button"
-                      class="px-6 h-10"
-                      [zDisabled]="!selectedDate() || !selectedTimeSlot()"
-                      (click)="setStep(3)"
-                    >
-                      Continuar
-                      <ng-icon name="lucideArrowRight" class="size-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- PASSO 3 -->
-            @if (bookingStep() === 3) {
-              <div class="animate-fade-in space-y-6 max-w-lg mx-auto">
-                <div>
-                  <h3 class="font-display text-2xl text-[#1C221F] mb-1">Seus dados de contato</h3>
-                  <p class="text-xs text-[#72807C] font-light">
-                    Usamos apenas para confirmar seu horário e enviar os detalhes da sessão.
-                  </p>
-                </div>
-
-                <div class="space-y-4">
-                  <div class="space-y-1.5">
-                    <label class="text-xs font-semibold tracking-wider uppercase text-[#72807C]" for="p-name">
-                      Nome completo *
-                    </label>
-                    <input
-                      z-input
-                      id="p-name"
-                      type="text"
-                      class="h-11 rounded-xl bg-[#FDFBF7]"
-                      placeholder="Seu nome"
-                      (input)="patientName.set($any($event.target).value)"
-                      [value]="patientName()"
-                    />
-                  </div>
-
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                      <label class="text-xs font-semibold tracking-wider uppercase text-[#72807C]" for="p-phone">
-                        WhatsApp *
-                      </label>
-                      <input
-                        z-input
-                        id="p-phone"
-                        type="tel"
-                        class="h-11 rounded-xl bg-[#FDFBF7]"
-                        placeholder="(31) 99999-9999"
-                        (input)="patientPhone.set($any($event.target).value)"
-                        [value]="patientPhone()"
-                      />
-                    </div>
-                    <div class="space-y-1.5">
-                      <label class="text-xs font-semibold tracking-wider uppercase text-[#72807C]" for="p-email">
-                        E-mail
-                      </label>
-                      <input
-                        z-input
-                        id="p-email"
-                        type="email"
-                        class="h-11 rounded-xl bg-[#FDFBF7]"
-                        placeholder="Opcional"
-                        (input)="patientEmail.set($any($event.target).value)"
-                        [value]="patientEmail()"
-                      />
                     </div>
                   </div>
-
-                  <div class="space-y-1.5">
-                    <label class="text-xs font-semibold tracking-wider uppercase text-[#72807C]" for="p-msg">
-                      Algo que gostaria de compartilhar antes?
-                    </label>
-                    <textarea
-                      z-textarea
-                      id="p-msg"
-                      rows="3"
-                      class="rounded-xl bg-[#FDFBF7] py-2.5"
-                      aria-describedby="p-msg-hint"
-                      placeholder="Completamente opcional — só se sentir vontade."
-                      (input)="patientMessage.set($any($event.target).value)"
-                      [value]="patientMessage()"
-                    ></textarea>
-                    <p id="p-msg-hint" class="text-xs text-[#72807C] font-light">
-                      Opcional e sigiloso — não vai para o Google Agenda, apenas ajuda a Lays a acolher você melhor.
-                    </p>
-                  </div>
-                </div>
-
-                @if (slotsError()) {
-                  <z-alert zType="destructive" [zDescription]="slotsError()!" />
                 }
 
-                <div class="p-4 rounded-xl bg-[#F5F2ED] border border-[#4C645B]/12 text-xs text-[#556661] space-y-2">
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="font-medium text-[#1C221F]">{{ selectedService() }}</span>
-                    <z-badge zType="secondary" class="bg-white text-[#4D6D66]">Online · Videochamada</z-badge>
+                <!-- PASSO 3 -->
+                @if (bookingStep() === 3) {
+                  <div class="animate-fade-in space-y-6 max-w-lg mx-auto">
+                    <div>
+                      <h3 class="font-display text-2xl text-[#1C221F] mb-1">Seus dados de contato</h3>
+                      <p class="text-xs text-[#556661] font-light">
+                        Usamos apenas para confirmar seu horário e enviar os detalhes da sessão.
+                      </p>
+                    </div>
+
+                    <div class="space-y-4">
+                      <div class="space-y-1.5">
+                        <label class="text-xs font-semibold tracking-wider uppercase text-[#556661]" for="p-name">
+                          Nome completo *
+                        </label>
+                        <input
+                          z-input
+                          id="p-name"
+                          type="text"
+                          class="h-11 rounded-xl bg-[#FDFBF7]"
+                          placeholder="Seu nome"
+                          (input)="patientName.set($any($event.target).value)"
+                          [value]="patientName()"
+                        />
+                      </div>
+
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                          <label class="text-xs font-semibold tracking-wider uppercase text-[#556661]" for="p-phone">
+                            WhatsApp *
+                          </label>
+                          <input
+                            z-input
+                            id="p-phone"
+                            type="tel"
+                            class="h-11 rounded-xl bg-[#FDFBF7]"
+                            placeholder="(31) 99999-9999"
+                            (input)="patientPhone.set($any($event.target).value)"
+                            [value]="patientPhone()"
+                          />
+                        </div>
+                        <div class="space-y-1.5">
+                          <label class="text-xs font-semibold tracking-wider uppercase text-[#556661]" for="p-email">
+                            E-mail
+                          </label>
+                          <input
+                            z-input
+                            id="p-email"
+                            type="email"
+                            class="h-11 rounded-xl bg-[#FDFBF7]"
+                            placeholder="Opcional"
+                            (input)="patientEmail.set($any($event.target).value)"
+                            [value]="patientEmail()"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="space-y-1.5">
+                        <label class="text-xs font-semibold tracking-wider uppercase text-[#556661]" for="p-msg">
+                          Algo que gostaria de compartilhar antes?
+                        </label>
+                        <textarea
+                          z-textarea
+                          id="p-msg"
+                          rows="3"
+                          class="rounded-xl bg-[#FDFBF7] py-2.5"
+                          aria-describedby="p-msg-hint"
+                          placeholder="Completamente opcional, só se sentir vontade."
+                          (input)="patientMessage.set($any($event.target).value)"
+                          [value]="patientMessage()"
+                        ></textarea>
+                        <p id="p-msg-hint" class="text-xs text-[#556661] font-light">
+                          Opcional e sigiloso: não vai para o Google Agenda, apenas ajuda a Lays a acolher você melhor.
+                        </p>
+                      </div>
+                    </div>
+
+                    @if (slotsError()) {
+                      <z-alert zType="destructive" [zDescription]="slotsError()!" />
+                    }
+
+                    <div class="p-4 rounded-xl bg-[#F5F2ED] border border-[#1C221F]/10 text-xs text-[#556661] space-y-2">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="font-medium text-[#1C221F]">{{ selectedService() }}</span>
+                        <z-badge zType="secondary" class="bg-white text-[#4D6D66]">Online · Videochamada</z-badge>
+                      </div>
+                      <z-separator />
+                      <div class="flex items-center gap-4 tabular-nums">
+                        <span><strong>Data:</strong> {{ selectedDate()?.toLocaleDateString('pt-BR') }}</span>
+                        <span><strong>Horário:</strong> {{ selectedTimeSlot() }}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <z-separator class="mb-4" />
+                      <div class="flex items-center justify-between gap-3">
+                        <button
+                          z-button
+                          zType="outline"
+                          zShape="circle"
+                          type="button"
+                          class="px-5 h-10"
+                          [zDisabled]="bookingLoading()"
+                          (click)="setStep(2)"
+                        >
+                          <ng-icon name="lucideArrowLeft" class="size-4" />
+                          Voltar
+                        </button>
+                        <button
+                          z-button
+                          zShape="circle"
+                          type="button"
+                          class="px-6 h-10"
+                          [zLoading]="bookingLoading()"
+                          [zDisabled]="!patientName() || !patientPhone() || bookingLoading()"
+                          (click)="confirmBooking()"
+                        >
+                          {{ bookingLoading() ? 'Confirmando...' : 'Confirmar sessão' }}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <z-separator />
-                  <div class="flex items-center gap-4 tabular-nums">
-                    <span><strong>Data:</strong> {{ selectedDate()?.toLocaleDateString('pt-BR') }}</span>
-                    <span><strong>Horário:</strong> {{ selectedTimeSlot() }}</span>
+                }
+
+                <!-- PASSO 4 -->
+                @if (bookingStep() === 4) {
+                  <div class="animate-fade-in text-center py-6 space-y-6 max-w-md mx-auto">
+                    <div class="w-16 h-16 rounded-full bg-[#D4E6E1] text-[#4D6D66] flex items-center justify-center mx-auto">
+                      <ng-icon name="lucideCheck" class="size-7" />
+                    </div>
+
+                    <div class="space-y-2">
+                      <h3 class="font-display text-3xl text-[#1C221F]">Solicitação enviada</h3>
+                      <p class="text-sm text-[#556661] font-light">
+                        Em instantes você será redirecionado ao WhatsApp da Lays para concluir a confirmação.
+                      </p>
+                    </div>
+
+                    <div class="p-5 rounded-2xl text-left text-xs space-y-2.5 bg-[#F5F2ED] border border-[#1C221F]/10 text-[#556661]">
+                      <div class="flex justify-between gap-2">
+                        <span>Paciente</span>
+                        <span class="font-medium text-[#1C221F]">{{ patientName() }}</span>
+                      </div>
+                      <z-separator />
+                      <div class="flex justify-between gap-2">
+                        <span>Tipo de sessão</span>
+                        <span class="font-medium text-[#1C221F]">{{ selectedService() }}</span>
+                      </div>
+                      <div class="flex justify-between gap-2 tabular-nums">
+                        <span>Data e horário</span>
+                        <span class="font-medium text-[#1C221F]">
+                          {{ selectedDate()?.toLocaleDateString('pt-BR') }} · {{ selectedTimeSlot() }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <a href="https://wa.me/553194720801" target="_blank" rel="noopener" class="btn-whatsapp w-full">
+                      Continuar no WhatsApp
+                    </a>
                   </div>
-                </div>
-
-                <div>
-                  <z-separator class="mb-4" />
-                  <div class="flex items-center justify-between gap-3">
-                    <button
-                      z-button
-                      zType="outline"
-                      zShape="circle"
-                      type="button"
-                      class="px-5 h-10"
-                      [zDisabled]="bookingLoading()"
-                      (click)="setStep(2)"
-                    >
-                      <ng-icon name="lucideArrowLeft" class="size-4" />
-                      Voltar
-                    </button>
-                    <button
-                      z-button
-                      zShape="circle"
-                      type="button"
-                      class="px-6 h-10"
-                      [zLoading]="bookingLoading()"
-                      [zDisabled]="!patientName() || !patientPhone() || bookingLoading()"
-                      (click)="confirmBooking()"
-                    >
-                      {{ bookingLoading() ? 'Confirmando...' : 'Confirmar sessão' }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- PASSO 4: Sucesso -->
-            @if (bookingStep() === 4) {
-              <div class="animate-fade-in text-center py-6 space-y-6 max-w-md mx-auto">
-                <div class="w-16 h-16 rounded-full bg-[#D4E6E1] text-[#4D6D66] flex items-center justify-center mx-auto">
-                  <ng-icon name="lucideCheck" class="size-7" />
-                </div>
-
-                <div class="space-y-2">
-                  <h3 class="font-display text-3xl text-[#1C221F]">Solicitação enviada</h3>
-                  <p class="text-sm text-[#556661] font-light">
-                    Em instantes você será redirecionado ao WhatsApp da Lays para concluir a confirmação.
-                  </p>
-                </div>
-
-                <div class="p-5 rounded-2xl text-left text-xs space-y-2.5 bg-[#F5F2ED] border border-[#4C645B]/12 text-[#556661]">
-                  <div class="flex justify-between gap-2">
-                    <span>Paciente</span>
-                    <span class="font-medium text-[#1C221F]">{{ patientName() }}</span>
-                  </div>
-                  <z-separator />
-                  <div class="flex justify-between gap-2">
-                    <span>Tipo de sessão</span>
-                    <span class="font-medium text-[#1C221F]">{{ selectedService() }}</span>
-                  </div>
-                  <div class="flex justify-between gap-2 tabular-nums">
-                    <span>Data e horário</span>
-                    <span class="font-medium text-[#1C221F]">
-                      {{ selectedDate()?.toLocaleDateString('pt-BR') }} · {{ selectedTimeSlot() }}
-                    </span>
-                  </div>
-                </div>
-
-                <a href="https://wa.me/553194720801" target="_blank" rel="noopener" class="btn-whatsapp w-full">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"
-                    />
-                  </svg>
-                  Continuar no WhatsApp
-                </a>
-              </div>
-            }
-          </z-card-content>
-        </z-card>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- =========================================================
-     SOBRE
-     ========================================================= -->
-<section id="sobre" class="py-24 lg:py-32 bg-[#F5F2ED]">
-  <div class="max-w-6xl mx-auto px-6 lg:px-12">
-    <div class="grid lg:grid-cols-2 gap-14 lg:gap-16 items-center">
-      <div class="reveal-left">
-        <div class="rounded-3xl overflow-hidden outline-1 outline-black/8 shadow-[0_18px_48px_rgba(28,34,31,0.12)]">
-          <img
-            src="assets/lays_coelho_profile3.jpeg"
-            alt="Lays Coelho - Psicóloga Clínica"
-            class="w-full object-cover transition-transform duration-500 hover:scale-[1.015]"
-          />
-        </div>
-      </div>
-
-      <div class="reveal space-y-5">
-        <span class="section-label">Sobre mim</span>
-        <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-tight">
-          Um olhar acolhedor e profundo para<br />
-          <em class="font-display-italic not-italic text-[#4D6D66]">você e suas relações</em>
-        </h2>
-        <p class="text-[#556661] leading-relaxed font-light">
-          Prazer, sou Lays Stephanie Coelho.
-        </p>
-        <p class="text-[#556661] leading-relaxed font-light">
-          Psicóloga formada pela PUC Minas, pós-graduanda em Terapia Sistêmica e atuo na área
-          clínica há 5 anos.
-        </p>
-        <p class="text-[#556661] leading-relaxed font-light">
-          Acredito profundamente que não existimos de forma isolada: nossas relações, história e interações moldam quem
-          somos, o modo como sentimos e como nos posicionamos no mundo. Compreender essas conexões e tomar consciência
-          dessas dinâmicas é o primeiro passo para quebrarmos padrões repetitivos e construirmos novos caminhos.
-        </p>
-        <p class="text-[#556661] leading-relaxed font-light">
-          Em consultório, adoto uma postura interventiva e dinâmica. Acredito que a transformação acontece na troca real
-          — por isso, além do acolhimento e da escuta cuidadosa, trago questionamentos, reflexões e direções práticas
-          que impulsionam o seu desenvolvimento pessoal.
-        </p>
-        <p class="text-[#556661] leading-relaxed font-light">
-          Meu compromisso é te acompanhar nessa jornada de clareza, autonomia e ressignificação das suas relações.
-        </p>
-
-        <div class="grid grid-cols-2 gap-2 pt-4 reveal-stagger">
-          @for (stat of stats(); track stat.label) {
-            <div class="stat-card">
-              <span class="stat-number">{{ stat.value }}</span>
-              <span class="stat-label">{{ stat.label }}</span>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- =========================================================
-     SERVIÇOS
-     ========================================================= -->
-<section id="servicos" class="py-24 lg:py-32 bg-background">
-  <div class="max-w-6xl mx-auto px-6 lg:px-12">
-    <div class="max-w-2xl mb-16 reveal">
-      <span class="section-label mb-4">Para quem é</span>
-      <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-tight">
-        Não é preciso estar<br />
-        <em class="font-display-italic not-italic text-[#4D6D66]">em crise para começar</em>
-      </h2>
-      <p class="text-[#556661] mt-4 leading-relaxed max-w-lg font-light">
-        A terapia é para quem sente que algo poderia ser diferente —
-        seja nas relações, nos pensamentos ou na forma como enfrenta o dia a dia.
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-[rgba(76,100,91,0.12)] reveal-stagger">
-      @for (service of services(); track service.title) {
-        <div class="service-card group">
-          <div
-            class="w-8 h-8 mb-5 text-[#4D6D66] transition-transform duration-200 group-hover:translate-x-0.5"
-            [innerHTML]="service.svgIcon | safeHtml"
-          ></div>
-          <h3 class="font-display text-xl text-[#1C221F] mb-2">{{ service.title }}</h3>
-          <p class="text-[#556661] text-sm leading-relaxed font-light">{{ service.description }}</p>
-        </div>
-      }
-    </div>
-  </div>
-</section>
-
-<!-- =========================================================
-     COMO FUNCIONA
-     ========================================================= -->
-<section class="py-24 lg:py-32 relative overflow-hidden bg-[#1C221F]">
-  <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-    <div
-      class="blob"
-      style="
-        width: 400px;
-        height: 400px;
-        top: 0;
-        right: 0;
-        background: radial-gradient(circle, rgba(77, 109, 102, 0.18) 0%, transparent 70%);
-        --blob-duration: 16s;
-        transform: translate(30%, -30%);
-      "
-    ></div>
-  </div>
-
-  <div class="max-w-6xl mx-auto px-6 lg:px-12 relative z-10">
-    <div class="max-w-xl mb-16 reveal">
-      <span class="section-label mb-4 text-[#D4E6E1]/60">O caminho</span>
-      <h2 class="font-display text-4xl lg:text-5xl text-white leading-tight">
-        Como acontece<br />
-        <em class="font-display-italic not-italic text-[#D4E6E1]/70">a terapia</em>
-      </h2>
-    </div>
-
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 reveal-stagger">
-      @for (step of steps(); track step.number; let last = $last) {
-        <div class="step-item relative">
-          <div class="step-number mb-5">{{ step.number }}</div>
-          <h3 class="font-display text-lg text-white mb-2">{{ step.title }}</h3>
-          <p class="text-sm leading-relaxed text-white/55 font-light">{{ step.description }}</p>
-          @if (!last) {
-            <div class="step-connector hidden lg:block absolute top-6 left-[calc(50%+2rem)] w-[calc(100%-4rem)]"></div>
-          }
-        </div>
-      }
-    </div>
-  </div>
-</section>
-
-<!-- =========================================================
-     DEPOIMENTOS (ZardUI Card + Avatar + Badge)
-     ========================================================= -->
-<section class="py-24 lg:py-32 bg-[#F5F2ED]">
-  <div class="max-w-6xl mx-auto px-6 lg:px-12">
-    <div class="max-w-xl mb-16 reveal">
-      <span class="section-label mb-4">O que relatam</span>
-      <h2 class="font-display text-4xl lg:text-5xl text-[#1C221F] leading-tight">
-        Experiências de<br />
-        <em class="font-display-italic not-italic text-[#4D6D66]">quem passou por aqui</em>
-      </h2>
-    </div>
-
-    <!-- Layout assimétrico: 1 destaque (3 colunas) + 2 empilhados (2 colunas) -->
-    <div class="grid lg:grid-cols-5 gap-5">
-      @if (testimonials().length > 0) {
-        <z-card class="testimonial-card lg:col-span-3 reveal-left rounded-2xl p-8 ring-1 ring-[#4C645B]/12 shadow-[0_2px_16px_rgba(28,34,31,0.05)] justify-between">
-          <p class="font-display text-xl sm:text-2xl text-[#1C221F] leading-relaxed mb-8">
-            "{{ testimonials()[0].text }}"
-          </p>
-          <div class="flex items-center justify-between gap-3 pt-4 border-t border-[#4C645B]/10">
-            <div class="flex items-center gap-3">
-              <z-avatar [zFallback]="testimonials()[0].author[0]" class="bg-[#4D6D66] text-white" />
-              <span class="text-[#1C221F] text-sm font-medium">{{ testimonials()[0].author }}</span>
-            </div>
-            <z-badge zType="secondary" class="bg-[#F5F2ED] text-[#556661]">{{ testimonials()[0].context }}</z-badge>
+                }
+              </z-card-content>
+            </z-card>
           </div>
-        </z-card>
-      }
-
-      <div class="lg:col-span-2 flex flex-col gap-5 reveal-right">
-        @for (t of testimonials().slice(1); track t.author) {
-          <z-card class="testimonial-card flex-1 rounded-2xl p-6 ring-1 ring-[#4C645B]/12 shadow-[0_2px_16px_rgba(28,34,31,0.05)] justify-between">
-            <p class="text-[#556661] text-sm leading-relaxed mb-6 font-light">
-              "{{ t.text }}"
-            </p>
-            <div class="flex items-center justify-between gap-3 pt-3 border-t border-[#4C645B]/10">
-              <div class="flex items-center gap-2.5">
-                <z-avatar zSize="sm" [zFallback]="t.author[0]" class="bg-[#4D6D66] text-white" />
-                <span class="text-[#1C221F] text-xs font-medium">{{ t.author }}</span>
-              </div>
-              <span class="text-[0.7rem] text-[#72807C]">{{ t.context }}</span>
-            </div>
-          </z-card>
-        }
+        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
+  </main>
 
-<!-- =========================================================
-     DÚVIDAS FREQUENTES (ZardUI Accordion)
-     ========================================================= -->
-<section id="duvidas" class="py-24 lg:py-28 bg-background">
-  <div class="max-w-6xl mx-auto px-6 lg:px-12">
-    <div class="grid lg:grid-cols-12 gap-12 items-start">
-      <div class="lg:col-span-5 reveal">
-        <span class="section-label mb-3">Antes de começar</span>
-        <h2 class="font-display text-4xl text-[#1C221F] leading-tight mb-4">
-          Dúvidas<br />
-          <em class="font-display-italic not-italic text-[#4D6D66]">frequentes</em>
-        </h2>
-        <p class="text-sm text-[#556661] font-light leading-relaxed max-w-sm">
-          Se algo ainda gera insegurança antes da primeira conversa, veja as respostas mais comuns ou mande uma mensagem.
-        </p>
-      </div>
+  <!-- =========================================================
+       COLOFÃO EDITORIAL (FECHAMENTO RESOLVIDO — CHAPTERED EDITORIAL)
+       ========================================================= -->
+  <footer id="contato" class="sc-chapter--dark border-t border-white/10">
+    <div class="sc-wrap py-16 lg:py-20 space-y-12">
+      <div class="grid lg:grid-cols-12 gap-8 items-end">
+        <div class="lg:col-span-7 space-y-4">
+          <p class="font-display text-3xl lg:text-4xl text-[#F5F2ED] leading-tight m-0 max-w-xl">
+            Se preferir conversar antes de escolher um horário, escreva diretamente pelo
+            <a
+              href="https://wa.me/553194720801"
+              target="_blank"
+              rel="noopener"
+              class="text-[#9AC2B8] underline underline-offset-4 hover:text-white transition-colors"
+            >
+              WhatsApp
+            </a>
+            ou por
+            <a
+              href="mailto:laysstephanie50@gmail.com"
+              class="text-[#9AC2B8] underline underline-offset-4 hover:text-white transition-colors"
+            >
+              e-mail
+            </a>.
+          </p>
+        </div>
 
-      <div class="lg:col-span-7 reveal">
-        <z-card class="rounded-2xl p-6 sm:p-8 ring-1 ring-[#4C645B]/12 shadow-[0_2px_16px_rgba(28,34,31,0.04)]">
-          <z-accordion zType="single" zDefaultValue="faq-online">
-            @for (item of faqs(); track item.id) {
-              <z-accordion-item [zTitle]="item.question" [zValue]="item.id" class="border-[#4C645B]/12">
-                <p class="text-sm text-[#556661] font-light leading-relaxed">
-                  {{ item.answer }}
-                </p>
-              </z-accordion-item>
-            }
-          </z-accordion>
-        </z-card>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- =========================================================
-     CTA FINAL
-     ========================================================= -->
-<section id="contato" class="py-24 lg:py-32 relative overflow-hidden bg-[#1C221F]">
-  <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-    <div
-      class="butterfly-container"
-      style="right: 8%; bottom: 20%; --duration: 11s; --delay: 0.5s; --flap-speed: 1.4s; opacity: 0.12;"
-    >
-      <svg width="60" height="45" viewBox="0 0 48 36" fill="none">
-        <ellipse cx="12" cy="14" rx="11" ry="7" fill="#D4E6E1" opacity="0.6" transform="rotate(-22 12 14)" />
-        <ellipse cx="36" cy="14" rx="11" ry="7" fill="#D4E6E1" opacity="0.6" transform="rotate(22 36 14)" />
-        <ellipse cx="11" cy="23" rx="7" ry="5" fill="#D4E6E1" opacity="0.3" transform="rotate(-35 11 23)" />
-        <ellipse cx="37" cy="23" rx="7" ry="5" fill="#D4E6E1" opacity="0.3" transform="rotate(35 37 23)" />
-        <line x1="24" y1="3" x2="24" y2="33" stroke="#fff" stroke-width="0.8" opacity="0.2" stroke-linecap="round" />
-      </svg>
-    </div>
-  </div>
-
-  <div class="max-w-6xl mx-auto px-6 lg:px-12 relative z-10">
-    <div class="max-w-3xl reveal">
-      <span class="section-label mb-5 text-[#D4E6E1]/60">O primeiro passo</span>
-      <h2 class="font-display text-5xl lg:text-6xl text-white leading-[1.05] mb-6">
-        A dúvida já é<br />
-        <em class="font-display-italic not-italic text-[#D4E6E1]/70">um começo</em>
-      </h2>
-      <p class="text-lg leading-relaxed mb-10 max-w-xl text-white/55 font-light">
-        Se você chegou até aqui, algo te trouxe. Não é preciso saber exatamente o que está sentindo para entrar em
-        contato — isso é justamente para o que a terapia serve.
-      </p>
-
-      <div class="flex flex-col sm:flex-row gap-4 mb-12">
-        <a href="https://wa.me/553194720801" target="_blank" rel="noopener" class="btn-whatsapp">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"
-            />
-          </svg>
-          Conversar no WhatsApp
-        </a>
-        <a
-          z-button
-          zType="outline"
-          zShape="circle"
-          href="mailto:laysstephanie50@gmail.com"
-          class="h-11 px-6 bg-transparent text-white/75 border-white/15 hover:bg-white/10 hover:text-white"
-        >
-          <ng-icon name="lucideMail" class="size-4" />
-          Enviar um e-mail
-        </a>
+        <div class="lg:col-span-5 lg:text-right space-y-2 text-sm text-[#B9C8C3]">
+          <p class="m-0 font-medium text-[#F5F2ED]">Lays Stephanie Coelho</p>
+          <p class="m-0">Psicóloga Clínica · CRP 04/67406</p>
+          <p class="m-0">Atendimento 100% Online · Brasil e Exterior</p>
+        </div>
       </div>
 
-      <div class="flex flex-wrap gap-6 text-xs text-white/40">
-        <span class="inline-flex items-center gap-1.5">
-          <ng-icon name="lucideVideo" class="size-3.5" />
-          Atendimento 100% Online
-        </span>
-        <span>Em todo o Brasil</span>
-        <span class="inline-flex items-center gap-1.5">
-          <ng-icon name="lucideShieldCheck" class="size-3.5" />
-          Sigilo ético e profissional
-        </span>
+      <div class="pt-8 border-t border-white/12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-[#B9C8C3]">
+        <p class="m-0">© {{ currentYear() }} Lays Coelho · Todos os direitos reservados</p>
+        <div class="flex items-center gap-6">
+          <a href="https://www.instagram.com/lays.psi/" target="_blank" rel="noopener" class="hover:text-white transition-colors">
+            Instagram
+          </a>
+          <a href="https://www.linkedin.com/in/laysstephaniemarinhocoelho/" target="_blank" rel="noopener" class="hover:text-white transition-colors">
+            LinkedIn
+          </a>
+          <a href="#agenda" class="text-[#9AC2B8] hover:text-white transition-colors">
+            Agendar sessão
+          </a>
+        </div>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- =========================================================
-     FOOTER
-     ========================================================= -->
-<footer class="bg-[#141817] border-t border-white/5">
-  <div class="max-w-6xl mx-auto px-6 lg:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
-    <div>
-      <span class="font-display text-white text-base">Lays Coelho</span>
-      <span class="text-xs ml-2 text-white/35">Psicologia Sistêmica · CRP - 04/67406</span>
-    </div>
-    <p class="text-xs text-center text-white/30">
-      © {{ currentYear() }} Lays Coelho · Todos os direitos reservados
-    </p>
-    <div class="flex gap-5">
-      <a href="https://www.instagram.com/lays.psi/" target="_blank" rel="noopener" class="text-xs text-white/35 hover:text-white/75 transition-colors">
-        Instagram
-      </a>
-      <a href="https://www.linkedin.com/in/laysstephaniemarinhocoelho/" target="_blank" rel="noopener" class="text-xs text-white/35 hover:text-white/75 transition-colors">
-        LinkedIn
-      </a>
-    </div>
-  </div>
-</footer>
+  </footer>
+</div>

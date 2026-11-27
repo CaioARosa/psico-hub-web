@@ -1,6 +1,7 @@
 @layer ng-icon, theme, base, components, utilities;
 @import 'tailwindcss';
 @import './app/shared/core/css/zard';
+@import './app/shared/scrollcraft/scrollcraft.css' layer(base);
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
@@ -70,6 +71,21 @@
 
   --shimmer-base: #EDEAE5;
   --shimmer-shine: #F5F2ED;
+
+  /* ============================================
+     SCROLLCRAFT BRAND TOKENS — Chaptered Editorial
+     ============================================ */
+  --sc-canvas: #FDFBF7;
+  --sc-surface: #FFFFFF;
+  --sc-ink: #1C221F;
+  --sc-ink-soft: #556661;
+  --sc-accent: #4D6D66;
+  --sc-accent-ink: #FFFFFF;
+  --sc-hairline: rgba(28, 34, 31, 0.12);
+  --sc-hairline-strong: rgba(28, 34, 31, 0.22);
+  --sc-font-display: 'Instrument Serif', Georgia, serif;
+  --sc-font-text: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --sc-shadow-color: 156 14% 12%;
 }
 
 @theme inline {
@@ -606,4 +622,283 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ============================================
+   SCROLLCRAFT CHAPTERED EDITORIAL + FIO SISTÊMICO
+   ============================================ */
+.sc-home-root {
+  background-color: var(--sc-canvas);
+  color: var(--sc-ink);
+}
+
+.sc-chapter--paper {
+  --sc-canvas: #FDFBF7;
+  --sc-surface: #FFFFFF;
+  --sc-ink: #1C221F;
+  --sc-ink-soft: #556661;
+  --sc-accent: #4D6D66;
+  --sc-accent-ink: #FFFFFF;
+  --sc-hairline: rgba(28, 34, 31, 0.12);
+  background-color: var(--sc-canvas);
+  color: var(--sc-ink);
+}
+
+.sc-chapter--linen {
+  --sc-canvas: #F5F2ED;
+  --sc-surface: #FDFBF7;
+  --sc-ink: #1C221F;
+  --sc-ink-soft: #4F5F5A;
+  --sc-accent: #4D6D66;
+  --sc-accent-ink: #FFFFFF;
+  --sc-hairline: rgba(28, 34, 31, 0.12);
+  background-color: var(--sc-canvas);
+  color: var(--sc-ink);
+}
+
+.sc-chapter--dark {
+  --sc-canvas: #1C221F;
+  --sc-surface: #252E2A;
+  --sc-ink: #F5F2ED;
+  --sc-ink-soft: #B9C8C3;
+  --sc-accent: #9AC2B8;
+  --sc-accent-ink: #141A17;
+  --sc-hairline: rgba(245, 242, 237, 0.14);
+  background-color: var(--sc-canvas);
+  color: var(--sc-ink);
+}
+
+/* Light-on-dark typography compensation (taste.md) */
+.sc-chapter--dark p,
+.sc-chapter--dark li {
+  letter-spacing: 0.005em;
+  line-height: 1.66;
+}
+
+/* Hero portrait step-down on mobile (taste.md) */
+.sc-hero-title {
+  font-family: var(--sc-font-display);
+  font-size: clamp(2.65rem, 1.8rem + 3.6vw, 4.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+@media (max-width: 700px) {
+  .sc-hero-title {
+    font-size: clamp(2.15rem, 1.55rem + 3.2vw, 2.75rem);
+    line-height: 1.06;
+  }
+}
+
+/* Editorial Pan Rail (Chapter 3) */
+.sc-care-stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #FDFBF7;
+}
+
+.sc-care-rail {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(1.25rem, 2.5vw, 2.25rem);
+  padding-inline: var(--sc-gutter);
+  width: max-content;
+}
+
+.sc-care-lead {
+  width: clamp(18.5rem, 32vw, 28rem);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-right: clamp(0.75rem, 2vw, 2rem);
+}
+
+.sc-care-item {
+  width: clamp(17.5rem, 27vw, 23rem);
+  flex-shrink: 0;
+  padding: clamp(1.5rem, 2.4vw, 2.25rem);
+  border-top: 1px solid rgba(28, 34, 31, 0.16);
+  border-radius: 0.75rem;
+  background-color: #FFFFFF;
+  box-shadow: var(--sc-e1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.sc-care-close {
+  width: clamp(17rem, 26vw, 22rem);
+  flex-shrink: 0;
+  padding: clamp(1.5rem, 2.4vw, 2.25rem);
+  border-radius: 0.75rem;
+  background-color: #1C221F;
+  color: #F5F2ED;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+/* Staggered settle on rail items driven from --sc-p (devices.md §3) */
+@media (prefers-reduced-motion: no-preference) {
+  .sc-care-item {
+    opacity: clamp(0.62, calc(0.62 + (var(--sc-p, 0) - var(--item-at, 0)) * 2.2), 1);
+    transform: translate3d(
+      0,
+      calc((1 - clamp(0, calc((var(--sc-p, 0) - var(--item-at, 0)) * 2.8), 1)) * 12px),
+      0
+    );
+  }
+}
+
+/* Systemic Constellation Peak (Chapter 4 — Fio Sistêmico) */
+.sc-constellation-stage {
+  display: flex;
+  align-items: center;
+  background-color: #1C221F;
+  color: #F5F2ED;
+}
+
+.sc-thread-path {
+  stroke-dasharray: var(--path-len, 320);
+  stroke-dashoffset: calc(
+    var(--path-len, 320) * (1 - clamp(0, calc((var(--sc-p, 0) - var(--t-start, 0)) / var(--t-dur, 0.25)), 1))
+  );
+  transition: stroke 220ms var(--sc-ease-out), stroke-opacity 220ms var(--sc-ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-thread-path {
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+.sc-stage-card {
+  border-top: 1px solid rgba(245, 242, 237, 0.14);
+  transition:
+    background-color 200ms var(--sc-ease-out),
+    border-color 200ms var(--sc-ease-out),
+    opacity 240ms var(--sc-ease-out);
+}
+
+.sc-stage-card--active {
+  border-top-color: #9AC2B8;
+  background-color: rgba(154, 194, 184, 0.09);
+}
+
+/* Live Margin Folio (Signature Move — desktop only) */
+.sc-margin-folio {
+  position: fixed;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.65rem;
+  padding: 0.75rem 0.7rem 0.75rem 0.9rem;
+  border-radius: 1rem;
+  background: rgba(253, 251, 247, 0.88);
+  border: 1px solid rgba(28, 34, 31, 0.10);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(28, 34, 31, 0.06);
+  pointer-events: auto;
+  transition: background-color 200ms var(--sc-ease-out), border-color 200ms var(--sc-ease-out);
+}
+
+.sc-margin-folio--dark {
+  background: rgba(28, 34, 31, 0.88);
+  border-color: rgba(245, 242, 237, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
+@media (min-width: 1280px) {
+  .sc-margin-folio {
+    display: flex;
+  }
+}
+
+.sc-folio-track {
+  position: absolute;
+  right: 16px;
+  top: 18px;
+  bottom: 18px;
+  width: 1px;
+  background: rgba(77, 109, 102, 0.24);
+  pointer-events: none;
+}
+
+.sc-margin-folio--dark .sc-folio-track {
+  background: rgba(154, 194, 184, 0.24);
+}
+
+.sc-folio-fill {
+  width: 100%;
+  height: 100%;
+  background: #4D6D66;
+  transform-origin: top;
+  transition: transform 90ms linear;
+}
+
+.sc-margin-folio--dark .sc-folio-fill {
+  background: #9AC2B8;
+}
+
+.sc-folio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  background: transparent;
+  border: 0;
+  padding: 0.2rem 0;
+  cursor: pointer;
+  color: #556661;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 180ms var(--sc-ease-out);
+}
+
+.sc-folio-btn:hover,
+.sc-folio-btn--active {
+  color: #1C221F;
+}
+
+.sc-folio-btn--on-dark {
+  color: rgba(245, 242, 237, 0.56);
+}
+
+.sc-folio-btn--on-dark:hover,
+.sc-folio-btn--on-dark.sc-folio-btn--active {
+  color: #F5F2ED;
+}
+
+.sc-folio-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 9999px;
+  border: 1.5px solid currentColor;
+  background: #FDFBF7;
+  transition: transform 180ms var(--sc-ease-out), background-color 180ms var(--sc-ease-out);
+}
+
+.sc-folio-btn--on-dark .sc-folio-dot {
+  background: #1C221F;
+}
+
+.sc-folio-btn--active .sc-folio-dot {
+  background: #4D6D66;
+  border-color: #4D6D66;
+  transform: scale(1.18);
+}
+
+.sc-folio-btn--on-dark.sc-folio-btn--active .sc-folio-dot {
+  background: #9AC2B8;
+  border-color: #9AC2B8;
 }
