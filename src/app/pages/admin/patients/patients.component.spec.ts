@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 
 import { PatientsService } from '../data/patients.service';
 import { SAVE_ERROR } from '../data/safe-write';
@@ -110,7 +111,7 @@ describe('PatientsComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(SAVE_ERROR);
   });
 
-  it('exibe microcopy apenas nos campos de acordo e mantém nome, telefone e valor limpos', async () => {
+  it('exibe microcopy nos campos de nome e acordo e mantém telefone e valor limpos', async () => {
     const fixture = TestBed.createComponent(PatientsComponent);
     fixture.componentInstance.openCreate();
     fixture.detectChanges();
@@ -118,7 +119,8 @@ describe('PatientsComponent', () => {
     const root = fixture.nativeElement as HTMLElement;
     const text = (root.textContent ?? '').replace(/\s+/g, ' ');
 
-    expect(root.querySelector('#patient-name')?.getAttribute('aria-describedby')).toBeNull();
+    expect(root.querySelector('#patient-name')?.getAttribute('aria-describedby')).toBe('patient-name-hint');
+    expect(text).toContain('Use o mesmo nome usado no Google Agenda para vincular as sessões automaticamente.');
     expect(root.querySelector('#patient-phone')?.getAttribute('aria-describedby')).toBeNull();
     expect(root.querySelector('#patient-amount')?.getAttribute('aria-describedby')).toBeNull();
 
@@ -143,8 +145,31 @@ describe('PatientsComponent', () => {
     await form.submit(new Event('submit'));
     fixture.detectChanges();
 
+    expect(root.querySelector('#patient-name')?.getAttribute('aria-describedby')).toBe(
+      'patient-name-hint patient-name-error',
+    );
     expect(root.querySelector('#patient-sessions')?.getAttribute('aria-describedby')).toBe(
       'patient-sessions-hint patient-sessions-error',
     );
+  });
+
+  it('mostra empty state guiado com CTA direto quando não há pacientes cadastrados', () => {
+    const fixture = TestBed.createComponent(PatientsComponent);
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Passo 1');
+    expect(text).toContain('Novo paciente');
+  });
+
+  it('abre o formulário de cadastro automaticamente quando a URL traz ?novo=1', () => {
+    TestBed.overrideProvider(ActivatedRoute, {
+      useValue: { snapshot: { queryParamMap: convertToParamMap({ novo: '1' }) } },
+    });
+    const fixture = TestBed.createComponent(PatientsComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.form().mode).toBe('create');
+    expect(fixture.nativeElement.querySelector('app-patient-form')).not.toBeNull();
   });
 });

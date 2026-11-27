@@ -8,6 +8,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucidePlus, lucideSearch, lucideUsers, lucideX } from '@ng-icons/lucide';
 
@@ -145,7 +146,28 @@ export function agreementSummary(agreement: Agreement): string {
           }
         </div>
       } @else if (visible().length === 0) {
-        <z-empty zIcon="lucideUsers" [zDescription]="emptyMessage()" class="admin-pane bg-card rounded-2xl border border-border py-10" />
+        @if (isFirstUse()) {
+          <z-card class="admin-pane rounded-2xl p-6 sm:p-8 shadow-2xs text-center space-y-3">
+            <div class="mx-auto flex size-11 items-center justify-center rounded-xl bg-[#D4E6E1]/70 text-[#1C221F]">
+              <ng-icon name="lucideUsers" class="size-5" />
+            </div>
+            <h2 class="font-display text-xl text-foreground">Passo 1 do consultório: cadastre seus pacientes</h2>
+            <p class="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+              Com o nome e o acordo de cada paciente, o sistema vincula a agenda e calcula os valores sozinho.
+            </p>
+            <button
+              z-button
+              type="button"
+              class="min-h-11 rounded-xl px-4"
+              (click)="openCreate()"
+            >
+              <ng-icon name="lucidePlus" class="size-4" />
+              Novo paciente
+            </button>
+          </z-card>
+        } @else {
+          <z-empty zIcon="lucideUsers" [zDescription]="emptyMessage()" class="admin-pane bg-card rounded-2xl border border-border py-10" />
+        }
       } @else {
         <ul class="space-y-3 stagger-list">
           @for (patient of visible(); track patient.id) {
@@ -247,12 +269,15 @@ export function agreementSummary(agreement: Agreement): string {
 })
 export class PatientsComponent {
   protected readonly service = inject(PatientsService);
+  private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly formHost = viewChild<ElementRef<HTMLElement>>('formHost');
   private scrollFrame = 0;
 
   readonly search = signal('');
   readonly showInactive = signal(false);
-  readonly form = signal<FormState>({ mode: 'closed' });
+  readonly form = signal<FormState>(
+    this.route?.snapshot?.queryParamMap?.get('novo') === '1' ? { mode: 'create' } : { mode: 'closed' },
+  );
   readonly confirmingId = signal<string | null>(null);
   readonly busyId = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
@@ -276,6 +301,10 @@ export class PatientsComponent {
       ? 'Nenhum paciente cadastrado.'
       : 'Nenhum paciente ativo. Use "Novo paciente" para cadastrar.';
   });
+
+  protected readonly isFirstUse = computed(
+    () => this.service.patients().length === 0 && this.search().trim() === '',
+  );
 
   protected summary(agreement: Agreement): string {
     return agreementSummary(agreement);

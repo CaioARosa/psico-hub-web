@@ -41,10 +41,13 @@ import type { PatientFormErrors } from '../domain/patient-form';
               autocomplete="off"
               class="h-11 rounded-xl bg-white"
               [attr.aria-invalid]="errors().name ? 'true' : null"
-              [attr.aria-describedby]="errors().name ? 'patient-name-error' : null"
+              [attr.aria-describedby]="errors().name ? 'patient-name-hint patient-name-error' : 'patient-name-hint'"
               [value]="name()"
               (input)="name.set($any($event.target).value)"
             />
+            <p id="patient-name-hint" class="text-xs text-muted-foreground">
+              Use o mesmo nome usado no Google Agenda para vincular as sessões automaticamente.
+            </p>
             @if (errors().name) {
               <p id="patient-name-error" class="admin-field-error text-sm text-red-700">{{ errors().name }}</p>
             }
