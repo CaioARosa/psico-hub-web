@@ -21,8 +21,13 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () => import('./inicio/home.component').then(m => m.HomeComponent),
       },
       {
+        path: 'atendimentos',
+        loadComponent: () =>
+          import('./atendimentos/atendimentos.component').then(m => m.AtendimentosComponent),
+      },
+      {
         path: 'agenda',
-        loadComponent: () => import('./agenda/agenda.component').then(m => m.AgendaComponent),
+        redirectTo: legacyRedirect('agenda'),
       },
       {
         path: 'painel',
@@ -34,7 +39,7 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'sessoes',
-        loadComponent: () => import('./sessions/sessions.component').then(m => m.SessionsComponent),
+        redirectTo: legacyRedirect('sessoes'),
       },
       {
         path: 'pagamentos',
