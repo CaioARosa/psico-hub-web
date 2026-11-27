@@ -43,15 +43,16 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'pagamentos',
-        loadComponent: () => import('./pagamentos/payments.component').then(m => m.PaymentsComponent),
+        redirectTo: legacyRedirect('pagamentos'),
       },
       {
         path: 'financeiro',
-        loadComponent: () => import('./financeiro/finance.component').then(m => m.FinanceComponent),
+        loadComponent: () =>
+          import('./financeiro/finance-hub.component').then(m => m.FinanceHubComponent),
       },
       {
         path: 'cobranca',
-        loadComponent: () => import('./cobranca/cobranca.component').then(m => m.CobrancaComponent),
+        redirectTo: legacyRedirect('cobranca'),
       },
     ],
   },

@@ -242,4 +242,14 @@ describe('CobrancaComponent', () => {
     expect(textOf(fixture)).toContain('Ana Paula');
     expect(textOf(fixture)).toContain('Corrija em Pacientes');
   });
+
+  it('em modo embedded oculta cabeçalho próprio e acompanha o mês passado via input', () => {
+    const fixture = TestBed.createComponent(CobrancaComponent);
+    fixture.componentRef.setInput('embedded', true);
+    fixture.componentRef.setInput('externalMonth', '2026-10');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('h1')).toBeNull();
+    expect(fixture.componentInstance.activeMonth()).toBe('2026-10');
+  });
 });

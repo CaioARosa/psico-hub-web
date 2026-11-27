@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideExternalLink, lucideInfo } from '@ng-icons/lucide';
@@ -38,19 +38,21 @@ import { MonthPickerComponent } from '../month-picker.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="space-y-6">
-      <header class="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 class="font-display text-3xl text-foreground tracking-tight">Cobrança</h1>
-          <p class="text-xs text-muted-foreground mt-0.5">
-            Uma paciente por vez. Você revisa a mensagem e envia pelo WhatsApp.
-          </p>
-        </div>
+      @if (!embedded()) {
+        <header class="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 class="font-display text-3xl text-foreground tracking-tight">Cobrança</h1>
+            <p class="text-xs text-muted-foreground mt-0.5">
+              Uma paciente por vez. Você revisa a mensagem e envia pelo WhatsApp.
+            </p>
+          </div>
 
-        <div class="space-y-1.5">
-          <label for="cobranca-month" class="block text-sm font-medium text-foreground">Mês</label>
-          <app-month-picker zId="cobranca-month" [month]="month()" (monthChange)="setMonth($event)" />
-        </div>
-      </header>
+          <div class="space-y-1.5">
+            <label for="cobranca-month" class="block text-sm font-medium text-foreground">Mês</label>
+            <app-month-picker zId="cobranca-month" [month]="activeMonth()" (monthChange)="setMonth($event)" />
+          </div>
+        </header>
+      }
 
       @if (loadError(); as message) {
         <z-alert zType="destructive" zRole="alert" [zDescription]="message" />
@@ -200,7 +202,14 @@ export class CobrancaComponent {
   protected readonly shortDate = shortDateOf;
   protected readonly cooldownDays = CHARGE_COOLDOWN_DAYS;
 
+  readonly embedded = input(false);
+  readonly externalMonth = input<string | null>(null);
+
   readonly month = signal(this.initialMonth());
+  readonly activeMonth = computed(() => {
+    const ext = this.externalMonth();
+    return ext && isValidMonth(ext) ? ext : this.month();
+  });
   readonly skipped = signal<ReadonlySet<string>>(new Set());
   readonly drafts = signal<Readonly<Record<string, string>>>({});
   /** Paciente cujo WhatsApp foi aberto e que aguarda a confirmação de envio. */
@@ -208,7 +217,17 @@ export class CobrancaComponent {
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
 
-  private readonly chargesWatch = computed(() => this.chargesService.watchMonth(this.month()));
+  private readonly chargesWatch = computed(() => this.chargesService.watchMonth(this.activeMonth()));
+
+  constructor() {
+    effect(() => {
+      this.activeMonth();
+      this.skipped.set(new Set());
+      this.drafts.set({});
+      this.awaitingId.set(null);
+      this.error.set(null);
+    });
+  }
 
   readonly ready = computed(
     () =>
@@ -232,7 +251,7 @@ export class CobrancaComponent {
         sessions: this.allSessions.sessions(),
         payments: this.paymentsService.payments(),
       }),
-      this.month(),
+      this.activeMonth(),
     ),
   );
 
@@ -293,7 +312,7 @@ export class CobrancaComponent {
     this.saving.set(true);
     this.error.set(null);
     try {
-      await this.chargesService.markCharged(item.patientId, this.month(), item.totalCents);
+      await this.chargesService.markCharged(item.patientId, this.activeMonth(), item.totalCents);
       this.awaitingId.set(null);
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : SAVE_ERROR);

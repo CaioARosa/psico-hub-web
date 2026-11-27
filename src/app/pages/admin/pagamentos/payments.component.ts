@@ -5,6 +5,7 @@ import {
   ElementRef,
   computed,
   inject,
+  input,
   signal,
   viewChild,
 } from '@angular/core';
@@ -57,22 +58,24 @@ type FormState =
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="space-y-6">
-      <header class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 class="font-display text-3xl text-foreground tracking-tight">Pagamentos</h1>
-          <p class="text-xs text-muted-foreground mt-0.5">Registre e acompanhe os recebimentos via Pix.</p>
-        </div>
-        <button
-          z-button
-          type="button"
-          class="admin-plus-hover h-10 rounded-xl px-4"
-          [zDisabled]="form().mode === 'create'"
-          (click)="openCreate()"
-        >
-          <ng-icon name="lucidePlus" class="size-4" />
-          Registrar Pix
-        </button>
-      </header>
+      @if (!embedded()) {
+        <header class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 class="font-display text-3xl text-foreground tracking-tight">Pagamentos</h1>
+            <p class="text-xs text-muted-foreground mt-0.5">Registre e acompanhe os recebimentos via Pix.</p>
+          </div>
+          <button
+            z-button
+            type="button"
+            class="admin-plus-hover h-10 rounded-xl px-4"
+            [zDisabled]="form().mode === 'create'"
+            (click)="openCreate()"
+          >
+            <ng-icon name="lucidePlus" class="size-4" />
+            Registrar Pix
+          </button>
+        </header>
+      }
 
       @if (form(); as current) {
         @if (current.mode !== 'closed') {
@@ -93,20 +96,35 @@ type FormState =
 
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div class="flex flex-wrap items-end gap-4 grow">
-          <div class="space-y-1.5">
-            <label for="payment-filter-month" class="block text-sm font-medium text-foreground">Mês de referência</label>
-            <div class="flex items-center gap-2">
-              <app-month-picker
-                zId="payment-filter-month"
-                zPlaceholder="Todos os meses"
-                [month]="monthFilter()"
-                (monthChange)="setMonthFilter($event)"
-              />
-              @if (monthFilter() !== '') {
-                <button z-button zType="ghost" zSize="sm" type="button" (click)="setMonthFilter('')">Limpar</button>
-              }
+          @if (embedded()) {
+            <div class="flex items-center gap-2 min-h-11">
+              <button
+                z-button
+                zType="outline"
+                zSize="sm"
+                type="button"
+                class="min-h-10 rounded-xl"
+                (click)="toggleAllMonths()"
+              >
+                {{ showAllMonths() ? 'Filtrar pelo mês ativo' : 'Ver todos os meses' }}
+              </button>
             </div>
-          </div>
+          } @else {
+            <div class="space-y-1.5">
+              <label for="payment-filter-month" class="block text-sm font-medium text-foreground">Mês de referência</label>
+              <div class="flex items-center gap-2">
+                <app-month-picker
+                  zId="payment-filter-month"
+                  zPlaceholder="Todos os meses"
+                  [month]="monthFilter()"
+                  (monthChange)="setMonthFilter($event)"
+                />
+                @if (monthFilter() !== '') {
+                  <button z-button zType="ghost" zSize="sm" type="button" (click)="setMonthFilter('')">Limpar</button>
+                }
+              </div>
+            </div>
+          }
 
           <div class="space-y-1.5 grow max-w-xs">
             <span class="block text-sm font-medium text-foreground">Paciente</span>
@@ -246,6 +264,10 @@ export class PaymentsComponent {
   protected readonly formatPaidAt = formatPaidAt;
   protected readonly formatMonth = formatMonth;
 
+  readonly embedded = input(false);
+  readonly externalMonth = input<string | null>(null);
+  readonly showAllMonths = signal(false);
+
   readonly monthFilter = signal('');
   readonly patientFilter = signal('');
   readonly form = signal<FormState>(this.initialForm());
@@ -261,9 +283,18 @@ export class PaymentsComponent {
   readonly ready = computed(() => this.service.loaded() && this.patientsService.loaded());
   readonly loadError = computed(() => this.service.error() ?? this.patientsService.error());
 
+  readonly effectiveMonthFilter = computed(() => {
+    if (this.embedded()) {
+      if (this.showAllMonths()) return '';
+      const ext = this.externalMonth();
+      return ext && isValidMonth(ext) ? ext : '';
+    }
+    return this.monthFilter();
+  });
+
   readonly visible = computed(() =>
     filterPayments(this.service.payments(), {
-      month: this.monthFilter(),
+      month: this.effectiveMonthFilter(),
       patientId: this.patientFilter(),
     }),
   );
@@ -276,11 +307,15 @@ export class PaymentsComponent {
   );
 
   readonly emptyMessage = computed(() => {
-    if (this.monthFilter() !== '' || this.patientFilter() !== '') {
+    if (this.effectiveMonthFilter() !== '' || this.patientFilter() !== '') {
       return 'Nenhum Pix encontrado para esses filtros.';
     }
     return 'Nenhum Pix registrado. Use "Registrar Pix" para começar.';
   });
+
+  toggleAllMonths(): void {
+    this.showAllMonths.update(v => !v);
+  }
 
   protected patientName(payment: Payment): string {
     return this.patientNames().get(payment.patientId) ?? REMOVED_PATIENT_LABEL;

@@ -280,4 +280,18 @@ describe('PaymentsComponent', () => {
 
     expect(textOf(fixture)).not.toContain(SAVE_ERROR);
   });
+
+  it('em modo embedded oculta cabeçalho, filtra pelo mês externo e alterna para todos os meses', () => {
+    const fixture = TestBed.createComponent(PaymentsComponent);
+    fixture.componentRef.setInput('embedded', true);
+    fixture.componentRef.setInput('externalMonth', '2026-11');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('h1')).toBeNull();
+    expect(fixture.componentInstance.visible().every(p => p.referenceMonth === '2026-11')).toBe(true);
+
+    buttonWithText(fixture, 'Ver todos os meses').click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.visible().length).toBeGreaterThanOrEqual(2);
+  });
 });
